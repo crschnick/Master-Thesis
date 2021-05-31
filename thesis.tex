@@ -1,0 +1,1366 @@
+% !TeX spellcheck = en-US
+% !TeX encoding = utf8
+% !TeX program = lualatex
+% !BIB program = biber
+% -*- coding:utf-8 mod:LaTeX -*-
+
+
+% vv  scroll down to line 200 for content  vv
+
+
+\let\ifdeutsch\iffalse
+\let\ifenglisch\iftrue
+\input{pre-documentclass}
+\documentclass[
+  % fontsize=11pt is the standard
+  a4paper,  % Standard format - only KOMAScript uses paper=a4 - https://tex.stackexchange.com/a/61044/9075
+  twoside,  % we are optimizing for both screen and two-side printing. So the page numbers will jump, but the content is configured to stay in the middle (by using the geometry package)
+  bibliography=totoc,
+  %               idxtotoc,   %Index ins Inhaltsverzeichnis
+  %               liststotoc, %List of X ins Inhaltsverzeichnis, mit liststotocnumbered werden die Abbildungsverzeichnisse nummeriert
+  headsepline,
+  cleardoublepage=empty,
+  parskip=half,
+  %               draft    % um zu sehen, wo noch nachgebessert werden muss - wichtig, da Bindungskorrektur mit drin
+  draft=false
+]{scrbook}
+\input{config}
+
+
+\usepackage[
+  title={Is Oil the future?},
+  author={Lars K.},
+  type=bachelor,
+  institute=iaas, % or other institute names - or just a plain string using {Demo\\Demo...}
+  course={Medieninformatik},
+  examiner={Prof.\ Dr.\ Uwe Fessor},
+  supervisor={Dipl.-Inf.\ Roman Tiker,\\Dipl.-Inf.\ Laura Stern,\\Otto Normalverbraucher,\ M.Sc.},
+  startdate={July 5, 2018},
+  enddate={January 5, 2019}
+]{scientific-thesis-cover}
+
+\input{acronyms}
+
+\makeindex
+
+
+\newtheorem{proof}{Proof}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\begin{document}
+
+%tex4ht-Konvertierung verschönern
+\iftex4ht
+  % tell tex4ht to create picures also for formulas starting with '$'
+  % WARNING: a tex4ht run now takes forever!
+  \Configure{$}{\PicMath}{\EndPicMath}{}
+  %$ % <- syntax highlighting fix for emacs
+  \Css{body {text-align:justify;}}
+
+  %conversion of .pdf to .png
+  \Configure{graphics*}
+  {pdf}
+  {\Needs{"convert \csname Gin@base\endcsname.pdf
+      \csname Gin@base\endcsname.png"}%
+    \Picture[pict]{\csname Gin@base\endcsname.png}%
+  }
+\fi
+
+%\VerbatimFootnotes %verbatim text in Fußnoten erlauben. Geht normalerweise nicht.
+
+\input{commands}
+\setcounter{page}{1}
+\pagenumbering{roman}
+\Titelblatt
+
+%Eigener Seitenstil fuer die Kurzfassung und das Inhaltsverzeichnis
+\deftripstyle{preamble}{}{}{}{}{}{\pagemark}
+%Doku zu deftripstyle: scrguide.pdf
+\pagestyle{preamble}
+\renewcommand*{\chapterpagestyle}{preamble}
+
+%Kurzfassung / abstract
+%auch im Stil vom Inhaltsverzeichnis
+\ifdeutsch
+  \section*{Kurzfassung}
+\else
+  \section*{Abstract}
+\fi
+
+<Short summary of the thesis>
+
+\cleardoublepage
+
+
+% BEGIN: Verzeichnisse
+
+\iftex4ht
+\else
+  \microtypesetup{protrusion=false}
+\fi
+
+%%%
+% Literaturverzeichnis ins TOC mit aufnehmen, aber nur wenn nichts anderes mehr hilft!
+% \addcontentsline{toc}{chapter}{Literaturverzeichnis}
+%
+% oder zB
+%\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+%
+%%%
+
+%Produce table of contents
+%
+%In case you have trouble with headings reaching into the page numbers, enable the following three lines.
+%Hint by http://golatex.de/inhaltsverzeichnis-schreibt-ueber-rand-t3106.html
+%
+%\makeatletter
+%\renewcommand{\@pnumwidth}{2em}
+%\makeatother
+%
+\tableofcontents
+
+\iftex4ht
+\else
+  %Optischen Randausgleich und Grauwertkorrektur wieder aktivieren
+  \microtypesetup{protrusion=true}
+\fi
+
+% END: Verzeichnisse
+
+
+% Headline and footline
+\renewcommand*{\chapterpagestyle}{scrplain}
+\pagestyle{scrheadings}
+\pagestyle{scrheadings}
+\ihead[]{}
+\chead[]{}
+\ohead[]{\headmark}
+\cfoot[]{}
+\ofoot[\usekomafont{pagenumber}\thepage]{\usekomafont{pagenumber}\thepage}
+\ifoot[]{}
+
+
+%% vv  scroll down for content  vv %%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Main content starts here
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\chapter{Introduction}
+
+
+Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
+	However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
+	Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
+	The first technique, Analysis of Variance (ANOVA) in the context of sparse grids \cite{F10}, has already been thoroughly investigated for this purpose.
+	It is based on the Sobol method \cite{S01}, which determines the importance of individual model inputs.
+	 Thus it allows to neglect less important ones.
+	Active Subspaces \cite{CG15} are another dimension reduction technique, which in contrast to ANOVA can replace parameters through linear combiniations of others.
+	Recently Active Subspaces have been applied in combination with sparse grids and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
+Both methods, ANOVA and Active Subspaces, view the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
+These techniques are then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates and to show their advantages and disadvantages in different contexts and provide some guidance on which type of models suit a method better based on the results.
+
+\section{Overview}
+
+The first chapter of this thesis covers all the basics needed to use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
+Next, we will give an overview over the currently most commonly used methods for dimensionality and grid point reduction for sparse grids that will also be used as a baseline for later comparisions.
+The following chapter gives an introduction to the concept of input transformations and some basic transformations, which are the central focus of this thesis.
+Afterwards we focus on a few promising types of transformations, namely linear and reducing linear transformations, for which we investigate on how to optimally construct them.
+In the penultimate part, we try to combine these transformation with iterative approximation algorithms.
+The last part, which covers implementation and evaluation, will put these new transformation-based methods to the test by applying them to different models and comparing the results of them with the previously covered conventional state of the art dimensionality reduction methods.
+
+A parameter study is the process of exploring the influence of different function parameters on the function output.
+This gained knowlegde about the parameters can be used for parameter reduction, which refers to the elimination and replacement of certain function parameters.
+
+- Sparse grids
+
+In this thesis the focus lies on high dimensional functions with $d \geq 8$ that cause these sparse grids to run into problems, since they are affected by the curse of dimensionality.
+These problems are caused by the high amount of grid points that result in too high runtime and memory requirements for many algorithms that work on sparse grids.
+can not effectively
+
+- use regression instead of interpolation, since dimension reduction is not suitable for interpolation
+
+- Focus lies on high dimensional functions with $d \geq 8$ that can not effectively be represented using sparse grids, since the grid point count would be too high
+
+Parameter reduction, as shown in fig ..., aims at eliminating some function inputs and therefore reduce the amount of grid points substantially.
+Used methods for parameter reduction include a sparse grid based Sobol method covered in \cite{}, which is a variance based global sensitivity analysis.
+Grid point reduction methods aim to create sparse grids that have comparatively less grid points than naively created sparse grids without optimizations while still maintaining a good interpolation error.
+However, grid point reduction methods do need an existing surrogate to work on, since hierarchisation has to be performed.
+With adaptive sparse grids we start with a very low level grid and add more grid points where needed ...
+For higher input dimensions, the commonly used adaptive sparse grids effectively become a parameter reduction method, since they can only work on a surrogate by neglecting unimportant input parameters, effectively eliminating them.
+
+fig
+
+\section{Motivation}
+
+Therefore in high dimensions, working with established methods is limited in its capabilities, since they all are parameter reduction methods.
+If there is no good tradeoff between the added regression error and the elimination of a certain parameter, it can't be eliminated. If this is the case for too many parameters, this process of parameter reduction has reached a dead end.
+However, we can find better ways to reduce the number of parameters instead of straight up parameter elimination, we can create more powerful methods for sparse grid based regression.
+This process of improved input reduction is broken down into two parts in this thesis, first an input transformation and then the subsequent parameter elimination as shown in fig .
+
+fig
+
+One approach for transformation and subsequent input reduction presented in this thesis, takes insipiration from common dimension reduction methods such as PCA , which takes a dataset $X$ as input and tries to reduce feature dimension while maintaining feature variance.
+Since we are working with functional data, i.e. a set of function samples $S$ where $x_i$ is distributed according to some probability distribution and $y_i$ are the function values, the goal here is to reduce the input dimension (or surrogate dimension) while maintaining output variance of the surrogate.
+
+
+This transformation process is first explored Transform inputs in such a way that (a) interpolation error is lower than normal or (b) regression error with lower amount of parameters is lower than normal
+ 
+
+\section{Structure}
+
+- different notion of regression (Only to reduce error function, no explanatatory vars)
+
+- Heuristic
+
+- Mesh based regression methods like ... are especially affected by the curse of dimensionality
+
+- Any method of 
+
+- Transform inputs in such a way that (a) interpolation error is lower or (b) regression error with lower dim is lower than normal
+
+- In theory every regression method can benefit from this
+
+- In practive the gains
+
+- While case (a) might be somewhat relevant at most, (b) has a lot more potential
+
+- dimension reduction after surrogate construction is easy (ANOVA)
+
+- goal is to do this before surrogate construction to allow for higher dims
+
+- Achieved by performing a change of basis on the inputs and oberserving whether applying existing methods for dim reduction on sparse grids get better results compared to untransformed
+
+- Similar to projection pursuit (i.e. goal to do this multiple times)
+
+- Therefore surrogate has to be differentiable, 
+
+
+\chapter{Basics}
+\label{chap:k1}
+
+More formally, the model is viewed as a function and is denoted as $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the input space,  a $d$-dimensional unit hypercube.
+Furthermore, the inputs of the model are distributed according to a probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$.
+The goal is to construct a surrogate $\hat{f}$ with $f(x) \approx \hat{f}(x)$.
+In this thesis, the surrogate construction is realized using sparse grids.
+We however deviate from standard sparse grid approaches and instead explore alternative options of sparse grid based interpolation with the goal to provide better results than the standard approach.
+
+\section{Sparse Grids}
+
+\begin{definition}[Levels and indices]
+Let $L$ denote the set of possible level indices.
+For sparse boundary grids, we define $L=\mathds{N}_0$. If no boundary exists, we instead define $L=\mathds{N}$.
+Then $\underline{l} \in L^d$ is a d-dimensional multi level index with
+\begin{equation}
+\underline{l} =(l_1, \dots, l_d)
+\end{equation}
+and
+\begin{equation}
+H_{\underline{l}} \coloneqq \left\{ \underline{i} \in \mathbb{N}^D_0 \mid
+\begin{cases}
+    i_t=1,3\dots,2^{l_t} - 3, 2^{l_t} - 1, & l_t \geq 1 \\
+    i_t=0,1, & l_t = 0
+\end{cases} \right\}
+\end{equation}
+is the corresponding hierarchical index set for $\underline{l}$.
+\end{definition}
+
+\begin{definition}[Grid points]
+Let $x_{l,i}=i2^{-l}$ be a one-dimensional grid point coordinate.
+Then
+\begin{equation}
+x_{\underline{l},\underline{i}}=(x_{l_1,i_1}, \dots, x_{l_d,i_d})
+\end{equation}
+is a d-dimensional grid point.
+Furthermore, we define the set of all grid points of a sparse grid for a level vector $\underline{l}$ as
+\begin{equation}
+X_{\underline{l}}=\{x_{\underline{l},\underline{i}} \mid \underline{i} \in H_{\underline{l}}\}
+\end{equation}
+and the set of grid points of a regular sparse grid for level $l$ as
+\begin{equation}
+X_{l}=\{x_{\underline{l'},\underline{i}} \mid |\underline{l'}|_1 \leq l, \underline{i} \in H_{\underline{l}}\}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Basis functions]
+Let $\phi_{l,i}(x)$ be an univariate basis function at the one-dimensional support coordinate $x_{l,i}$.
+We then define a $d-$dimensional basis function at a supporting grid point $x_{\underline{l},\underline{i}}$ using the tensor-product approach with
+\begin{equation}
+\phi_{\underline{l},\underline{i}} \coloneqq \prod_{k=1}^{d} \phi_{l_k,i_k}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Hierarchical subspaces]
+Let $\phi_{\underline{l},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
+Then we define the space spanned by that sparse grid as
+\begin{equation}
+W_{\underline{l}}^X=\text{span} \{\phi_{\underline{l'},\underline{i}} \mid x_{\underline{l'},\underline{i}} \in X_{\underline{l}}\}
+\end{equation}
+Let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
+Then a sparse grid interpolant $\hat{f} \in V_X$ can be represented as
+\begin{equation}
+V^X=\text{span} \{\phi_{\underline{l},\underline{i}} \mid x_{\underline{l},\underline{i}} \in X\}=\bigoplus_{\underline{l}} W^X_{\underline{l}}
+\end{equation}
+In the case of a regular sparse grid, i.e. $X=X_{l}$ for some $l$, the interpolant is
+\begin{equation}
+V_l=V^{X_l}=\bigoplus_{|\underline{l}|_1 \leq l} W^X_{\underline{l}}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Interpolants]
+Let $\phi_{\underline{l},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
+Then we define the space spanned by that sparse grid as
+\begin{equation}
+V_X=\text{span} \{\phi_{\underline{l},\underline{i}} \mid x_{\underline{l},\underline{i}} \in X\}
+\end{equation}
+Let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
+Then a sparse grid interpolant $\hat{f} \in V_X$ can be represented as
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x)
+\end{equation}
+In the case of a regular sparse grid, i.e. $X=X_{l}$ for some $l$, the interpolant is
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{|\underline{l}|_1 \leq l} \sum_{\underline{i} \in {H_{\underline{l}}}} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x).
+\end{equation}
+\end{definition}
+
+
+\section{Basis functions}
+
+In this section we will take a look at all the different basis functions used in this thesis and the reasons for using them.
+
+\subsection{Hat basis}
+
+The basic hat function $h(x)=\max(1 - |x|,0)$ can be used to construct a simple basis, called the hat basis.
+\begin{definition}[Hat basis]
+Let $l \in L$ be a level index and $i \in H_l$ the index.
+We then define
+\begin{equation}
+\phi^h_{l,i}(x) \coloneqq h(2^lx-i)
+\end{equation}
+as the hat basis function.
+\end{definition}
+The classic piecewise linear basis functions are easy to understand, easy to implement and the hierarchical surplusses can be computed without solving an sle.
+
+\subsection{B-Spline basis}
+
+One downside of the hat basis is that the functions do not have a continuous derivative.
+Instead, there are discontinuities at the grid point $x_{l,i}$ itself where the derivative flips its sign and at the neighbouring grid points $x_{l,i+2}$ and $x_{l,i-2}$ where the derivative changes to zero.
+One solution to eliminating these discontinuities are B-Splines, which are just piecewise polynomials.
+\begin{definition}[B-Splines]
+Let $p \in \mathds{N}$.
+Then
+\begin{equation}
+b^0(x) \coloneqq
+\begin{cases}
+    1, & x \in [0,1) \\
+   0, & \text{else}
+\end{cases}
+\end{equation}
+is a B-Spline of degree $0$ and
+\begin{equation}
+b^p(x) \coloneqq \frac{1}{p} xb^{p-1}(x) + (p + 1 - x) b^{p-1}(x-1) 
+\end{equation}
+is a B-Spline of degree $p$.
+\end{definition}
+This definition of B-Splines is based on the Cox-de-Boor recursion.
+
+\begin{definition}[B-Spline basis functions]
+Let $l,i \in \mathds{N}_0$.
+Then
+\begin{equation}
+\phi^b_{l,i}(x) \coloneqq b^p \left( 2^l x + \frac{p+1}{2} -i \right)
+\end{equation}
+is an univariate B-Spline basis function of degree $p$.
+\end{definition}
+
+\subsection{Mod B-Spline basis}
+
+\begin{definition}[Knots]
+Let $m,p \in \mathds{N}_0$.
+We then define
+\begin{equation}
+\underline{\xi}=(\xi_0, \dots, \xi_{m + p}) \in \mathds{R}^{m + p}, ~~ \xi_0 \leq \dots \leq \xi_{m + p}
+\end{equation}
+as a sequence of knots.
+\end{definition}
+
+\begin{definition}[B-Splines]
+Let $p \in \mathds{N}$.
+Then
+\begin{equation}
+b^0_{i,\underline{\xi}}(x) \coloneqq
+\begin{cases}
+    1, & x \in [\xi_i,x_i] \\
+   0, & \text{else}
+\end{cases}
+\end{equation}
+is a B-Spline of degree $0$ and
+\begin{equation}
+b_{i,\underline{\xi}}^p(x) \coloneqq \frac{x - \xi_i}{\xi_{i + p} - \xi_i} b_{i,\underline{\xi}}^{p-1}(x) + \frac{\xi_{i+p+1} - \xi_i}{\xi_{i + p} - \xi_i} b_{i+1,\underline{\xi}}^{p-1}(x) 
+\end{equation}
+is a B-Spline of degree $p$.
+\end{definition}
+
+\begin{definition}[Mod B-Spline basis functions]
+Let
+\begin{equation}
+\phi_l^p(x) \coloneqq \sum_{i=0}^{\lceil (p+1)/2 \rceil} (i+1) \phi^p_{l,1-k}(x)
+\end{equation}
+be the boundary...
+\begin{equation}
+\phi^{p,\text{mod}}_{l,i}(x) \coloneqq
+\begin{cases}
+1 &, l=1\\
+\phi^p_{l}(x)&, l>1, i=1\\
+\phi^p_{l}(x)&, l>1, i=2^l - 1\\
+\phi_{l,i}(x)&, \text{else}
+\end{cases}
+\nonumber
+\end{equation}
+\end{definition}
+
+
+\subsection{Modified basis functions}
+
+One method of removing the need of using boundary grid points at least to some degree are modified basis functions.
+These basis functions do not require grid points at the boundary.
+Instead at every grid level, they extrapolate the values at the boundaries from the grid points closest to the boundaries using a special kind of basis function.
+Therefore, it is possible to modify any non-boundary basis $\phi_{l,i}$ by defining the modified basis as follows:
+\begin{equation}
+\phi^{\text{mod}}_{l,i}(x) \coloneqq
+\begin{cases}
+1 &, l=1\\
+\phi^{\text{left}}_{l}(x)&, l>1, i=1\\
+\phi^{\text{right}}_{l}(x)&, l>1, i=2^l - 1\\
+\phi_{l,i}(x)&, \text{else}
+\end{cases}
+\nonumber
+\end{equation}
+where $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are the special boundary extrapolation functions.
+Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with regards to their structure of the normal basis functions $\phi_{l,i}$, e.g. a hat basis is usually modified with special hat functions.
+
+
+
+\subsection{Prewavelets}
+
+A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
+Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
+One of these properties is the orthogonality property with $\langle \phi_{i},\phi_{j} \rangle = 0$ for all wavelets with $i \neq j$.
+Furthermore,  the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
+One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
+In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
+However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
+
+\begin{definition}[Semi-Orthogonality]
+Let $m,n \in \mathds{N}_0, m \neq n$ be two different levels and $\phi_{l,i}$ a basis.
+We then call this basis semi-orthogonal if
+\begin{align}
+\begin{split}
+&\langle \phi_{m,i},\phi_{n,j} \rangle = 0
+\nonumber
+\end{split}
+\end{align}
+\end{definition}
+
+The basis functions that are used in this thesis are prewavelets with boundary support \cite{GO95,HP17}, which are linear combinations of the hierarchical hat functions $\phi_{l,i}^h(x)$ and have the desirable property of being semi-orthogonal.
+
+\begin{definition}[Boundary prewavelet basis]
+The first basis functions are defined as
+\begin{equation}
+\phi^p_{0,0} = 1\\
+\phi^p_{0, 1} = -\phi_{0,0} + \phi_{0,1}\\
+\phi^p_{1, 1} = -\phi_{1,0} + \phi_{1,1} -\phi_{1,2}
+\end{equation}
+For $l \geq 2$ the basis function are defined as 
+\begin{equation}
+\phi^p_{l,i} = \frac{1}{10} \phi_{l,i-2} - \frac{6}{10} \phi_{l,i-1} + \frac{10}{10} \phi_{l,i} - \frac{6}{10} \phi_{l,i+1} + \frac{1}{10} \phi_{l,i+2}
+\label{prewavelet_def}
+\end{equation}
+with the special boundary cases
+\begin{equation}
+\phi^p_{l,1} = -\frac{12}{10} \phi_{l,0} + \frac{11}{10} \phi_{l,1} - \frac{6}{10} \phi_{l,2} + \frac{1}{10} \phi_{l,3}\\ \phi^p_{l,2^l-1}(x)=\phi^p_{l,1}(1-x)
+\end{equation}
+\end{definition}
+The multivariate basis functions $\phi^p_{\underline{l},\underline{i}}$ are obtained by applying the tensor-product approach to the univariate basis functions $\phi^p_{l,i}$ to get $\phi^p_{\underline{l},\underline{i}} \coloneqq \prod_{t=1}^{d} \phi^p_{l_t,i_t}$.
+These also fullfil the semi-orthogonality with $\langle \phi^p_{\underline{l},\underline{i}},\phi^p_{\underline{l'},\underline{i'}} \rangle = 0$ for $\underline{l} \neq \underline{l'}$.
+
+
+\newpage
+\section{Hierarchisation}
+
+\newpage
+
+\section{Regression}
+
+- useful if the model function has noise
+
+There are different ways of constructing the surrogate $\hat{f}$.
+The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
+The dataset used for the regression is then defined as
+\todo{Bezeichner $S$ ist schon der surrogate space}
+\begin{equation}
+S=\{(x_i,y_i) = (t(z_i),f(z_i)), ~ z_i \in Z\}
+\end{equation}
+
+We are aiming to construct the function $\hat{f}$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
+\end{equation}
+Thus, we are trying to solve the least squares problem with the standard square loss function for the dataset $S$ with
+\begin{equation}
+\epsilon_{S}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (y_i - \hat{f}(x_i))^2 
+\end{equation}
+
+Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(x,y), (x',y') \in S, ~ x=x', y\neq y'$.
+Since the surrogate construction is usually an ill-posed problem and we are calculating a regressed function only based on the samples $S$, the regression method used employs regularization as well to prevent overfitting.
+We are therefore solving the regularized least squares problem with the smoothing factor $\lambda > 0$:
+\begin{equation}
+\hat{f} = \argmin_{\hat{f} \in V} \epsilon_{S}(\hat{f}) + \lambda R(\hat{f})
+\end{equation}
+
+\newpage
+
+\section{Sampling}
+
+We assume that the inputs of the model functions are distributed according to multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$, which consists out of $d$ independent distributions $\rho_i$.
+In the coming chapters we will use some Monte-Carlo based methods as a comparision to the presented sparse grid methods.
+For this purpose, even the relatively simple process of sampling a probality distribution can improved in different ways to create better results.
+
+\subsection{Quasirandom sequences}
+
+A problem that arises when generating a sequence of random samples using a pseudorandom number generator is ...
+One solution are low-discrepancy sequences, also called quasirandom sequences to distinguish them from pseudorandom sequencens.
+These sequences are more evenly distributed than pseudorandom samples and therefore have a lower discrepancy.
+As a result they cause the result of a Monte-Carlo quadrature to converge faster than one using the same amount of pseudorandom samples.
+A commonly used sequence is the Sobol sequence, which is also used in this thesis.
+It is generated using the Antonov and Saleev variant, which uses the Gray code of $i$ to construct the $i$-th sample.
+
+\subsection{Inverse transform sampling}
+To extend the generation pseudorandom samples to non-uniform distributions, one commonly used approach are inverse transformations.
+\begin{definition}[Inverse transformation]
+Given a cumulative distribution function $F_X$ that describes the distribution of the random variable $X$, we define the transformation $T_X$ for the random variable $X$ with
+\begin{equation}
+T_X \colon [0,1] \mapsto \mathds{R}, ~ T_X(U)=X
+\end{equation}
+where $U \sim \mathcal{U}[0,1]$ is a uniformly distributed random variable.
+\end{definition}
+This transformation is then exactly the inverse of $F_X$ with $T_X=F_X^{-1}$, hence the name inverse transform sampling.
+Unfortunately, the inverse $F_X^{-1}$, also called the quantile function, does not always have a closed-form solution.
+There exist many different algorithms to approximate the quantile function for commonly used distributions.
+The variant that is used in this thesis is presented in \cite{} and is basically a combination of different algorithms that excel for specific ranges of values for $U$.
+The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
+
+\chapter{Grid point reduction strategies}
+
+The main driver for the runtime of operations on all different types of grids is the amount of grid points.
+Therefore, especially in higher dimensions, employing some strategy for grid point reduction is necessary.
+Of course these strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
+Sparse grids themselves are already a relatively good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids.
+However, the amount of grid points needed for a sparse grid grows exponentially with the dimensionality.
+This effect is called the curse of dimensionality.
+In this chaper we show a few already established approaches to mitigate this issue.
+
+\chapter{ANOVA-based methods}
+
+Functional ANOVA is a well established method in statistics to 
+The fundemental goal is to obtain the ANOVA decomposition of a function $f$ that has the form of
+\begin{equation}
+f(x)=f_0 + \sum_{t=1}^d \sum_{i_1 < \dots < i_t} f_{i_1,\dots,i_t}(x_{i_1},\dots,x_{i_t})
+\label{anovaBase}
+\end{equation}
+
+\begin{definition}[Dimension indices]
+Let $D=\{1,\dots,d\}$ be the set of dimension indices.
+Then
+\begin{equation}
+C \coloneqq \mathcal{P}(D)
+\end{equation}
+is the set of ANOVA-components, where an ANOVA-component $c \in C$ that contains a specific dimension index $i \in D$ indicates that the function term is non-constant in the $i$-th dimension.
+\end{definition}
+We can then express the decomposition \eqref{anovaBase} as a componentwise sum with
+\begin{equation}
+f(x)=\sum_{c \in \mathcal{P}(D)} f_{c}(x)
+\end{equation}
+A requirement of this decomposition is that all terms have to be orthogonal, i.e. for $c,c' \in C, c \neq c'$ it has to hold that
+\begin{equation}
+\int_{\Omega} f_c(x) f_{c'}(x) \text{d}x = 0
+\end{equation}
+It can be shown that this property can be fullfilled by having terms that average to zero over all of their active dimension indices with
+\begin{equation}
+\int_0^1 f_{i_1,\dots,i_t}(x_{i_1},\dots,x_{i_t}) ~ \text{d}x_k = 0, ~ k \in \{i_1, \dots, i_t\}
+\end{equation}
+
+
+
+A decomposition of a high dimensional function $f$ into $2^d$ lower dimensional function terms allows for an examination of individual terms with the goal identifying the terms that contribute the least amount of variance to the total function variance.
+This decomposition can also be performed on a sparse grid by using the right basis functions and grid point partition.
+
+\begin{definition}[Variance]
+Let $f$ be a function and $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$.
+Then
+\begin{equation}
+\sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x
+\end{equation}
+denotes the so-called variance of a function with regards to the input distribution $\rho$.
+\end{definition}
+
+It holds that 
+\begin{equation}
+\sigma^2(f)=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c)
+\end{equation}
+because the terms $f_i$ fullfil the orthogonality property \eqref{ortho} and therefore the variance function $\sigma^2(f)$ is additive.
+
+\begin{definition}[Sobol indices]
+Let $c \in C$ be an ANOVA-component.
+Then
+\begin{equation}
+S_{c}=\frac{\sigma^2(f_{\underline{c}} )}{\sigma^2(f)}, ~~ \sum_{c \in \mathcal{P}(D)} S_{c} = 1
+\nonumber
+\end{equation}
+is the Sobol index of a function term $f_c$. It indicates the share of the total variance of the function term.
+\end{definition}
+
+
+\begin{definition}[Total-effect indices]
+Adding all indices of a dimension together results in the so called total-effect indices 
+\begin{equation}
+T_i \coloneqq \sum_{c \in \mathcal{P}(D), i \in c} S_{c}
+\label{total_effect}
+\end{equation}
+\end{definition}
+Note that for practical implementations, calculations of these total-effect indices \eqref{total_effect} do not require calculating an exponential amount of Sobol indices $S_{c}$.
+
+\newpage
+\subsection{Sparse grid based ANOVA}
+
+\begin{definition}[Component grid points]
+Let $c \in C$ be an ANOVA-component and $X$ be a set of grid points.
+Then
+\begin{equation}
+X_c=\{x_{\underline{l},\underline{i}} \in X \mid l_t=i_t=0 \oplus t \in c, ~ 1 \leq t \leq d\}
+\end{equation}
+is the set of grid points that support basis functions that are only active in the dimensions included in $c$.
+\end{definition}
+
+\begin{lemma}
+The componentwise grid point sets $X_c$ form a partition of $X$, i.e.
+\begin{equation}
+X=\bigcup_{c \in C} X_c, ~~ X_c \cap X_{c'} = \emptyset
+\end{equation}
+\end{lemma}
+\begin{proof}
+\end{proof}
+
+\begin{theorem}
+Let $\hat{f} \in V_{X}^{\phi^p}$ be the interpolant of $f$.
+It then holds that
+\begin{equation}
+\hat{f}(x)=\sum_{c \in C} \hat{f}_{c}(x), ~~ \hat{f}_c \in V_{X_c}^{\phi^p}
+\end{equation}
+is an ANOVA decomposition of $\hat{f}$ since every function term in that decomposition averages zero over all its dimension indices, i.e.
+\begin{equation}
+\int_0^1 \hat{f}_c(x) ~ \text{d}x_k = 0, ~ k \in c
+\end{equation}
+\end{theorem}
+
+\begin{definition}[Remaining ANOVA grid points]
+Let $R \subseteq D$ be the set of remaining dimension indices and $X$ be a set of grid points.
+Then
+\begin{equation}
+\text{A}_R(X)=\{x_{\underline{l},\underline{i}} \in X \mid l_t=i_t=0 \lor t \in R, ~ 1 \leq t \leq d\}
+\end{equation}
+is the set of grid points that support basis functions that are only active in the dimensions included in $R$.
+\end{definition}
+
+
+\newpage
+\subsection{MC ANOVA}
+
+\begin{lemma}
+Let $\{x_i \sim \rho\}_{i=1}^n$ and $\{y_i \sim \rho\}_{i=1}^n$ be two sets of $n$ independently drawn samples from $\rho$.
+By defining the mixed sample points
+\begin{equation}
+x_k^{(i)}=(x_{k,1}, \dots,x_{k,i-1}, y_{k,i}, x_{k,i+1},\dots,x_{k,d})^T
+\end{equation}
+which are ... we can calculate the total effect indices with
+\begin{equation}
+S_{\rho}^{(i)}=\frac{\sum_{k=1}^n f(y_k) (f(x_k^{(i)}) - f(x_k))}{n \sigma_{\rho}(f)}
+\end{equation}
+\begin{equation}
+T_{\rho}^{(i)}=\frac{\sum_{k=1}^n (f(x_k) - f(x_k^{(i)}))^2}{2n \sigma_{\rho}(f)}
+\end{equation}
+\end{lemma}
+
+\newpage
+\subsection{Eliminating dimensions}
+
+The first dimension reduction method introduced is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}.
+The goal here is to identify important inputs of a model by examining its ANOVA-decomposition and its total-effect indices.
+
+The removal of unessential dimensions is then accomplished by a stepwise algorithm that starts with $R=D$ and in which during each step all the reduced set dimension indices $R=\{d_1, \dots,d_r\}$ that are left are ranked based on their total-effect indices with $T_{d_1} \geq \dots \geq T_{d_i}$ and the one with the lowest total-effect index is eliminated with $R=R \setminus \{d_i\}$.
+This process can be continued until there are no more dimensions left ($R=\emptyset$) or the variance share left is less than the required minium ($\sum_{c \in \mathcal{P}(R)} S_{c} < \epsilon_{min}$).
+
+After the dimension removal algorithm has finished and there are only $r$ dimensions left with $R=\{d_1, \dots, d_r\}$,
+we define the transformation function using the matrix $T_R \in \{0,1\}^{(r \times d)}$ which is used for removing inactive dimensions as follows:
+\begin{equation}
+t_R^{ANOVA}(x) \coloneqq T_R \, x, ~~
+(T_R)_{i,j} \coloneqq\begin{cases}
+    1,  d_i = j\\
+    0,  else
+\end{cases}
+\nonumber
+\end{equation}
+The reduced function is then constructed by only keeping the active dimensions included in $R$:
+\begin{equation}
+\eta_R^{ANOVA}(x) = \sum_{c \in \mathcal{P}(R)} f_c(x), ~~ f_c \in \tilde{V}_{n}^c
+\label{anovaComponentWise}
+\end{equation}
+
+This decomposition can be employed on sparse grids by using an orthogonal basis, e.g. a wavelet basis, with a special constant basis function to represent the $f_c$.
+
+\newpage
+\subsection{Reducing the effective dimensionality}
+
+This can then be used for effective dimensionality reduction as shown in \cite{G13,F10}, where the focus lies on minimizing the ANOVA order $a$, i.e. the number of non-constant dimensions of the function terms used in \eqref{anovaBase}, to approximate $f(x)$.
+In other words, we try to find a $a < d$ with
+\begin{equation}
+f(x) \approx \sum_{c \in \mathcal{P}(D), |c| \leq a} f_c(x)
+\end{equation}
+
+\begin{definition}[ANOVA grid points]
+Let $X$ be a set of grid points and $1 \leq a \leq d$ the ANOVA order.
+Then
+\begin{equation}
+X^{\text{ANOVA}(a)}=\{x_{\underline{l},\underline{i}} \in X \mid |\{1 \leq t \leq d \mid l_t=0 \land i_t = 0\}| \leq a\}
+\end{equation}
+is the set of grid points that support a basis function with at most $a$ non-constant dimensions.
+\end{definition}
+
+Such an approximation is useful for certain problems with a low effective dimensionality as presented in \cite{H08}.
+This method also has its limitations however, specifically the need to first construct a $d$-dimensional sparse grid to accurately compute the variances $\sigma^2(f_c)$, the need for boundaries and the analysis of $2^d$ terms.
+
+
+\subsection{Combining both methods}
+
+\chapter{Adaptive sparse grids}
+
+
+\section{Spatially adaptive sparse grids}
+
+By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
+This creation of new grid points of a parent is called refinement of a grid point.
+To choose the best grid points to refine, a refinement criterion $\xi(x_{\underline{l},\underline{i}})$ is introduced.
+This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
+\begin{definition}
+Let $x_{\underline{l},\underline{i}} \in X$ be a grid point.
+We then define
+\begin{equation}
+c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k - 1}, \dots, x_{l_d,i_d}), ~~ 
+\end{equation}
+as its left child if $i_k > 0$ and
+\begin{equation}
+c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k + 1}, \dots, x_{l_d,i_d}), ~~ 
+\end{equation}
+as its right child if $i_k < 2^{l_k}$.
+Then
+\begin{equation}
+c_{k}(x_{\underline{l},\underline{i}})=
+\begin{cases}
+\{c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})\}&, i_k=0\\
+\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})\}&,i_k= 2^{l_k}\\
+\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}}),c_{k}^{\text{right}}(x_{\underline{l},\underline{i}}) \}&, \text{else}
+\end{cases}
+\end{equation}
+is the set of possible children of a grid point in dimension $k$ and 
+\begin{equation}
+c(x_{\underline{l},\underline{i}})= \bigcup_{k=1}^d \{c_{k}(x_{\underline{l},\underline{i}})\}
+\end{equation}
+is the set of children of a grid point. It holds that $|c(x_{\underline{l},\underline{i}})| \leq 2d$ and $|c(x_{\underline{l},\underline{i}})| =2d$ if there is no boundary involved.
+\end{definition}
+\begin{definition}
+We define a grid point $x_{\underline{l},\underline{i}} \in X$ as a leaf if
+\begin{equation}
+c(x_{\underline{l},\underline{i}}) \cap X = \emptyset
+\end{equation}
+\end{definition}
+\begin{definition}[Refinement criterion]
+Let $X$ be a set of grid points.
+Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assins each grid point a value that determines the suitability of a refinement of that grid point.
+
+Let $\hat{f}(x) = \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x), ~\hat{f} \in V^X$.
+The commonly used surplus criterion is defined as
+\begin{equation}
+\xi_s(x_{\underline{l},\underline{i}}) = |\alpha_{\underline{l},\underline{i}}|
+\end{equation}
+Since in this thesis we also assume that the input is distributed according to the probability density $\rho$, we also introduce the distribution surplus criterion with
+\begin{equation}
+\xi_{ds}(x_{\underline{l},\underline{i}}) =\rho(x_{\underline{l},\underline{i}}) |\alpha_{\underline{l},\underline{i}}|
+\end{equation}
+\end{definition}
+We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
+A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X_{\underline{l}}$.
+Then during the $m$-th iteration, we first order all leaf grid points $x_i$ with $x_1, \dots, x_p \in X_a^{(k-1)}, ~~ \xi(x_1) \geq \dots \geq \xi(x_p)$ and then refine with $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_r)$.
+Usually, if a leaf grid point is refined, all children are created because selective grid point creation would create additional overhead.
+After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
+The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
+
+\section{Dimensionally adaptive sparse grids}
+
+Dimensionally adaptive sparse grids are closely related to spatially adaptive sparse grids.
+In fact, they can be defined as a special case of spatial adaptivity in which all grid points of a subspace $W_{\underline{l}}$ are refined in a specific dimension $k$ during each step.
+The set of grid points of a dimensionally adaptive sparse grid after $m$ steps is denoted as $X_{\text{da}}^{(m)}$.
+Furthermore we define the refinement criterion for a subspace $W_{\underline{l}}$ as $\xi(W_{\underline{l}})$.
+As before we refine the subspace $W_{\underline{l}}$ with the highest value for $\xi(\underline{l})$.
+\begin{definition}
+Let $W_{\underline{l}} \in W$ be a subspace. Then
+\begin{equation}
+c_k(W_{\underline{l}})=\{x_{\underline{l}',\underline{i}} \mid \underline{i} \in H_{\underline{l}'} \}, ~ \underline{l}'=(l_1, \dots, l_k + 1, \dots, l_d)
+\end{equation}
+are the child grid points of that subspace in dimension $k$.
+\end{definition}
+By adding all grid points of $c_k(W_{\underline{l}})$, we effectively add a new subspace $W_{(l_1, \dots, l_k + 1, \dots, l_d)}$ as well.
+Which subspaces can be refined during each step is a little bit more complex than in the spatially adaptive case and since in this paper we will only use spatially adaptive sparse grids, it will be omitted.
+
+\section{Coarse boundaries}
+
+A compromise between having no boundary and having a full boundary are coarse boundaries.
+These are trailing boundaries
+
+\section{Grid point count comparision}
+
+graph
+
+\chapter{Transformations}
+
+The previous chapter shows that a lot of work has gone into exploring optimizations for high-dimensional Sparse Grids.
+However, all of these methods share the natural limitations of axis aligned sparse grids, since all of them are effectively ways of removing certain grid points from a full sparse grid.
+The primary focus was optimizing the basis functions and structure of $\hat{f}$ when looking at the generalized approximation problem $f(x) \approx \hat{f}(x)$.
+Less focus lied on inspecting and altering the inputs $x \in \Omega$ itself.
+Of course, some of the grid point optimizations presented here will be used in the showcased method as well.
+
+
+For example, the function $f(x_1,x_2)=x_1 + x_2$ can be interpolated perfectly using a linear boundary grid with level 0 and using the ANOVA method, it can also be represented as a sum of two one-dimensional basis functions, since the effective dimensionality is 1.
+However, just by rotating the function by a few degrees with
+\begin{equation}
+f'(x_1,x_2)=x_1' + x_2', ~~ \begin{pmatrix}
+    x_1' \\ x_2'
+    \\
+  \end{pmatrix} = \begin{pmatrix}
+    \cos(0.1 \pi) & -\sin(0.1 \pi)\\
+    \sin(0.1 \pi) & \cos(0.1 \pi)
+    \\
+  \end{pmatrix}\begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix}
+\end{equation}
+the function can not be interpolated perfectly anymore and the ANOVA method fails, since the function is no longer aligned to the axes.
+This can be seen in figure \ref{fig:fcomp}.
+Even without the additional rotation, the ANOVA method and others do not detect that the function can be represented with a single one-dimensional term with
+\begin{equation}
+f(x_1,x_2)=g(\begin{pmatrix}
+    1 & 1
+    \\
+  \end{pmatrix} \begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix}), ~ g(x)=x
+\end{equation}
+, because this single term is not axis-aligned.
+
+\begin{figure}[H]
+Comparision of optimizations on f.
+\label{fig:fcomp}
+\caption{abc}
+\end{figure}
+
+The basic idea of this thesis is that instead of directly using the Sparse Grid to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V_l$, we insert another layer of flexibility by introducing an input transformation function $t$ and creatingthe surrogate $\hat{f}$ in tandem with $t$ such that $f(x) \approx \hat{f}(t(x))$.
+Of course, this idea can and will be expanded upon, from different kinds of transformation functions to using sums of separately transformed Sparse Grids.
+
+For the example shown in this section, the obvious choice would be to use the following transformation function:
+\begin{equation}
+t(x_1,x_2)=\begin{pmatrix}
+    \cos(0.1 \pi) & -\sin(0.1 \pi)\\
+    \sin(0.1 \pi) & \cos(0.1 \pi)
+    \\
+  \end{pmatrix}^{-1} \begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix} ~~ \text{ with } f'(x_1,x_2)=f(t(x_1,x_2)) 
+\end{equation}
+Since we already know that creating a surrogate $\hat{f}$ for the function $f$ using a boundary sparse grid is trivial, we can now interpolate $f'$ perfectly as well with $f'(x_1,x_2)=\hat{f}(t(x_1,x_2))$.
+The following chapters will elaborate on this principle.
+
+
+The surrogate $\hat{f}$ is then constructed by using spatial adaptivity in conjunction with regression on Sparse Grids.
+\begin{definition}
+For a transformation function $t$ we define the set of all transformed inputs as
+\begin{equation}
+T=\{t(\omega)\mid \omega\in\Omega\}, ~~ T \subseteq \Omega_t
+\end{equation}
+and as we will see later, a useful metric for determining the usability of a linear transformation $t$ for surrogate construction is the relative share of the set of unused inputs for the surrogate $U=\Omega_r \setminus T$.
+This ratio is defined as
+\begin{equation}
+u_t = |U| / |\Omega|
+\end{equation}
+\end{definition}
+
+In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
+
+\section{Periodic transformations}
+
+Another use case for transformations are periodic functions.
+If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i\text{ mod } h, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } h) /h, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
+This way, the function can be interpolated better because there are effectively $1 / h$ times more grid points spent along the $i$-th dimension.
+Of course this can concept can be expanded upon with multiple periodic dimensions, antiperiodic functions, offsets and combination with linear transformations.
+
+\todo{Example with $f(x)=sin(2\pi x_1) x_2^2$}
+
+\section{Basis transformations}
+
+We can formalize this by defining a change of basis transformation $b \colon \Omega \to \mathds{R}^d$ that transforms the inputs $x \in \Omega$ using a basis $A$, i.e. $t(x)=A^Tx, ~ A \in \mathds{R}^{d \times d}, ~ rank(A)=d$.
+Since we are primarily focusing on the alignment, we choose $A$ to be an orthonormal basis.
+
+One problem is that it usually does not hold that $b(\Omega) \nsubseteq \Omega$.
+We therefore have to apply a normalization $n \colon \mathds{R}^d \to \Omega$ on the result of $b(\Omega)$ such that $n(b(\Omega)) \nsubseteq \Omega$.
+\begin{equation}
+n(x)=Cx , ~~
+C=\text{diag}(1 / s_1, \dots, 1 / s_d), ~~, s_i = \|a_i\|_1
+\label{alignment}
+\end{equation}
+
+\begin{equation}
+s_i=\sum_{k=1}^d |\langle e_i, b(e_k) \rangle| = \sum_{k=1}^d |(b(e_k))_i| = \sum_{k=1}^d |(A^T)_{i,k}| = \sum_{k=1}^d A_{k,i}= \|a_i\|_1
+\end{equation}
+
+Even though these transformed inputs are only meant to be intermediary in this thesis, i.e. they are only meant to be used for dimensionality reduction purposes later on, we can still explore how to fit sparse grids on the transformed inputs and compare the quality of these to sparse grids fitted on the original data.
+By employing spatial adaptivity with distribution surplus criterion \eqref{}, ...
+The only problem that arises when refining a grid point is that some child grid points may not be within the transformation space, i.e. in some cases it holds that $c(x_{\underline{l},\underline{i}}) \nsubset T$.
+Since function evaluations are not possible outside $\Omega$, one solution is to assign these grid points the same value as the function value at their parent grid point.
+In the regression case this special case value assignment is not necessary.
+
+\chapter{Finding a good basis for transformations}
+
+
+\section{Estimating gradients}
+
+If the gradient can not be calculated analytically and can not be approximated using finite differences, one solution would be to roughly approximate the gradient by looking at neighboring sample points.
+Such an approach is useful for problems such as regression, where we only have a given set of samples.
+These gradients can be approximated by solving the following sle:
+\begin{equation}
+\begin{bmatrix}
+    x_1 - x\\
+    \vdots \\
+    x_m - x
+  \end{bmatrix}  \nabla_x f =\begin{bmatrix}
+    f(x_1) - f(x) \\ \vdots \\  f(x_m) - f(x)
+    \\
+  \end{bmatrix}
+\end{equation}
+The dimension of this sle is ...
+
+One limitation of this calculation is of course the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function leads to biased gradients.
+Furthermore, 
+
+The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ and calculates the neighbours $x_1,\dots,x_m$ of a point $x$ by selected all points with a norm value smaller than ... .
+The random neighbour variant ...
+Overall, one might think that these several limitations of these methods lead to worse results.
+However, at the end only the average of the outer products of the gradients is needed for the Active Subspace construction.
+Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
+
+
+
+
+
+\chapter{Reducing linear transformations}
+
+\begin{equation}
+\begin{split}
+&\sigma^2_{\rho_t,i}(\frac{\text{d}}{\text{d}x_i} \hat{f})\\
+=&\int_{x \in \Omega} ((\nabla \hat{f}(t(x)))^T e_i) \rho_t(x) \text{ d}x\\
+=&\int_{x \in \Omega} ((\nabla f(x)^T v_i) \rho(x) \text{ d}x\\
+=&\lambda_i / s_i
+\end{split}
+\end{equation}
+
+
+Now that the inputs are transformed into a more axis-aligned representation, the next step would be to exploit this fact with the goal of reducing the dimensionality of the sparse grid based function representation.
+The higher the dimensionality $d$, the more necessary is the usage of dimensionality reduction, because often the ...
+
+\begin{equation}
+S_{\rho}^{(i)}=\frac{\sum_{k=1}^n f(y_k) (f(x_k^{(i)}) - f(x_k))}{n \sigma_{\rho}(f)}
+\end{equation}
+\begin{equation}
+T_{\rho}^{(i)}=\frac{\sum_{k=1}^n (f(x_k) - f(x_k^{(i)}))^2}{2n \sigma_{\rho}(f)}
+\end{equation}
+
+
+There is also no need to have matching input space dimensions and surrogate dimensions, i.e. it is possible to decouple the dimensionality of the model function and the surrogate to reduce the effects of the curse of dimensionality.
+We can formalize this by defining the input space $\Omega \subseteq [0,1]^d$, a surrogate space $\Omega_r=[0,1]^r$ and a transformation $t \colon \Omega \to \Omega_r$ that transforms the inputs $x \in \Omega$ into the $r-$dimensional unit hypercube $\Omega_r$ with $r < d$.
+
+\begin{equation}
+u_t = 1 - \prod_{i=1}^d s_i
+\end{equation}
+Since for every dimension removed the scaling factor $s_i$ is also removed, the unused space ratio is reduced if $s_i < 1$.
+Therefore $u_t$ convergers to $0$ when removing more and more dimensions and the surrogate uses the input space more efficiently.
+
+\section{Why sparse grids?}
+
+All approaches, basic transformations and dimensionality reducing transformations, can be implemented without using sparse grids at all in theory.
+There exist many other regression methods ...
+
+
+
+\subsection{Regression-based projection reduction}
+
+\begin{equation}
+A_r=\begin{bmatrix}
+  \\
+    a_1 ~ a_2 ~ \dots ~ a_{r-1} ~ a_r\\
+    \\
+  \end{bmatrix}
+\label{basis}
+\end{equation}
+
+
+\subsection{Adapted Regression-based reduction}
+
+\section{Operations on transformation surrogates}
+
+
+\textbf{Differentiation }
+Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, 
+\begin{equation}
+\nabla f(x) \approx \nabla \hat{f}(t(x)) = \nabla (\hat{f} \circ t)(x)=(Dt(x))^T \nabla \hat{f}(t(x))
+\end{equation}
+on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
+\\
+\\
+\textbf{Inverting the transformation  }
+For certain operations it is necessary to invert the transformation.
+For this we define the inverse transformation as follows:
+\begin{equation}
+t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
+\end{equation}
+In the case of a linear dimensionality preserving transformation, it holds that $|t^{\text{inv}}(x_{t})| \in \{0,1\}$.
+Otherwise, we can't infer anything about the cardinality of the inverse, i.e. $|t^{\text{inv}}(x_{t})| \geq 0$.
+Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conducting operations on the surrogate, it suffices to determine wether a point $x_t \in \Omega_t$ is unused, i.e. $|t^{\text{inv}}(x_{t})| = 0$, which can be done quickly.
+\\
+\\
+\textbf{Transformed distribution}
+The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also has to be transformed to work on the transformation surrogate.
+We therefore define the transformed distribution as
+\begin{equation}
+\rho_r \colon \Omega_r \to \mathds{R_+}, ~~ \rho_r(x_r)=\int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x 
+\end{equation}
+This is also a distribution since it holds that
+\begin{equation}
+\int_{\Omega_r} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
+\end{equation}
+The function $\rho_r$ can be approximated by a surrogate $\hat{\rho_t}$ using the same regression based approach used to construct $\hat{f}$.
+\\
+\\
+\textbf{Density Quadrature}
+Given an input distribution $\rho$ and transformation $t$, we can construct $\rho_t$ and compute the integral
+\begin{equation}
+\int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}(t(x)) \rho(x) \; \text{d}x
+=
+\int_{\Omega_r} \hat{f}(x_t) \left(\int_{t^{\text{inv}}(x_t)} \rho(x)  \; \text{d}x \right)  \; \text{d}x_t=
+\int_{\Omega_r} \hat{f}(x_t) \rho_t(x_t) \; \text{d}x_t
+\end{equation}
+on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
+\\
+\\
+\textbf{Quadrature}
+Given a transformation $t$, we can easily compute $\int_{\Omega} f(x) \; \text{d}x$ using the surrogate, since it is a special case of density quadrature with $\rho=\mathcal{U}(0,1)^d$.
+Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_t$ is usually not.
+\\
+\\
+\textbf{Optimization}
+To calculate the maximum $x^\text{max} \coloneqq \argmax_{x \in \Omega} f(x)$ or minimum $x^\text{min} \coloneqq \argmin_{x \in \Omega} f(x)$ of the model function, one can also optimize the surrogate. There exist many different algorithms, especially for B-Spline basis functions presented in \cite{}.
+After having applied a transformation, there might unused points $x_r \in \Omega_r$ in the surrogate space, i.e. $\nexists x \in \Omega \colon t(x)=x_r$.
+Therefore a constrained optimization has to be performed on the surrogate first with
+\begin{equation}
+x_{r}^\text{max} \coloneqq \argmax_{x_r \in \Omega_r} \hat{f}(x_r), ~ |t^{\text{inv}}(x_{r})|\geq 1
+\end{equation}
+Afterwards, at least in the dimensionality preserving transformation, we can obtain the maximum $x^\text{max}$ with $x^\text{max}=t^{\text{inv}}(x_{r}^\text{max})$, since $|t^{\text{inv}}(x_{r}^\text{max})|=1$.
+One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
+Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
+
+
+\chapter{Linear transformations}
+
+\subsection{Unit hypercubes}
+\todo{Insgesamt noch etwas unübersichtlich. Konsistenter die Bezeichner $\Omega_r$, $S$,$Z,\dots$ verwenden und nicht nur  ``the unit hypercube''}
+
+Furthermore, we also only use a unit hypercube as an input space $\Omega$, since this a commonly used input space and can be compared to normal sparse grids.
+To construct a transformation function $t$ for $\Omega=[0,1]^d$ and $\Omega_r=[0,1]^r$, we first define the center  as $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$.
+Therefore, the inputs are first projected using $p(x)=W_r^T (x-c_d)$ and the result of this projection for all inputs $p(\Omega)$ is an $r$-dimensional zonotope centered at the origion with $d$ generators.
+This zonotope corresponds to a $d$-dimensional minkowski sum with
+\begin{equation}
+Z=\{\sum_{i=1}^d p_i x_i , ~ -\frac{1}{2} \leq x_i \leq \frac{1}{2}\}, ~~ Z=p(\Omega)
+\end{equation}
+The generators\todo{Der Begriff generator wird oft genutzt aber nirgends definiert} of this zonotope can be obtained by projecting the unit vectors $e_i$ that span the hypercube $\Omega=\{c_d + \sum_{i=1}^d e_i x_i , ~ -\frac{1}{2} \leq x_i \leq \frac{1}{2}\}$ to get
+\begin{equation}
+p_i=W_r e_i, ~~ |p_1|\geq \dots \geq |p_d|
+\end{equation}
+However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z$ is first encased in an $r$-dimensional hypercube called the surrogate space which is then scaled and aligned to obtain the unit hypercube\todo{welchen?}.
+To make the generation of the surrogate space easier, the generators $p_i$ are ordered by their magnitude.
+\todo{inwiefern wird es dadurch easier?}
+
+The generators $q_1, \dots, q_r$ of the encasing hypercube are calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ with
+\begin{equation}
+q_i=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
+\nonumber
+\end{equation}
+\todo{Die Bezeichner $S$ und $Z$ müssen schon weiter oben kommen}The surrogate space $S$ which encases the zonotope $Z$, i.e. $Z \subseteq S$, is then an $r$-dimensional hypercube with
+\begin{equation}
+S=\{c_r + \sum_{i=1}^r q_i x_i , ~ -s_i \leq x_i \leq s_i\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
+\label{surrogate_space}
+\end{equation}
+where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent of the zonotope $Z$ as shown in \ref{fig:space}.
+The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore \todo{?} elements $z \in Z$ 
+\begin{equation}
+a(z)=c_r + \Gamma^{-1} Q^T z, ~~
+Q=\begin{bmatrix}
+  \\
+    q_1 ~ q_2 ~ \dots ~q_{r-1} ~ q_r\\
+    \\
+  \end{bmatrix}
+  , ~~
+\Gamma=\text{diag}(s_1, \dots, s_r), ~~
+\label{alignment}
+\end{equation}
+
+
+The surrogate space $S$ can then be transformed into a unit hypercube $\Omega_R$\todo{$\Omega_r?$} with \eqref{alignment}, i.e. $a(S)=\Omega_R$, and therefore the transformation function can be defined as follows:
+\begin{equation}
+t_{\text{Cube}}(x)=a(p(x))
+\end{equation}
+
+
+\subsection{Surrogate construction}
+
+There are different ways of constructing the surrogate $\hat{f}$.
+The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
+The dataset used for the regression is then defined as
+\todo{Bezeichner $S$ ist schon der surrogate space}
+\begin{equation}
+S=\{(x_i,y_i) = (t(z_i),f(z_i)), ~ z_i \in Z\}
+\end{equation}
+
+We are aiming to construct the function $\hat{f}$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
+\end{equation}
+Thus, we are trying to solve the least squares problem with the standard square loss function for the dataset $S$ with
+\begin{equation}
+\epsilon_{S}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (y_i - \hat{f}(x_i))^2 
+\end{equation}
+
+Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(x,y), (x',y') \in S, ~ x=x', y\neq y'$.
+Since the surrogate construction is usually an ill-posed problem and we are calculating a regressed function only based on the samples $S$, the regression method used employs regularization as well to prevent overfitting.
+We are therefore solving the regularized least squares problem with the smoothing factor $\lambda > 0$:
+\begin{equation}
+\hat{f} = \argmin_{\hat{f} \in V} \epsilon_{S}(\hat{f}) + \lambda R(\hat{f})
+\end{equation}
+
+\chapter{Implementation}
+
+The whole reduction process is modeled and implemented as a pipeline made up of different sections to allow for maximum flexibility.
+Many sections can be
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
+\end{center}
+	\captionof{figure}{Die eindimensionale hierarchische Prewavelet-Basis eines Dünnen ANOVA-Gitters für die Level -1 bis 3}
+	\label{fig:ansatz_prewavelet}
+\end{figure}
+
+The core component of the reduction pipeline and also the most important one wrt. achieving good reduction results in the transformation function generator.
+
+\section{Active Subpsace transformation generator}
+
+The already described 
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_AS.pdf}
+\end{center}
+\end{figure}
+
+\subsection {Gradient sample generator}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/GradientGen.pdf}
+\end{center}
+\end{figure}
+
+So for a gradient sample generator, four variants can be chosen depending on given inputs and requirements:
+\begin{enumerate}
+\item Nearest neighbour approximation of $n$ samples with $m$ neighbours each
+\item Random neighbour approximation of $n$ samples with $m$ neighbours each
+\item Finite differences gradient approximation of $n$ samples
+\item Given gradient function evaluation at $n$ samples
+\end{enumerate}
+
+\section {Random transformation generator}
+
+A completely different approach to finding a transformation function is just generating a random one.
+A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
+It allows us to ...
+It can also serve as a reference for comparision as one would expect that the Active Subspace method would always output better transformation.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_Random.pdf}
+\end{center}
+\end{figure}
+
+So for a random transformation generator, two variants can be chosen:
+\begin{enumerate}
+\item Random basis, best transformation using evaluator $e$.
+\item Random basis, random reduced dimensions
+\end{enumerate}
+
+\section {Iterative transformation generator}
+
+Since the probability of finding a good transformation randomly in one try is very low, it makes sense to also introduce an iterative transformation generator, which can be combined with any other transformation generator.
+It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
+\end{center}
+\end{figure}
+
+\section {Transformation evaluator}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
+\end{center}
+\end{figure}
+
+\chapter{Implementation and evaluation}
+
+The goal is to answer the following questions:
+
+\begin{enumerate}
+\item What is a good amount of samples? How do different sampling techniques influence the results?
+
+\item How good is the quality of the computed $A_k$ for a certain amount of samples? We compare the errors that occur when using the optimal $A_k$ and the computed $A_k$.
+
+\item How much does a certain deviation of the $A_k$ effect the interpolation error?
+
+\item How much do more iterations influence the resultung errors?
+
+\item Is there a local or global convergence for the iterative algorithm? What happens to the convergence error value if we introduce a wrong $A_k$ during a step?
+
+\item How well does the method handle unused dimensions and noise? We inspect the errors for a different amount of unused inputs and varying noise intensity.
+
+\item How high can the input dimension be? In theory, the input dimension can rise arbitrarily high as long as the effective dimensionality does not change. However, at some point the amount of samples used to construct the Active Subspace must be too low for accurate results.
+
+\item What is the best way of determining the amount of reduced dimensions $r$ during each step that leads to the best result? How well suited are the eigenvalues of the Active Subspace for this task?
+\end{enumerate}
+
+Every question will be answered by looking at one or more example functions or datasets.
+
+
+\section{ANOVA}
+
+\begin{equation}
+\begin{split}
+&\sigma^2_{\rho_t,i}(\frac{\text{d}}{\text{d}x_i} \hat{f})\\
+=&\int_{x \in \Omega} ((\nabla \hat{f}(t(x)))^T e_i) \rho_t(x) \text{ d}x\\
+=&\int_{x \in \Omega} ((\nabla f(x)^T v_i) \rho(x) \text{ d}x\\
+=&\lambda_i / s_i
+\end{split}
+\end{equation}
+
+\section{Active Subspace quality}
+
+
+\subsection{Importance of sample count}
+
+
+\subsection{Approximated gradient quality}
+
+
+\section{Noise and unused dimensions}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{ l | c | c | c | c | c | c | c |}
+d $\setminus$ $\sigma$ & 1 & 2 & 3 & 4 & 5 & 6 & sum\\
+\hline
+$\epsilon_S(b_{4,i} - \hat{b}_{4,i})$ & 1 & 0.925& 1 & 0.999 & 1 & 0.999 & 0\\
+$\epsilon_S(b_{5,i} - \hat{b}_{5,i})$ & 1 & 0.917 &1 & - & - & - & 0\\
+\end{tabular}
+\caption{abc}
+\end{figure}
+
+This behaviour is very convenient compared to other methods.
+Spatially adaptive sparse grids can replicate this behaviour, however
+This can even be extended to a non axis-aligned concept, i.e. unused directions.
+Overall, the Active Subspace based algorithm is both more flexible and faster than other sparse grid based alternatives in filtering out inactive dimensions/directions.
+
+\chapter{Conclusion and Outlook}
+\label{chap:zusfas}
+
+\section*{Outlook}
+
+\printbibliography
+
+All links were last followed on March 17, 2018.
+
+\appendix
+
+\pagestyle{empty}
+\renewcommand*{\chapterpagestyle}{empty}
+\Versicherung
+\end{document}
