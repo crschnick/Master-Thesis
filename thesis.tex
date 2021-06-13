@@ -981,14 +981,15 @@ The only problem that arises when refining a grid point is that some child grid 
 Since function evaluations are not possible outside $\Omega$, one solution is to assign these grid points the same value as the function value at their parent grid point.
 In the regression case this special case value assignment is not necessary.
 
-\chapter{Finding a good basis for transformations}
+\chapter{Active Subspaces}
 
 
 \section{Estimating gradients}
 
-If the gradient can not be calculated analytically and can not be approximated using finite differences, one solution would be to roughly approximate the gradient by looking at neighboring sample points.
-Such an approach is useful for problems such as regression, where we only have a given set of samples.
-These gradients can be approximated by solving the following sle:
+If the gradient can not be calculated analytically and can not be approximated using finite differences because function evaluations are very costly, one solution would be to roughly approximate the gradient by looking at neighboring sample points.
+Note that while these approximated gradients are of course not as accurate, the resulting Active Subspace results are still useful as shown later in this section.
+
+Let $m \in \mathds{N}$, $x \in \Omega$ and $x_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$. Then
 \begin{equation}
 \begin{bmatrix}
     x_1 - x\\
@@ -999,10 +1000,26 @@ These gradients can be approximated by solving the following sle:
     \\
   \end{bmatrix}
 \end{equation}
+where the $x_i \in \Omega, x_i \neq x, i \in \{1, \dots, m\}$ are other sample points.
 The dimension of this sle is ...
 
-One limitation of this calculation is of course the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function leads to biased gradients.
-Furthermore, 
+One limitation of this calculation is the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function leads to biased gradients.
+Furthermore, the choice of the $x_i$ heavily influences the result as well as the size of $m$, since the solving complexity is $\mathcal{O}(n\log{}n)$ 
+
+
+\subsection{Random neighbour approximation}
+
+The random neighbour approximation method takes as an input a sample $S \subseteq \Omega$ with $|S|=n$.
+For every element $x \in S$, it then randomly chooses $m < n$ elements out of $S \setminus \{x\}$, which are called a random neighbour set $\{x_1, \dots, x_m\}$ of $x$.
+This random neighbour set is then used as an input for \ref{} to approximate the gradient $\nabla_x f$.
+
+Overall, one might think that this method will lead to considerably worse results.
+However, at the end only the average of the outer products of the gradients is needed for the Active Subspace construction.
+Therefore, general trends of the gradients should still be reflected with this method.
+
+For $n \to \infty$, the approximated gradient does not converge to the actual gradients.
+
+\subsection{Nearest neighbour approximation}
 
 The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ and calculates the neighbours $x_1,\dots,x_m$ of a point $x$ by selected all points with a norm value smaller than ... .
 The random neighbour variant ...
@@ -1011,6 +1028,17 @@ However, at the end only the average of the outer products of the gradients is n
 Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
 
 
+Compared to the random neighbour approximation, for $n \to \infty$, the approximated gradient does converge to the actual gradient.
+
+\subsection{Approximation quality}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
+\end{center}
+	\captionof{figure}{Mean $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
+	\label{fig:as_approx}
+\end{figure}
 
 
 
@@ -1132,21 +1160,61 @@ Therefore another non sparse grid based optimization can be performed on the set
 
 \chapter{Linear transformations}
 
-\subsection{Unit hypercubes}
-\todo{Insgesamt noch etwas unübersichtlich. Konsistenter die Bezeichner $\Omega_r$, $S$,$Z,\dots$ verwenden und nicht nur  ``the unit hypercube''}
+\section{Unit hypercubes}
 
-Furthermore, we also only use a unit hypercube as an input space $\Omega$, since this a commonly used input space and can be compared to normal sparse grids.
-To construct a transformation function $t$ for $\Omega=[0,1]^d$ and $\Omega_r=[0,1]^r$, we first define the center  as $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$.
-Therefore, the inputs are first projected using $p(x)=W_r^T (x-c_d)$ and the result of this projection for all inputs $p(\Omega)$ is an $r$-dimensional zonotope centered at the origion with $d$ generators.
-This zonotope corresponds to a $d$-dimensional minkowski sum with
+To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$, we first define the center  as $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$.
+
+\begin{definition}[Zonotopes]
+
+A $d$-dimensional zonotope $Z$ with $k \geq d$ generators $g_1, \dots g_k \in \mathds{R}^d$ corresponds to a $d$-dimensional minkowski sum with 
 \begin{equation}
-Z=\{\sum_{i=1}^d p_i x_i , ~ -\frac{1}{2} \leq x_i \leq \frac{1}{2}\}, ~~ Z=p(\Omega)
+Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
+  \label{zonotope}
 \end{equation}
-The generators\todo{Der Begriff generator wird oft genutzt aber nirgends definiert} of this zonotope can be obtained by projecting the unit vectors $e_i$ that span the hypercube $\Omega=\{c_d + \sum_{i=1}^d e_i x_i , ~ -\frac{1}{2} \leq x_i \leq \frac{1}{2}\}$ to get
+
+\begin{figure}[H]
+\centering
+  \includegraphics[width=0.5\linewidth]{graphics/zonotope}
+  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $d=2$, $k=3$ and the three generators $p_1,p_2,p_3$.}
+  \label{fig:zonotope}
+\end{figure}
+
+\end{definition}
+
+When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it can be seen that it holds:
 \begin{equation}
-p_i=W_r e_i, ~~ |p_1|\geq \dots \geq |p_d|
+W_r^T x=W_r^T \sum_{i=1}^d x_i e_i =\sum_{i=1}^d x_i p_i , ~~ p_i=W_r^T e_i
 \end{equation}
-However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z$ is first encased in an $r$-dimensional hypercube called the surrogate space which is then scaled and aligned to obtain the unit hypercube\todo{welchen?}.
+Therefore, since $x_i \in [0,1]$
+\begin{equation}
+\{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}
+\end{equation}
+
+To get closer to the zonotope definition \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2:
+\begin{equation}
+\begin{split}
+&\{W_r^T (x - c_d) \mid x \in \Omega\}\\
+=&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) p_i' \mid x \in \Omega \right\}, ~~ p_i'=W_r^T e_i\\
+=&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}\\
+=&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} p_i'\\
+=&\left\{\sum_{i=1}^d x_i p_i' \mid -1 \leq x_i \leq 1 \right\}
+\end{split}
+\end{equation}
+
+Therefore we define
+\begin{equation}
+p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
+\end{equation}
+and
+\begin{equation}
+Z=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
+\end{equation}
+
+Then $Z=p(\Omega)$.
+
+\section{Surrogate space}
+
+However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is then scaled and aligned to obtain the unit hypercube $\Omega_r$.
 To make the generation of the surrogate space easier, the generators $p_i$ are ordered by their magnitude.
 \todo{inwiefern wird es dadurch easier?}
 
@@ -1155,13 +1223,41 @@ The generators $q_1, \dots, q_r$ of the encasing hypercube are calculated by app
 q_i=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
 \nonumber
 \end{equation}
-\todo{Die Bezeichner $S$ und $Z$ müssen schon weiter oben kommen}The surrogate space $S$ which encases the zonotope $Z$, i.e. $Z \subseteq S$, is then an $r$-dimensional hypercube with
+
+The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
 \begin{equation}
-S=\{c_r + \sum_{i=1}^r q_i x_i , ~ -s_i \leq x_i \leq s_i\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
+S=\{\sum_{i=1}^r q_i x_i s_i , ~ -1 \leq x_i \leq 1\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
 \label{surrogate_space}
 \end{equation}
-where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent of the zonotope $Z$ as shown in \ref{fig:space}.
-The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore \todo{?} elements $z \in Z$ 
+where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent of the zonotope $Z$ as shown in \ref{fig:surrogate_space}.
+
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.46\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{graphics/s}
+  \captionof{figure}{Construction of the surrogate space $S$ for the zonotope of figure \ref{fig:zonotope} according to \eqref{surrogate_space}.}
+  \label{fig:surrogate_space}
+\end{minipage}
+\hspace{1cm}
+\begin{minipage}{.446\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{graphics/s_unit}
+  \captionof{figure}{Transformation of $S$ from figure \ref{fig:space} into a unit hypercube according to \eqref{alignment}}
+  \label{fig:f2_combined_rel_errors_inter}
+\end{minipage}
+\end{figure}
+
+In theory, the generators $p_i$ that are used to calculate the $q_i$ don't have to be ordered.
+However, to improve the generation of the surrogate space, the generators $p_i$ are ordered by their magnitude w.l.og. $|p_1|\geq \dots \geq |p_d|$.
+This will improve the surrogate space $S$ in terms of unused space $S \setminus Z$.
+\todo{Proove?}
+
+
+The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore elements $z \in Z$ 
+
+
 \begin{equation}
 a(z)=c_r + \Gamma^{-1} Q^T z, ~~
 Q=\begin{bmatrix}
@@ -1175,13 +1271,13 @@ Q=\begin{bmatrix}
 \end{equation}
 
 
-The surrogate space $S$ can then be transformed into a unit hypercube $\Omega_R$\todo{$\Omega_r?$} with \eqref{alignment}, i.e. $a(S)=\Omega_R$, and therefore the transformation function can be defined as follows:
+The surrogate space $S$ can then be transformed into a unit hypercube $\Omega_R$ with \eqref{alignment}, i.e. $a(S)=\Omega_R$, and therefore the transformation function can be defined as follows:
 \begin{equation}
 t_{\text{Cube}}(x)=a(p(x))
 \end{equation}
 
 
-\subsection{Surrogate construction}
+\section{Surrogate construction}
 
 There are different ways of constructing the surrogate $\hat{f}$.
 The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
@@ -1224,7 +1320,7 @@ The core component of the reduction pipeline and also the most important one wrt
 
 \section{Active Subpsace transformation generator}
 
-The already described 
+The already described Monte-Carlo Active Subspace method
 
 \begin{figure}[H]
 \begin{center}
@@ -1232,13 +1328,35 @@ The already described
 \end{center}
 \end{figure}
 
+In the Active Subspace transformation creator step, the transformation evaluator is used to test many different possible transformations that can be created by using the eigenvectors and eigenvalues.
+
 \subsection {Gradient sample generator}
+
+The Monte-Carlo Active Subspace method requires gradient samples as inputs.
+If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward.
 
 \begin{figure}[H]
 \begin{center}
-	\includegraphics[width=\textwidth]{graphics/GradientGen.pdf}
+	\includegraphics[width=\textwidth]{graphics/GradientGen_KGF.pdf}
 \end{center}
 \end{figure}
+
+Alternatively, the gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
+For high $d$ and a large amount of samples $n$, $dn$ function evaluations may become too costly.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/GradientGen_FD.pdf}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/GradientGen_SA.pdf}
+\end{center}
+\end{figure}
+
+
 
 So for a gradient sample generator, four variants can be chosen depending on given inputs and requirements:
 \begin{enumerate}
@@ -1247,6 +1365,10 @@ So for a gradient sample generator, four variants can be chosen depending on giv
 \item Finite differences gradient approximation of $n$ samples
 \item Given gradient function evaluation at $n$ samples
 \end{enumerate}
+
+\subsection {Active Subspace transformation creator}
+
+Usually, the eigenvectors are sorted by the magnitude of the eigenvalues and then only 
 
 \section {Random transformation generator}
 
@@ -1280,11 +1402,21 @@ It can therefore also be used with the Active Subspace transformation generator 
 
 \section {Transformation evaluator}
 
+The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
+While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
+
 \begin{figure}[H]
 \begin{center}
 	\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
 \end{center}
 \end{figure}
+
+In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all required inputs like grid type, basis functions, level, adaptivity properties, and more.
+As runtime performance is important, especially when using evaluators with the iterative transformation generator, finding the right Sparse Grid level ...
+
+Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
+Additionally, penalty terms for various features can be introduced, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
+
 
 \chapter{Implementation and evaluation}
 
