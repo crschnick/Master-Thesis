@@ -1234,19 +1234,9 @@ where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent 
 
 \begin{figure}[H]
 \centering
-\begin{minipage}{.46\textwidth}
-  \centering
-  \includegraphics[width=1\linewidth]{graphics/s}
+  \includegraphics[width=0.4\linewidth]{graphics/s}
   \captionof{figure}{Construction of the surrogate space $S$ for the zonotope of figure \ref{fig:zonotope} according to \eqref{surrogate_space}.}
   \label{fig:surrogate_space}
-\end{minipage}
-\hspace{1cm}
-\begin{minipage}{.446\textwidth}
-  \centering
-  \includegraphics[width=1\linewidth]{graphics/s_unit}
-  \captionof{figure}{Transformation of $S$ from figure \ref{fig:space} into a unit hypercube according to \eqref{alignment}}
-  \label{fig:f2_combined_rel_errors_inter}
-\end{minipage}
 \end{figure}
 
 In theory, the generators $p_i$ that are used to calculate the $q_i$ don't have to be ordered.
@@ -1255,27 +1245,54 @@ This will improve the surrogate space $S$ in terms of unused space $S \setminus 
 \todo{Proove?}
 
 
-The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore elements $z \in Z$ 
+\section{Reduced unit hypercube}
 
+The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore elements $z \in Z$.
+First, by using a change of basis from the unit basis into the surrogate space basis given by the $q_i$.
 
+Let
 \begin{equation}
-a(z)=c_r + \Gamma^{-1} Q^T z, ~~
 Q=\begin{bmatrix}
   \\
     q_1 ~ q_2 ~ \dots ~q_{r-1} ~ q_r\\
     \\
   \end{bmatrix}
   , ~~
-\Gamma=\text{diag}(s_1, \dots, s_r), ~~
 \label{alignment}
 \end{equation}
+be the new basis matrix.
 
-
-The surrogate space $S$ can then be transformed into a unit hypercube $\Omega_R$ with \eqref{alignment}, i.e. $a(S)=\Omega_R$, and therefore the transformation function can be defined as follows:
+We can then obtain $u=Q^T z$, where $u_i \in [-s_i,s_i]$ since this is the range of the surrogate space defined in \ref{surrogate_space}.
+Once the projected inputs $z \in Z=p(\Omega)$ are represented by the new basis, it is trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$.
+First, the $u$ have to be scaled down with
 \begin{equation}
-t_{\text{Cube}}(x)=a(p(x))
+u_s=\Gamma u, ~~ \Gamma=\text{diag}(\frac{1}{2 s_1}, \dots, \frac{1}{2 s_r}), ~~
+\label{alignment}
+\end{equation}
+s.t. $(u_s)_i \in [\frac{1}{2},\frac{1}{2}]$.
+
+Then the $u_s$ just have to be translated again from the center away with
+\begin{equation}
+t_{\text{Cube}}(x)=c_r + u_s
 \end{equation}
 
+\begin{figure}[H]
+\centering
+  \includegraphics[width=0.4\linewidth]{graphics/s_unit}
+  \captionof{figure}{Transformation of $S$ from figure \ref{fig:space} into a unit hypercube according to \eqref{alignment}}
+  \label{fig:f2_combined_rel_errors_inter}
+\end{figure}
+
+
+\section{Reversing the transformation}
+
+While it is not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, later figures in this thesis use the described reversing to illustrate lower dimensional transformed sparse grids in the original and higher-dimensional space.
+It is therefore only shown in a more informal way.
+$y=t_{\text{Cube}}(x)$
+
+\begin{equation}
+x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
+\end{equation}
 
 \section{Surrogate construction}
 
@@ -1305,6 +1322,9 @@ We are therefore solving the regularized least squares problem with the smoothin
 
 \chapter{Implementation}
 
+
+\section{Pipeline}
+
 The whole reduction process is modeled and implemented as a pipeline made up of different sections to allow for maximum flexibility.
 Many sections can be
 
@@ -1318,19 +1338,101 @@ Many sections can be
 
 The core component of the reduction pipeline and also the most important one wrt. achieving good reduction results in the transformation function generator.
 
-\section{Active Subpsace transformation generator}
+
+\section {Transformation generator}
+
+The transformation generator component has the responsibility of finding a good transformation function to use for a reduction pipeline step.
+
+\subsection {Stream transformation generator}
+
+Since for every transformation generation method there are always many possible transformations to choose from, as will be shown later on, the transformation generation process is implemented using streams.
+A transformation stream generator will sequentially generate as much different transformations as it can.
+Every transformation is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
+\end{center}
+\end{figure}
+
+\subsection {Iterative transformation generator}
+
+Since the probability of finding a good transformation randomly in one try is very low, it makes sense to also introduce an iterative transformation generator, which can be combined with any other transformation generator.
+It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
+\end{center}
+\end{figure}
+
+
+
+\section{Transformation stream generator}
+
+\subsection{Active Subpsace transformation stream generator}
 
 The already described Monte-Carlo Active Subspace method
 
 \begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationGen_AS.pdf}
-\end{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
+\captionof{figure}{Component structure of an Active Subpsace transformation stream generator}
 \end{figure}
+
+\begin{figure}[H]
+\begin{mdframed}[backgroundcolor=blue!5] 
+
+\begin{description}
+\item[Sample count:] The amount of samples used to create a gradient sample and subsequentially the Active Subspaces.
+\item[Gradient sample generator:] The maximum amount of used eigen vectors.  The maximum amount of used eigen vectors.  The maximum amount of used eigen vectors.
+\item[Construction parameters:] {~ \begin{enumerate}[\indent{}]
+\item \textbf{Min dimensions} The minimum amount of used eigen vectors.
+\item \textbf{Max dimensions} The maximum amount of used eigen vectors.
+\item \textbf{Min eigen value share (+)} Scientific study of mental processes and behaviour.
+\end{enumerate}}
+\end{description}
+
+\end{mdframed}
+\captionof{figure}{Active Subpsace transformation stream generator configuration options}
+\end{figure}
+
 
 In the Active Subspace transformation creator step, the transformation evaluator is used to test many different possible transformations that can be created by using the eigenvectors and eigenvalues.
 
-\subsection {Gradient sample generator}
+\subsection {Random transformation stream generator}
+
+A completely different approach to finding a transformation function is just generating a random one.
+A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
+It allows us to ...
+It can also serve as a reference for comparision as one would expect that the Active Subspace method would always output better transformation.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
+\end{center}
+\end{figure}
+
+\begin{definition}[Random config]
+
+A $d$-dimensional zonotope $Z$ with $k \geq d$ generators $g_1, \dots g_k \in \mathds{R}^d$ corresponds to a $d$-dimensional minkowski sum with 
+\begin{enumerate}
+\item Min dimensions
+\item Max dimensions
+\end{enumerate}
+
+\end{definition}
+
+So for a random transformation generator, two variants can be chosen:
+\begin{enumerate}
+\item Random basis, best transformation using evaluator $e$.
+\item Random basis, random reduced dimensions
+\end{enumerate}
+
+\subsection {Active Subspace transformation creator}
+
+Usually, the eigenvectors are sorted by the magnitude of the eigenvalues and then only 
+
+\section {Gradient sample generator}
 
 The Monte-Carlo Active Subspace method requires gradient samples as inputs.
 If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward.
@@ -1366,39 +1468,8 @@ So for a gradient sample generator, four variants can be chosen depending on giv
 \item Given gradient function evaluation at $n$ samples
 \end{enumerate}
 
-\subsection {Active Subspace transformation creator}
 
-Usually, the eigenvectors are sorted by the magnitude of the eigenvalues and then only 
 
-\section {Random transformation generator}
-
-A completely different approach to finding a transformation function is just generating a random one.
-A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
-It allows us to ...
-It can also serve as a reference for comparision as one would expect that the Active Subspace method would always output better transformation.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationGen_Random.pdf}
-\end{center}
-\end{figure}
-
-So for a random transformation generator, two variants can be chosen:
-\begin{enumerate}
-\item Random basis, best transformation using evaluator $e$.
-\item Random basis, random reduced dimensions
-\end{enumerate}
-
-\section {Iterative transformation generator}
-
-Since the probability of finding a good transformation randomly in one try is very low, it makes sense to also introduce an iterative transformation generator, which can be combined with any other transformation generator.
-It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
-\end{center}
-\end{figure}
 
 \section {Transformation evaluator}
 
