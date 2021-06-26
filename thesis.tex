@@ -984,57 +984,132 @@ In the regression case this special case value assignment is not necessary.
 \chapter{Active Subspaces}
 
 
+The method of active subspaces \cite{CG15} aims to identify the most influential directions in the parameter space to construct a lower-dimensional subspace of $\Omega$ which covers most of a models output variance to conduct parameter studies with a reduced amount of dimensions.
+In constrast to conducting parameter studies, we will use the so-called active directions to construct the $W_r$.
+Let
+\begin{equation}
+C = \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
+\label{as_c}
+\end{equation}
+be the average outer product of the gradient, a $(d \times d)$ matrix.
+Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
+\begin{equation}
+C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
+  \begin{bmatrix}
+  \\
+    v_1 ~ v_2 ~ \dots ~ v_{d-1} ~ v_d\\
+    \\
+  \end{bmatrix}
+\nonumber
+\end{equation}
+and we furthermore assume that the eigenvectors are ordered, i.e. $\lambda_1 \geq ... \geq \lambda_d$.
+A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
+\begin{equation}
+\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
+\label{eigenvalues}
+\end{equation}
+Therefore, the column vectors of the matrix $V$ are ordered from most the active direction $v_1$ to least the active direction $v_d$.
+By keeping only a specific amount of the most active directions $r \leq d$ we obtain
+\begin{equation}
+W_r=\begin{bmatrix}
+  \\
+    v_1 ~ v_2 ~ \dots ~ v_{i-1} ~ v_r\\
+    \\
+  \end{bmatrix}
+\label{basis}
+\end{equation}
+
+
+
 \section{Estimating gradients}
 
-If the gradient can not be calculated analytically and can not be approximated using finite differences because function evaluations are very costly, one solution would be to roughly approximate the gradient by looking at neighboring sample points.
-Note that while these approximated gradients are of course not as accurate, the resulting Active Subspace results are still useful as shown later in this section.
+If the gradient function is not known and can not be calculated analytically, the gradients can be approximated.
+There are various different methods of achieving that, however each method has its advantages and disadvantages as will be showcased in this section.
 
-Let $m \in \mathds{N}$, $x \in \Omega$ and $x_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$. Then
+\begin{definition}[Active Subspace error]
+Let $A \in \mathds{R}^{m \times n}$. Then
+\begin{equation}
+\| A\|_2=\sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
+\nonumber
+\end{equation}
+is the Frobenius norm of the matrix $A$.
+Given an estimated Active Subspace eigenvector matrix $V$ and the reference eigenvector matrix $V^*$, the
+Active Subspace error is calculated with
+\begin{equation}
+e_{\text{AS}}(V)=\| V - V^* \|_2
+\nonumber
+\end{equation}
+\end{definition}
+
+In the context of Active Subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
+Instead, the primary focus is the Active Subspace approximation error, which is decoupled from the individual gradients, since it is based on the average outer product of the gradients.
+While the individual gradients approximated by different methods can be far off, the gradient average can still come close to the real one if the general trend of the gradients is still be reflected with the method.
+Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
+
+
+\subsection{Finite differences}
+
+The most common approach to estimate the gradients are finite differences.
+In this thesis, an adaptive mix of forward and backward differences are used with a fixed distance $h$ where the range of possible distance is defined by $0 < h \leq 0.5$ such that
+\begin{equation}
+\frac{\partial f(x)}{\partial x_i} \approx
+\begin{cases}
+    \dfrac{f(x_1, \dots, x_i + h, \dots, x_d) - f(x)}{h}, & x_i + h \leq 1 \\[1.5em]
+    \dfrac{f(x_1, \dots, x_i - h, \dots, x_d) - f(x)}{h}, & \text{else}
+\end{cases}
+\end{equation}
+
+The downside in the context of the sample-based approach is the requirement to additionally evaluate the model function at $d$ other inputs to determine the gradient at one sample point.
+For high $d$ and a large amount of samples $n$, $dn$ function evaluations for finite differences may become too costly.
+Alternatively, the gradients can be determined using a different approach that only works on a given input sample and does not require other function evaluations.
+
+\subsection{Directional derivatives}
+
+Another approach is to roughly approximate the gradient by looking at neighboring points in the same sample and using directional derivatives to create a system of linear equations for the gradient at a certain input.
+Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $d=y-x$ and the direction of the distance as the normalized distance with $r=\frac{d}{|d|}$.
+By extrapolating the gradient along the direction, we can define an approximation rule with
+\begin{equation}
+\begin{split}
+d (\nabla_x f) \approx f(y) - f(x)\\
+(\nabla_x f) r=\frac{f(y) - f(x)}{|d|}
+\end{split}
+\end{equation}
+
+Using $m \in \mathds{N}$ neighbours of a sample point $x \in \Omega$ with $y_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$, we can create a system of linear equations with
 \begin{equation}
 \begin{bmatrix}
-    x_1 - x\\
+    y_1 - x\\
     \vdots \\
-    x_m - x
+    y_m - x
   \end{bmatrix}  \nabla_x f =\begin{bmatrix}
-    f(x_1) - f(x) \\ \vdots \\  f(x_m) - f(x)
+    f(y_1) - f(x) \\ \vdots \\  f(y_m) - f(x)
     \\
   \end{bmatrix}
 \end{equation}
-where the $x_i \in \Omega, x_i \neq x, i \in \{1, \dots, m\}$ are other sample points.
-The dimension of this sle is ...
 
-One limitation of this calculation is the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function leads to biased gradients.
-Furthermore, the choice of the $x_i$ heavily influences the result as well as the size of $m$, since the solving complexity is $\mathcal{O}(n\log{}n)$ 
-
+One limitation of this calculation is the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function can lead to biased gradients.
+Furthermore, the choice of the $y_i$ heavily influences the result as well as the size of $m$.
+The next sections introduce different ways of selecting the neighbours $y_i$ and also evaluate the results.
 
 \subsection{Random neighbour approximation}
 
 The random neighbour approximation method takes as an input a sample $S \subseteq \Omega$ with $|S|=n$.
-For every element $x \in S$, it then randomly chooses $m < n$ elements out of $S \setminus \{x\}$, which are called a random neighbour set $\{x_1, \dots, x_m\}$ of $x$.
+For every element $x \in S$, it then randomly chooses $m < n$ elements out of $S \setminus \{x\}$, which are called a random neighbour set $\{y_1, \dots, y_m\}$ of $x$.
 This random neighbour set is then used as an input for \ref{} to approximate the gradient $\nabla_x f$.
 
-Overall, one might think that this method will lead to considerably worse results.
-However, at the end only the average of the outer products of the gradients is needed for the Active Subspace construction.
-Therefore, general trends of the gradients should still be reflected with this method.
-
-For $n \to \infty$, the approximated gradient does not converge to the actual gradients.
+For $n,m \to \infty$, the approximated gradient does not converge to the actual gradients.
 
 \subsection{Nearest neighbour approximation}
 
-The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ and calculates the neighbours $x_1,\dots,x_m$ of a point $x$ by selected all points with a norm value smaller than ... .
-The random neighbour variant ...
-Overall, one might think that these several limitations of these methods lead to worse results.
-However, at the end only the average of the outer products of the gradients is needed for the Active Subspace construction.
-Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
+The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ and calculates the $m \leq n'$ nearest neighbours $y_1,\dots,y_m \in S'$ of a point $x$.
 
+Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient.
 
-Compared to the random neighbour approximation, for $n \to \infty$, the approximated gradient does converge to the actual gradient.
-
-\subsection{Approximation quality}
+\section{Approximation quality}
 
 \begin{figure}[H]
 \begin{center}
-	\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
+	\includegraphics[width=\textwidth]{graphics/as_mc_errors}
 \end{center}
 	\captionof{figure}{Mean $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
 	\label{fig:as_approx}
@@ -1294,7 +1369,7 @@ $y=t_{\text{Cube}}(x)$
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 \end{equation}
 
-\section{Surrogate construction}
+\chapter{Surrogate construction}
 
 There are different ways of constructing the surrogate $\hat{f}$.
 The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
@@ -1329,108 +1404,160 @@ The whole reduction process is modeled and implemented as a pipeline made up of 
 Many sections can be
 
 \begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
-\end{center}
-	\captionof{figure}{Die eindimensionale hierarchische Prewavelet-Basis eines Dünnen ANOVA-Gitters für die Level -1 bis 3}
-	\label{fig:ansatz_prewavelet}
+
+\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
+\vspace{-1.5mm}
+
+\begin{mdframed}[linewidth=0.7px]
+
+\begin{description}
+\item[Components] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{transformationGenerator}}: A transformation generator instance (\ref{sec:tg}) that is called for each iteration.
+\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
+\end{enumerate}}
+
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{numIterations}}: Iterative transformation generator configuration options
+\item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample and that is subsequentially passed down to create the Active Subspaces.
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigen vectors, i.e. the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigen vectors, i.e. the upper bound for $r$.
+\item \texttt{\textbf{minEigenValueShare (= 0)}}: Defines a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
+\end{enumerate}}
+\end{description}
+
+\end{mdframed}
+\captionof{figure}{Component structure of an Active Subspace transformation stream generator and the associated possible configuration options.}
+\label{fig:astsg}
 \end{figure}
 
 The core component of the reduction pipeline and also the most important one wrt. achieving good reduction results in the transformation function generator.
 
-
-\section {Transformation generator}
-
-The transformation generator component has the responsibility of finding a good transformation function to use for a reduction pipeline step.
-
-\subsection {Stream transformation generator}
-
-Since for every transformation generation method there are always many possible transformations to choose from, as will be shown later on, the transformation generation process is implemented using streams.
-A transformation stream generator will sequentially generate as much different transformations as it can.
-Every transformation is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
-\end{center}
-\end{figure}
-
-\subsection {Iterative transformation generator}
-
-Since the probability of finding a good transformation randomly in one try is very low, it makes sense to also introduce an iterative transformation generator, which can be combined with any other transformation generator.
-It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
-\end{center}
-\end{figure}
-
-
+\newpage
 
 \section{Transformation stream generator}
 
 \subsection{Active Subpsace transformation stream generator}
 
-The already described Monte-Carlo Active Subspace method
+The already described Monte-Carlo Active Subspace method presented in \ref{sec:as} is implemented as a transformation stream generator component as seen in figure \ref{fig:astsg} , since there are multiple different cutoff possibilities.
+The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \ref{fig:astsg}.
 
 \begin{figure}[H]
-	\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
-\captionof{figure}{Component structure of an Active Subpsace transformation stream generator}
-\end{figure}
 
-\begin{figure}[H]
-\begin{mdframed}[backgroundcolor=blue!5] 
+\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
+
+\vspace{-1.5mm}
+
+\begin{mdframed}[linewidth=0.7px]
 
 \begin{description}
-\item[Sample count:] The amount of samples used to create a gradient sample and subsequentially the Active Subspaces.
-\item[Gradient sample generator:] The maximum amount of used eigen vectors.  The maximum amount of used eigen vectors.  The maximum amount of used eigen vectors.
-\item[Construction parameters:] {~ \begin{enumerate}[\indent{}]
-\item \textbf{Min dimensions} The minimum amount of used eigen vectors.
-\item \textbf{Max dimensions} The maximum amount of used eigen vectors.
-\item \textbf{Min eigen value share (+)} Scientific study of mental processes and behaviour.
+\item[Components] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{gradientSampleGenerator}}: A gradient sample generator instance (\ref{sec:gsg}) that is used to create generate the Active Subspaces from.
+\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
+\end{enumerate}}
+
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample and that is subsequentially passed down to create the Active Subspaces.
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigen vectors, i.e. the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigen vectors, i.e. the upper bound for $r$.
+\item \texttt{\textbf{minEigenValueShare (= 0)}}: Defines a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
 \end{enumerate}}
 \end{description}
 
 \end{mdframed}
-\captionof{figure}{Active Subpsace transformation stream generator configuration options}
+\captionof{figure}{Component structure of an Active Subspace transformation stream generator and the associated possible configuration options.}
+\label{fig:astsg}
 \end{figure}
-
-
-In the Active Subspace transformation creator step, the transformation evaluator is used to test many different possible transformations that can be created by using the eigenvectors and eigenvalues.
 
 \subsection {Random transformation stream generator}
 
 A completely different approach to finding a transformation function is just generating a random one.
 A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
-It allows us to ...
-It can also serve as a reference for comparision as one would expect that the Active Subspace method would always output better transformation.
+It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
 
 \begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
-\end{center}
+
+\includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
+
+\vspace{-1.5mm}
+
+\begin{mdframed}[linewidth=0.7px]
+
+\begin{description}
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used basis vectors, i.e. the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used basis vectors, i.e. the upper bound for $r$.
+\end{enumerate}}
+\end{description}
+
+\end{mdframed}
+\captionof{figure}{Component structure of an random transformation stream generator and the associated possible configuration options.}
+\label{fig:rtsg}
 \end{figure}
 
-\begin{definition}[Random config]
+\newpage
 
-A $d$-dimensional zonotope $Z$ with $k \geq d$ generators $g_1, \dots g_k \in \mathds{R}^d$ corresponds to a $d$-dimensional minkowski sum with 
-\begin{enumerate}
-\item Min dimensions
-\item Max dimensions
-\end{enumerate}
+\section {Transformation generators}
+\label{sec:tg}
 
-\end{definition}
+The transformation generator component has the responsibility of finding a good transformation function to use for a reduction pipeline step.
 
-So for a random transformation generator, two variants can be chosen:
-\begin{enumerate}
-\item Random basis, best transformation using evaluator $e$.
-\item Random basis, random reduced dimensions
-\end{enumerate}
 
-\subsection {Active Subspace transformation creator}
 
-Usually, the eigenvectors are sorted by the magnitude of the eigenvalues and then only 
+\subsection {Stream-based transformation generator}
+
+How exactly this is accomplished is not narrowly defined, but this implementation primarily makes use of transformation generator streams, since for every transformation generation method there are always many possible transformations to choose from.
+A transformation stream generator will sequentially generate as much different transformations as it can, where the range of possible transformations is defined by multiple specific parameters.
+Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
+
+
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
+\vspace{-1.5mm}
+
+\begin{mdframed}[linewidth=0.7px]
+
+\begin{description}
+\item[Components] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{transformationStreamGenerator}}: A transformation stream generator instance (\ref{sec:tsg}) that is used to generate all possible transformations to choose from.
+\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
+\end{enumerate}}
+\end{description}
+
+\end{mdframed}
+\captionof{figure}{Component structure of a stream-based transformation generator and the associated possible configuration options.}
+\end{figure}
+
+\newpage
+
+\subsection {Iterative transformation generator}
+
+In some cases, especially when dealing with a random transformation generation as shown in \ref{sec:rtg}, the probability of finding a good transformation in one try is very low, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component.
+
+It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
+
+\begin{figure}[H]
+	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
+
+\vspace{-1.5mm}
+
+\begin{mdframed}[linewidth=0.7px]
+
+\begin{description}
+\item[Components] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{transformationGenerator}}: A transformation generator instance (\ref{sec:tg}) that is called for each iteration.
+\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
+\end{enumerate}}
+
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{numIterations}}: Iterative transformation generator configuration options
+\end{enumerate}}
+\end{description}
+
+\end{mdframed}
+\captionof{figure}{Component structure of an iterative transformation generator and the associated possible configuration options}
+\end{figure}
+
 
 \section {Gradient sample generator}
 
