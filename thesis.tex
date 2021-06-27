@@ -1107,6 +1107,9 @@ Compared to the random neighbour approximation, for $n,n',m \to \infty$, the app
 
 \section{Approximation quality}
 
+To get an idea of the actual quality of the different methods, this section will focus purely on the gradient approximation methods as a ... before the methods are used in the surrogate creation process later on.
+
+
 \begin{figure}[H]
 \begin{center}
 	\includegraphics[width=\textwidth]{graphics/as_mc_errors}
@@ -1115,6 +1118,17 @@ Compared to the random neighbour approximation, for $n,n',m \to \infty$, the app
 	\label{fig:as_approx}
 \end{figure}
 
+As seen in figure \ref{fig:as_approx}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+The other directional derivatives methods do not converge but are instead in a range similar to the finite differences approximation with a very big step size.
+Furthermore, the nearest neighbour method does not deliver better results than the random neighbour method.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/as_grad_errors}
+\end{center}
+	\captionof{figure}{Mean $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
+	\label{fig:as_approx}
+\end{figure}
 
 
 \chapter{Reducing linear transformations}
