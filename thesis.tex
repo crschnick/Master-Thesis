@@ -981,272 +981,6 @@ The only problem that arises when refining a grid point is that some child grid 
 Since function evaluations are not possible outside $\Omega$, one solution is to assign these grid points the same value as the function value at their parent grid point.
 In the regression case this special case value assignment is not necessary.
 
-\chapter{Active Subspaces}
-
-
-The method of active subspaces \cite{CG15} aims to identify the most influential directions in the parameter space to construct a lower-dimensional subspace of $\Omega$ which covers most of a models output variance to conduct parameter studies with a reduced amount of dimensions.
-In constrast to conducting parameter studies, we will use the so-called active directions to construct the $W_r$.
-Let
-\begin{equation}
-C = \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
-\label{as_c}
-\end{equation}
-be the average outer product of the gradient, a $(d \times d)$ matrix.
-Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
-\begin{equation}
-C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
-  \begin{bmatrix}
-  \\
-    v_1 ~ v_2 ~ \dots ~ v_{d-1} ~ v_d\\
-    \\
-  \end{bmatrix}
-\nonumber
-\end{equation}
-and we furthermore assume that the eigenvectors are ordered, i.e. $\lambda_1 \geq ... \geq \lambda_d$.
-A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
-\begin{equation}
-\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
-\label{eigenvalues}
-\end{equation}
-Therefore, the column vectors of the matrix $V$ are ordered from most the active direction $v_1$ to least the active direction $v_d$.
-By keeping only a specific amount of the most active directions $r \leq d$ we obtain
-\begin{equation}
-W_r=\begin{bmatrix}
-  \\
-    v_1 ~ v_2 ~ \dots ~ v_{i-1} ~ v_r\\
-    \\
-  \end{bmatrix}
-\label{basis}
-\end{equation}
-
-
-
-\section{Estimating gradients}
-
-If the gradient function is not known and can not be calculated analytically, the gradients can be approximated.
-There are various different methods of achieving that, however each method has its advantages and disadvantages as will be showcased in this section.
-
-\begin{definition}[Active Subspace error]
-Let $A \in \mathds{R}^{m \times n}$. Then
-\begin{equation}
-\| A\|_2=\sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
-\nonumber
-\end{equation}
-is the Frobenius norm of the matrix $A$.
-Given an estimated Active Subspace eigenvector matrix $V$ and the reference eigenvector matrix $V^*$, the
-Active Subspace error is calculated with
-\begin{equation}
-e_{\text{AS}}(V)=\| V - V^* \|_2
-\nonumber
-\end{equation}
-\end{definition}
-
-In the context of Active Subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
-Instead, the primary focus is the Active Subspace approximation error, which is decoupled from the individual gradients, since it is based on the average outer product of the gradients.
-While the individual gradients approximated by different methods can be far off, the gradient average can still come close to the real one if the general trend of the gradients is still be reflected with the method.
-Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
-
-
-\subsection{Finite differences}
-
-The most common approach to estimate the gradients are finite differences.
-In this thesis, an adaptive mix of forward and backward differences are used with a fixed distance $h$ where the range of possible distance is defined by $0 < h \leq 0.5$ such that
-\begin{equation}
-\frac{\partial f(x)}{\partial x_i} \approx
-\begin{cases}
-    \dfrac{f(x_1, \dots, x_i + h, \dots, x_d) - f(x)}{h}, & x_i + h \leq 1 \\[1.5em]
-    \dfrac{f(x_1, \dots, x_i - h, \dots, x_d) - f(x)}{h}, & \text{else}
-\end{cases}
-\end{equation}
-
-The downside in the context of the sample-based approach is the requirement to additionally evaluate the model function at $d$ other inputs to determine the gradient at one sample point.
-For high $d$ and a large amount of samples $n$, $dn$ function evaluations for finite differences may become too costly.
-Alternatively, the gradients can be determined using a different approach that only works on a given input sample and does not require other function evaluations.
-
-\subsection{Directional derivatives}
-
-Another approach is to roughly approximate the gradient by looking at neighboring points in the same sample and using directional derivatives to create a system of linear equations for the gradient at a certain input.
-Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $d=y-x$ and the direction of the distance as the normalized distance with $r=\frac{d}{|d|}$.
-By extrapolating the gradient along the direction, we can define an approximation rule with
-\begin{equation}
-\begin{split}
-d (\nabla_x f) \approx f(y) - f(x)\\
-(\nabla_x f) r=\frac{f(y) - f(x)}{|d|}
-\end{split}
-\end{equation}
-
-Using $m \in \mathds{N}$ neighbours of a sample point $x \in \Omega$ with $y_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$, we can create a system of linear equations with
-\begin{equation}
-\begin{bmatrix}
-    y_1 - x\\
-    \vdots \\
-    y_m - x
-  \end{bmatrix}  \nabla_x f =\begin{bmatrix}
-    f(y_1) - f(x) \\ \vdots \\  f(y_m) - f(x)
-    \\
-  \end{bmatrix}
-\end{equation}
-
-One limitation of this calculation is the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function can lead to biased gradients.
-Furthermore, the choice of the $y_i$ heavily influences the result as well as the size of $m$.
-The next sections introduce different ways of selecting the neighbours $y_i$ and also evaluate the results.
-
-\subsection{Random neighbour approximation}
-
-The random neighbour approximation method takes as an input a sample $S \subseteq \Omega$ with $|S|=n$.
-For every element $x \in S$, it then randomly chooses $m < n$ elements out of $S \setminus \{x\}$, which are called a random neighbour set $\{y_1, \dots, y_m\}$ of $x$.
-This random neighbour set is then used as an input for \ref{} to approximate the gradient $\nabla_x f$.
-
-For $n,m \to \infty$, the approximated gradient does not converge to the actual gradients.
-
-\subsection{Nearest neighbour approximation}
-
-The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ and calculates the $m \leq n'$ nearest neighbours $y_1,\dots,y_m \in S'$ of a point $x$.
-
-Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient.
-
-\section{Approximation quality}
-
-To get an idea of the actual quality of the different methods, this section will focus purely on the gradient approximation methods as a ... before the methods are used in the surrogate creation process later on.
-
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/as_mc_errors}
-\end{center}
-	\captionof{figure}{Mean $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
-	\label{fig:as_approx}
-\end{figure}
-
-As seen in figure \ref{fig:as_approx}, the finite differences approximation error converges towards zero as the step size goes down as expected.
-The other directional derivatives methods do not converge but are instead in a range similar to the finite differences approximation with a very big step size.
-Furthermore, the nearest neighbour method does not deliver better results than the random neighbour method.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/as_grad_errors}
-\end{center}
-	\captionof{figure}{Mean $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
-	\label{fig:as_approx}
-\end{figure}
-
-
-\chapter{Reducing linear transformations}
-
-\begin{equation}
-\begin{split}
-&\sigma^2_{\rho_t,i}(\frac{\text{d}}{\text{d}x_i} \hat{f})\\
-=&\int_{x \in \Omega} ((\nabla \hat{f}(t(x)))^T e_i) \rho_t(x) \text{ d}x\\
-=&\int_{x \in \Omega} ((\nabla f(x)^T v_i) \rho(x) \text{ d}x\\
-=&\lambda_i / s_i
-\end{split}
-\end{equation}
-
-
-Now that the inputs are transformed into a more axis-aligned representation, the next step would be to exploit this fact with the goal of reducing the dimensionality of the sparse grid based function representation.
-The higher the dimensionality $d$, the more necessary is the usage of dimensionality reduction, because often the ...
-
-\begin{equation}
-S_{\rho}^{(i)}=\frac{\sum_{k=1}^n f(y_k) (f(x_k^{(i)}) - f(x_k))}{n \sigma_{\rho}(f)}
-\end{equation}
-\begin{equation}
-T_{\rho}^{(i)}=\frac{\sum_{k=1}^n (f(x_k) - f(x_k^{(i)}))^2}{2n \sigma_{\rho}(f)}
-\end{equation}
-
-
-There is also no need to have matching input space dimensions and surrogate dimensions, i.e. it is possible to decouple the dimensionality of the model function and the surrogate to reduce the effects of the curse of dimensionality.
-We can formalize this by defining the input space $\Omega \subseteq [0,1]^d$, a surrogate space $\Omega_r=[0,1]^r$ and a transformation $t \colon \Omega \to \Omega_r$ that transforms the inputs $x \in \Omega$ into the $r-$dimensional unit hypercube $\Omega_r$ with $r < d$.
-
-\begin{equation}
-u_t = 1 - \prod_{i=1}^d s_i
-\end{equation}
-Since for every dimension removed the scaling factor $s_i$ is also removed, the unused space ratio is reduced if $s_i < 1$.
-Therefore $u_t$ convergers to $0$ when removing more and more dimensions and the surrogate uses the input space more efficiently.
-
-\section{Why sparse grids?}
-
-All approaches, basic transformations and dimensionality reducing transformations, can be implemented without using sparse grids at all in theory.
-There exist many other regression methods ...
-
-
-
-\subsection{Regression-based projection reduction}
-
-\begin{equation}
-A_r=\begin{bmatrix}
-  \\
-    a_1 ~ a_2 ~ \dots ~ a_{r-1} ~ a_r\\
-    \\
-  \end{bmatrix}
-\label{basis}
-\end{equation}
-
-
-\subsection{Adapted Regression-based reduction}
-
-\section{Operations on transformation surrogates}
-
-
-\textbf{Differentiation }
-Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, 
-\begin{equation}
-\nabla f(x) \approx \nabla \hat{f}(t(x)) = \nabla (\hat{f} \circ t)(x)=(Dt(x))^T \nabla \hat{f}(t(x))
-\end{equation}
-on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
-\\
-\\
-\textbf{Inverting the transformation  }
-For certain operations it is necessary to invert the transformation.
-For this we define the inverse transformation as follows:
-\begin{equation}
-t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
-\end{equation}
-In the case of a linear dimensionality preserving transformation, it holds that $|t^{\text{inv}}(x_{t})| \in \{0,1\}$.
-Otherwise, we can't infer anything about the cardinality of the inverse, i.e. $|t^{\text{inv}}(x_{t})| \geq 0$.
-Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conducting operations on the surrogate, it suffices to determine wether a point $x_t \in \Omega_t$ is unused, i.e. $|t^{\text{inv}}(x_{t})| = 0$, which can be done quickly.
-\\
-\\
-\textbf{Transformed distribution}
-The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also has to be transformed to work on the transformation surrogate.
-We therefore define the transformed distribution as
-\begin{equation}
-\rho_r \colon \Omega_r \to \mathds{R_+}, ~~ \rho_r(x_r)=\int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x 
-\end{equation}
-This is also a distribution since it holds that
-\begin{equation}
-\int_{\Omega_r} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
-\end{equation}
-The function $\rho_r$ can be approximated by a surrogate $\hat{\rho_t}$ using the same regression based approach used to construct $\hat{f}$.
-\\
-\\
-\textbf{Density Quadrature}
-Given an input distribution $\rho$ and transformation $t$, we can construct $\rho_t$ and compute the integral
-\begin{equation}
-\int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}(t(x)) \rho(x) \; \text{d}x
-=
-\int_{\Omega_r} \hat{f}(x_t) \left(\int_{t^{\text{inv}}(x_t)} \rho(x)  \; \text{d}x \right)  \; \text{d}x_t=
-\int_{\Omega_r} \hat{f}(x_t) \rho_t(x_t) \; \text{d}x_t
-\end{equation}
-on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
-\\
-\\
-\textbf{Quadrature}
-Given a transformation $t$, we can easily compute $\int_{\Omega} f(x) \; \text{d}x$ using the surrogate, since it is a special case of density quadrature with $\rho=\mathcal{U}(0,1)^d$.
-Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_t$ is usually not.
-\\
-\\
-\textbf{Optimization}
-To calculate the maximum $x^\text{max} \coloneqq \argmax_{x \in \Omega} f(x)$ or minimum $x^\text{min} \coloneqq \argmin_{x \in \Omega} f(x)$ of the model function, one can also optimize the surrogate. There exist many different algorithms, especially for B-Spline basis functions presented in \cite{}.
-After having applied a transformation, there might unused points $x_r \in \Omega_r$ in the surrogate space, i.e. $\nexists x \in \Omega \colon t(x)=x_r$.
-Therefore a constrained optimization has to be performed on the surrogate first with
-\begin{equation}
-x_{r}^\text{max} \coloneqq \argmax_{x_r \in \Omega_r} \hat{f}(x_r), ~ |t^{\text{inv}}(x_{r})|\geq 1
-\end{equation}
-Afterwards, at least in the dimensionality preserving transformation, we can obtain the maximum $x^\text{max}$ with $x^\text{max}=t^{\text{inv}}(x_{r}^\text{max})$, since $|t^{\text{inv}}(x_{r}^\text{max})|=1$.
-One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
-Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
-
-
 \chapter{Linear transformations}
 
 \section{Unit hypercubes}
@@ -1383,6 +1117,212 @@ $y=t_{\text{Cube}}(x)$
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 \end{equation}
 
+\chapter{Active Subspaces}
+
+
+The method of active subspaces \cite{CG15} aims to identify the most influential directions in the parameter space to construct a lower-dimensional subspace of $\Omega$ which covers most of a models output variance to conduct parameter studies with a reduced amount of dimensions.
+In constrast to conducting parameter studies, we will use the so-called active directions to construct the $W_r$.
+Let
+\begin{equation}
+C = \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
+\label{as_c}
+\end{equation}
+be the average outer product of the gradient, a $(d \times d)$ matrix.
+Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
+\begin{equation}
+C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
+  \begin{bmatrix}
+  \\
+    v_1 ~ v_2 ~ \dots ~ v_{d-1} ~ v_d\\
+    \\
+  \end{bmatrix}
+\nonumber
+\end{equation}
+
+We furthermore assume that the eigenvectors in this decomposition are ordered, i.e. $\lambda_1 \geq ... \geq \lambda_d$.
+A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
+\begin{equation}
+\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
+\label{eigenvalues}
+\end{equation}
+Therefore, the column vectors of the matrix $V$ are ordered from most the active direction $v_1$ to least the active direction $v_d$.
+By keeping only a specific amount of the most active directions $r \leq d$ we obtain
+\begin{equation}
+W_r=\begin{bmatrix}
+  \\
+    v_1 ~ v_2 ~ \dots ~ v_{i-1} ~ v_r\\
+    \\
+  \end{bmatrix}
+\label{basis}
+\end{equation}
+
+In the context of this thesis, the given input sample $S$ is used to derive the matrix $C$ from \ref{as_c} using a classical Monte-Carlo approach.
+The matrix $C$ can then be approximated with
+\begin{equation}
+C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(y_i)) (\nabla f(y_i))^T
+\nonumber
+\end{equation}
+
+
+
+
+\section{Estimating gradients}
+
+If the gradient function is not known and can not be calculated analytically, the gradients can be approximated in various ways.
+There are various different methods of achieving that, however each method has its advantages and disadvantages as will be showcased in this section.
+
+\begin{definition}[Active Subspace error]
+Let $A \in \mathds{R}^{m \times n}$. Then
+\begin{equation}
+\| A\|_2=\sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
+\nonumber
+\end{equation}
+is the Frobenius norm of the matrix $A$.
+Given an estimated Active Subspace eigenvector matrix $V$ and the reference eigenvector matrix $V^*$, the
+Active Subspace error is calculated with
+\begin{equation}
+e_{\text{AS}}(V)=\| V - V^* \|_2
+\nonumber
+\end{equation}
+\end{definition}
+
+In the context of Active Subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
+Instead, the primary focus is the Active Subspace approximation error, which is decoupled from the individual gradients, since it is based on the average outer product of the gradients.
+While the individual gradients approximated by different methods can be far off, the gradient average can still come close to the real one if the general trend of the gradients is still be reflected with the method.
+Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the Active Subspace.
+
+
+\subsection{Finite differences}
+
+The most common approach to estimate the gradients are finite differences.
+In this thesis, an adaptive mix of forward and backward differences are used with a fixed distance $h$ where the range of possible distance is defined by $0 < h \leq 0.5$ such that
+\begin{equation}
+\frac{\partial f(x)}{\partial x_i} \approx
+\begin{cases}
+    \dfrac{f(x_1, \dots, x_i + h, \dots, x_d) - f(x)}{h}, & x_i + h \leq 1 \\[1.5em]
+    \dfrac{f(x_1, \dots, x_i - h, \dots, x_d) - f(x)}{h}, & \text{else}
+\end{cases}
+\end{equation}
+
+The downside in the context of the sample-based approach is the requirement to additionally evaluate the model function at $d$ other inputs to determine the gradient at one sample point.
+For high $d$ and a large amount of samples $n$, $dn$ function evaluations for finite differences may become too costly.
+Alternatively, the gradients can be determined using a different approach that only works on a given input sample and does not require other function evaluations.
+
+\subsection{Directional derivatives}
+
+Another approach is to roughly approximate the gradient by looking at neighboring points in the same sample and using directional derivatives to create a system of linear equations for the gradient at a certain input.
+Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $d=y-x$ and the direction of the distance as the normalized distance with $r=\frac{d}{|d|}$.
+By extrapolating the gradient along the direction, we can define an approximation rule with
+\begin{equation}
+d (\nabla_x f) \approx f(y) - f(x)
+\end{equation}
+
+Using $m \in \mathds{N}$ neighbours of a sample point $x \in \Omega$ with $y_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$, we can create a system of linear equations with
+\begin{equation}
+\begin{bmatrix}
+    y_1 - x\\
+    \vdots \\
+    y_m - x
+  \end{bmatrix}  \nabla_x f =\begin{bmatrix}
+    f(y_1) - f(x) \\ \vdots \\  f(y_m) - f(x)
+    \\
+  \end{bmatrix}
+  \label{dd_sle}
+\end{equation}
+
+One limitation of this calculation is the linear nature of the calculated gradients, i.e. estimating gradients of a non-linear function can lead to biased gradients.
+Furthermore, the choice of the $y_i$ heavily influences the result as well as the size of $m$.
+The next sections introduce different ways of selecting the neighbours $y_i$ and also evaluate the results.
+
+\subsection{Random neighbour approximation}
+
+The random neighbour approximation method takes as an input a subsample $S' \subseteq S \setminus \{x\}$ with $|S'|=n' < n$.
+The set $S'=\{y_1', \dots, y_{n'}'\}$ is called a random neighbour set of $x$.
+This random neighbour set is then used as an input for \ref{dd_sle} to approximate the gradient $\nabla_x f$.
+For $n,n' \to \infty$, the approximated gradient does not converge to the actual gradients, since the expected distance to the neighbours in a random neighbour set does not go to zero.
+
+\subsection{Nearest neighbour approximation}
+
+The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $y_1',\dots,y_m' \in S'$ of the point $x$ with $|(y_1'-x)| < |(y_2'-x)|< \dots<|(y_{n'-1}'-x)| < |(y_{n'}'-x)|$.
+Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
+
+\section{Approximation quality}
+
+To get an idea of the actual quality of the different methods, this section will focus purely on the gradient approximation methods as a ... before the methods are used in the surrogate creation process later on.
+Two example functions are investigated with the focus being on first the gradient approximation quality and the subsequent Active Subspace approximation quality.
+
+\newpage
+
+\subsection{Simple function}
+
+\begin{equation}
+f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
+\nonumber
+\end{equation}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/as_grad_errors_f1}
+\end{center}
+	\captionof{figure}{Average $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
+	\label{fig:as_grad_errors_f1}
+\end{figure}
+
+As seen in figure \ref{fig:as_grad_errors_f1}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method, as it also slowly converges to zero.
+The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
+\end{center}
+	\captionof{figure}{Mean Active Subspace error calculated with the previously introduced methods compared to the actual Active Subspace for $f_1$ over 10 iterations .}
+	\label{fig:as_errors_f1}
+\end{figure}
+
+As a result of the approximation qualities shown in figure \ref{fig:as_grad_errors_f1}, the gradient approximation qualities behave similar.
+The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size.
+The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
+Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be better.
+
+\newpage
+
+\subsection{Complex function}
+
+The second case study is a 20-dimensional function:
+
+\begin{align}
+\begin{split}
+f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
++ &5 * sin(\pi x_5 x_6 x_7) x_8^2 x_9^5 x_{10}\\
++ &(x_{11} + 2)^2 x_{12}\\
++ &2 x_{13} * 3 x_{14}\\
++ &x_{15} x_{16}\\
++ &log(1 + (10 x_{17} / (0.1 + x_{18} + x_{19})))
+\end{split}
+\end{align}
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/as_grad_errors_f2}
+\end{center}
+	\captionof{figure}{Average $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_2$.}
+	\label{fig:as_grad_errors_f2}
+\end{figure}
+
+As seen in figure \ref{fig:as_grad_errors_f2}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=\textwidth]{graphics/as_errors_f2}
+\end{center}
+	\captionof{figure}{Mean Active Subspace error calculated with the previously introduced methods compared to the actual Active Subspace for $f_2$ over 10 iterations .}
+	\label{fig:as_errors_f2}
+\end{figure}
+
+...
+
+
 \chapter{Surrogate construction}
 
 There are different ways of constructing the surrogate $\hat{f}$.
@@ -1408,6 +1348,91 @@ We are therefore solving the regularized least squares problem with the smoothin
 \begin{equation}
 \hat{f} = \argmin_{\hat{f} \in V} \epsilon_{S}(\hat{f}) + \lambda R(\hat{f})
 \end{equation}
+
+
+\section{Why sparse grids?}
+
+All approaches, basic transformations and dimensionality reducing transformations, can be implemented without using sparse grids at all in theory.
+There exist many other regression methods ...
+
+
+
+\subsection{Regression-based projection reduction}
+
+\begin{equation}
+A_r=\begin{bmatrix}
+  \\
+    a_1 ~ a_2 ~ \dots ~ a_{r-1} ~ a_r\\
+    \\
+  \end{bmatrix}
+\label{basis}
+\end{equation}
+
+
+\subsection{Adapted Regression-based reduction}
+
+\section{Operations on transformation surrogates}
+
+
+\textbf{Differentiation }
+Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, 
+\begin{equation}
+\nabla f(x) \approx \nabla \hat{f}(t(x)) = \nabla (\hat{f} \circ t)(x)=(Dt(x))^T \nabla \hat{f}(t(x))
+\end{equation}
+on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
+\\
+\\
+\textbf{Inverting the transformation  }
+For certain operations it is necessary to invert the transformation.
+For this we define the inverse transformation as follows:
+\begin{equation}
+t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
+\end{equation}
+In the case of a linear dimensionality preserving transformation, it holds that $|t^{\text{inv}}(x_{t})| \in \{0,1\}$.
+Otherwise, we can't infer anything about the cardinality of the inverse, i.e. $|t^{\text{inv}}(x_{t})| \geq 0$.
+Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conducting operations on the surrogate, it suffices to determine wether a point $x_t \in \Omega_t$ is unused, i.e. $|t^{\text{inv}}(x_{t})| = 0$, which can be done quickly.
+\\
+\\
+\textbf{Transformed distribution}
+The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also has to be transformed to work on the transformation surrogate.
+We therefore define the transformed distribution as
+\begin{equation}
+\rho_r \colon \Omega_r \to \mathds{R_+}, ~~ \rho_r(x_r)=\int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x 
+\end{equation}
+This is also a distribution since it holds that
+\begin{equation}
+\int_{\Omega_r} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
+\end{equation}
+The function $\rho_r$ can be approximated by a surrogate $\hat{\rho_t}$ using the same regression based approach used to construct $\hat{f}$.
+\\
+\\
+\textbf{Density Quadrature}
+Given an input distribution $\rho$ and transformation $t$, we can construct $\rho_t$ and compute the integral
+\begin{equation}
+\int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}(t(x)) \rho(x) \; \text{d}x
+=
+\int_{\Omega_r} \hat{f}(x_t) \left(\int_{t^{\text{inv}}(x_t)} \rho(x)  \; \text{d}x \right)  \; \text{d}x_t=
+\int_{\Omega_r} \hat{f}(x_t) \rho_t(x_t) \; \text{d}x_t
+\end{equation}
+on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
+\\
+\\
+\textbf{Quadrature}
+Given a transformation $t$, we can easily compute $\int_{\Omega} f(x) \; \text{d}x$ using the surrogate, since it is a special case of density quadrature with $\rho=\mathcal{U}(0,1)^d$.
+Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_t$ is usually not.
+\\
+\\
+\textbf{Optimization}
+To calculate the maximum $x^\text{max} \coloneqq \argmax_{x \in \Omega} f(x)$ or minimum $x^\text{min} \coloneqq \argmin_{x \in \Omega} f(x)$ of the model function, one can also optimize the surrogate. There exist many different algorithms, especially for B-Spline basis functions presented in \cite{}.
+After having applied a transformation, there might unused points $x_r \in \Omega_r$ in the surrogate space, i.e. $\nexists x \in \Omega \colon t(x)=x_r$.
+Therefore a constrained optimization has to be performed on the surrogate first with
+\begin{equation}
+x_{r}^\text{max} \coloneqq \argmax_{x_r \in \Omega_r} \hat{f}(x_r), ~ |t^{\text{inv}}(x_{r})|\geq 1
+\end{equation}
+Afterwards, at least in the dimensionality preserving transformation, we can obtain the maximum $x^\text{max}$ with $x^\text{max}=t^{\text{inv}}(x_{r}^\text{max})$, since $|t^{\text{inv}}(x_{r}^\text{max})|=1$.
+One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
+Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
+
 
 \chapter{Implementation}
 
@@ -1653,50 +1678,6 @@ The goal is to answer the following questions:
 \end{enumerate}
 
 Every question will be answered by looking at one or more example functions or datasets.
-
-
-\section{ANOVA}
-
-\begin{equation}
-\begin{split}
-&\sigma^2_{\rho_t,i}(\frac{\text{d}}{\text{d}x_i} \hat{f})\\
-=&\int_{x \in \Omega} ((\nabla \hat{f}(t(x)))^T e_i) \rho_t(x) \text{ d}x\\
-=&\int_{x \in \Omega} ((\nabla f(x)^T v_i) \rho(x) \text{ d}x\\
-=&\lambda_i / s_i
-\end{split}
-\end{equation}
-
-\section{Active Subspace quality}
-
-
-\subsection{Importance of sample count}
-
-
-\subsection{Approximated gradient quality}
-
-
-\section{Noise and unused dimensions}
-
-\begin{figure}[H]
-\centering
-\begin{tabular}{ l | c | c | c | c | c | c | c |}
-d $\setminus$ $\sigma$ & 1 & 2 & 3 & 4 & 5 & 6 & sum\\
-\hline
-$\epsilon_S(b_{4,i} - \hat{b}_{4,i})$ & 1 & 0.925& 1 & 0.999 & 1 & 0.999 & 0\\
-$\epsilon_S(b_{5,i} - \hat{b}_{5,i})$ & 1 & 0.917 &1 & - & - & - & 0\\
-\end{tabular}
-\caption{abc}
-\end{figure}
-
-This behaviour is very convenient compared to other methods.
-Spatially adaptive sparse grids can replicate this behaviour, however
-This can even be extended to a non axis-aligned concept, i.e. unused directions.
-Overall, the Active Subspace based algorithm is both more flexible and faster than other sparse grid based alternatives in filtering out inactive dimensions/directions.
-
-\chapter{Conclusion and Outlook}
-\label{chap:zusfas}
-
-\section*{Outlook}
 
 \printbibliography
 
