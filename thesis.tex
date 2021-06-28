@@ -1004,7 +1004,10 @@ Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
 
 When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it can be seen that it holds:
 \begin{equation}
-W_r^T x=W_r^T \sum_{i=1}^d x_i e_i =\sum_{i=1}^d x_i p_i , ~~ p_i=W_r^T e_i
+\begin{split}
+W_r^T x=~&W_r^T \sum_{i=1}^d x_i e_i\\
+=~&\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i
+\end{split}
 \end{equation}
 Therefore, since $x_i \in [0,1]$
 \begin{equation}
@@ -1014,7 +1017,7 @@ Therefore, since $x_i \in [0,1]$
 To get closer to the zonotope definition \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2:
 \begin{equation}
 \begin{split}
-&\{W_r^T (x - c_d) \mid x \in \Omega\}\\
+&\eft{W_r^T (x - c_d) \mid x \in \Omega\right}\\
 =&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) p_i' \mid x \in \Omega \right\}, ~~ p_i'=W_r^T e_i\\
 =&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}\\
 =&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} p_i'\\
@@ -1109,8 +1112,8 @@ t_{\text{Cube}}(x)=c_r + u_s
 
 While it is not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, later figures in this thesis use the described reversing to illustrate lower dimensional transformed sparse grids in the original and higher-dimensional space.
 It is therefore only shown in a more informal way.
-$y=t_{\text{Cube}}(x)$
 
+Let $y=t_{\text{Cube}}(x)$ be the transformed input. It then holds that
 \begin{equation}
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 \end{equation}
@@ -1319,6 +1322,29 @@ As seen in figure \ref{fig:as_grad_errors_f2}, the finite differences approximat
 \end{figure}
 
 ...
+
+\chapter{Random linear transformations}
+
+A completely different approach to finding a transformation function is just generating a random one.
+A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
+It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
+
+As shown in \cite{ABC}, generating uniformly distributed orthonormal matrices is not trivial.
+Therefore, this thesis uses the presented algorithm that works like this:
+\begin{equation}
+z_{i,j} \sim \mathcal{N}\left(0, 1\right)
+\end{equation}
+
+The matrix $Z$ is then used in a $QR$ decomposition with $Z=QR$.
+The entries diagonal matrix $R$ are then normalized to get
+\begin{equation}
+\Phi=\text{diag}(\frac{r_{1,1}}{|r_{1,1}|}, \dots, \frac{r_{d,d}}{|r_{d,d}|},)
+\end{equation}
+
+The matrix $Q \Phi$ is then uniformly distributed with Haar measure.
+
+
+
 
 
 \chapter{Surrogate construction}
