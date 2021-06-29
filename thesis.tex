@@ -870,7 +870,27 @@ These are trailing boundaries
 
 graph
 
-\chapter{Transformations}
+
+
+
+
+
+
+
+
+
+
+\chapter{Transforming inputs}
+
+The main focus in this thesis lies on linear transformations.
+More specifically, we first start off with an orthogonal transformation, i.e. a change of basis, to align the active directions along the axes.
+
+In the case of a dimension reducing transformation, the orthogonal transformation is followed by a linear projection, with a few adjustments needed to accomodate for the fact that $\Omega$ is not centered around the origin. 
+
+(Easily differentiable)
+
+\section{Motivation}
+
 
 The previous chapter shows that a lot of work has gone into exploring optimizations for high-dimensional Sparse Grids.
 However, all of these methods share the natural limitations of axis aligned sparse grids, since all of them are effectively ways of removing certain grid points from a full sparse grid.
@@ -947,22 +967,23 @@ u_t = |U| / |\Omega|
 
 In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
 
-\section{Periodic transformations}
+\section{Basics}
 
-Another use case for transformations are periodic functions.
-If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i\text{ mod } h, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } h) /h, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
-This way, the function can be interpolated better because there are effectively $1 / h$ times more grid points spent along the $i$-th dimension.
-Of course this can concept can be expanded upon with multiple periodic dimensions, antiperiodic functions, offsets and combination with linear transformations.
-
-\todo{Example with $f(x)=sin(2\pi x_1) x_2^2$}
-
-\section{Basis transformations}
+The previous section showed how a simple orthogonal transformation, i.e. a change of basis, to align the active directions along the axes.
+If we go one step further and now also try to eliminate the most inactive directions, which are also now the most inactive dimensions after aligning the active directions along the axes, we have to possibility of drastically reducing the amount of grid points while only suffering a small increase in error.
+This process is still broken up into two parts.
 
 We can formalize this by defining a change of basis transformation $b \colon \Omega \to \mathds{R}^d$ that transforms the inputs $x \in \Omega$ using a basis $A$, i.e. $t(x)=A^Tx, ~ A \in \mathds{R}^{d \times d}, ~ rank(A)=d$.
 Since we are primarily focusing on the alignment, we choose $A$ to be an orthonormal basis.
 
 One problem is that it usually does not hold that $b(\Omega) \nsubseteq \Omega$.
-We therefore have to apply a normalization $n \colon \mathds{R}^d \to \Omega$ on the result of $b(\Omega)$ such that $n(b(\Omega)) \nsubseteq \Omega$.
+We therefore have to apply a normalization $n \colon \mathds{R}^d \to \Omega$, which is in this case a simple scaling operation, on the result of $b(\Omega)$ such that $n(b(\Omega)) \subseteq \Omega$.
+\begin{equation}
+n(x)=Cx , ~~
+C=\text{diag}(s_1, \dots, s_d)
+\label{alignment}
+\end{equation}
+
 \begin{equation}
 n(x)=Cx , ~~
 C=\text{diag}(1 / s_1, \dots, 1 / s_d), ~~, s_i = \|a_i\|_1
@@ -973,15 +994,9 @@ C=\text{diag}(1 / s_1, \dots, 1 / s_d), ~~, s_i = \|a_i\|_1
 s_i=\sum_{k=1}^d |\langle e_i, b(e_k) \rangle| = \sum_{k=1}^d |(b(e_k))_i| = \sum_{k=1}^d |(A^T)_{i,k}| = \sum_{k=1}^d A_{k,i}= \|a_i\|_1
 \end{equation}
 
-Even though these transformed inputs are only meant to be intermediary in this thesis, i.e. they are only meant to be used for dimensionality reduction purposes later on, we can still explore how to fit sparse grids on the transformed inputs and compare the quality of these to sparse grids fitted on the original data.
-By employing spatial adaptivity with distribution surplus criterion \eqref{}, ...
-The only problem that arises when refining a grid point is that some child grid points may not be within the transformation space, i.e. in some cases it holds that $c(x_{\underline{l},\underline{i}}) \nsubset T$.
-Since function evaluations are not possible outside $\Omega$, one solution is to assign these grid points the same value as the function value at their parent grid point.
-In the regression case this special case value assignment is not necessary.
+\section{Mapping between unit hypercubes}
 
-\chapter{Linear transformations}
-
-\section{Unit hypercubes}
+\subsection{Unit hypercubes}
 
 To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$, we first define the center  as $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$.
 
@@ -1017,7 +1032,7 @@ Therefore, since $x_i \in [0,1]$
 To get closer to the zonotope definition \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2:
 \begin{equation}
 \begin{split}
-&\eft{W_r^T (x - c_d) \mid x \in \Omega\right}\\
+&\left\{W_r^T (x - c_d) \mid x \in \Omega\right\}\\
 =&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) p_i' \mid x \in \Omega \right\}, ~~ p_i'=W_r^T e_i\\
 =&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}\\
 =&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} p_i'\\
@@ -1036,7 +1051,7 @@ Z=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
 
 Then $Z=p(\Omega)$.
 
-\section{Surrogate space}
+\subsection{Surrogate space}
 
 However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is then scaled and aligned to obtain the unit hypercube $\Omega_r$.
 To make the generation of the surrogate space easier, the generators $p_i$ are ordered by their magnitude.
@@ -1069,7 +1084,7 @@ This will improve the surrogate space $S$ in terms of unused space $S \setminus 
 \todo{Proove?}
 
 
-\section{Reduced unit hypercube}
+\subsection{Reduced unit hypercube}
 
 The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in \ref{fig:aligned} and therefore elements $z \in Z$.
 First, by using a change of basis from the unit basis into the surrogate space basis given by the $q_i$.
@@ -1108,7 +1123,7 @@ t_{\text{Cube}}(x)=c_r + u_s
 \end{figure}
 
 
-\section{Reversing the transformation}
+\subsection{Reversing the transformation}
 
 While it is not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, later figures in this thesis use the described reversing to illustrate lower dimensional transformed sparse grids in the original and higher-dimensional space.
 It is therefore only shown in a more informal way.
@@ -1118,7 +1133,7 @@ Let $y=t_{\text{Cube}}(x)$ be the transformed input. It then holds that
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 \end{equation}
 
-\chapter{Active Subspaces}
+\section{Active Subspaces}
 
 
 The method of active subspaces \cite{CG15} aims to identify the most influential directions in the parameter space to construct a lower-dimensional subspace of $\Omega$ which covers most of a models output variance to conduct parameter studies with a reduced amount of dimensions.
@@ -1167,7 +1182,7 @@ C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(y_i)) (\nabla f(y_i))^T
 
 
 
-\section{Estimating gradients}
+\subsection{Estimating gradients}
 
 If the gradient function is not known and can not be calculated analytically, the gradients can be approximated in various ways.
 There are various different methods of achieving that, however each method has its advantages and disadvantages as will be showcased in this section.
@@ -1323,7 +1338,7 @@ As seen in figure \ref{fig:as_grad_errors_f2}, the finite differences approximat
 
 ...
 
-\chapter{Random linear transformations}
+\section{Random linear transformations}
 
 A completely different approach to finding a transformation function is just generating a random one.
 A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
@@ -1343,6 +1358,16 @@ The entries diagonal matrix $R$ are then normalized to get
 
 The matrix $Q \Phi$ is then uniformly distributed with Haar measure.
 
+
+
+\section{Periodic transformations}
+
+Another use case for transformations are periodic functions.
+If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i\text{ mod } h, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } h) /h, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
+This way, the function can be interpolated better because there are effectively $1 / h$ times more grid points spent along the $i$-th dimension.
+Of course this can concept can be expanded upon with multiple periodic dimensions, antiperiodic functions, offsets and combination with linear transformations.
+
+\todo{Example with $f(x)=sin(2\pi x_1) x_2^2$}
 
 
 
@@ -1457,6 +1482,37 @@ Afterwards, at least in the dimensionality preserving transformation, we can obt
 One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
 Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
 
+\chapter{Algorithm}
+
+\section{An iterative approach}
+
+First of all, we take a look at the theoretical function representation using the iterative algorithm.
+We define a function $f$ as $r$-dimensional representable in one step if
+\todo{wo wird $t_A$ definiert?}
+\begin{equation}
+r_{min}(f) \leq r, ~~r_{min}(f)=\argmin_i \exists A \in R^{d \times i},\hat{f} \colon f(x)=\hat{f}(t_{A}(x))
+\end{equation}
+
+When looking at a decomposition into a minimal sum of multiple function terms, one important factor is that each term has to contribute something to the function along a direction that no other term can do.
+I.e. one can not merge two function terms into one.
+Therefore, we define that two matrices $A,B$ are independent, if
+\begin{equation}
+\text{span } A \nsubseteq
+\text{span } B \land \text{span } B \nsubseteq
+\text{span } A
+\end{equation}
+
+If there are $n$ functions with $r_{min}(f_i) = r_i, ~ i \in \{1,\dots,n\}$ and the $A_i \in R^{d \times r_i}$ are independent with \todo{Summe bis $n$, nicht $i$ oder?} $f=\sum_{k=1}^i \hat{f}_k \circ t_{A_k}$, then we define a function $f$ as $r$-dimensional representable in $n$ steps, i.e. an optimal algorithm that correctly calculates $A_i$ needs a minimum of $n$ iterations to exactly approximate the function $f$.
+
+\subsection{Practical representations}
+
+We define a function $f$ as approximately $r$-dimensional representable in $n$ steps with $\epsilon_{max}$ if there exist $\hat{f_k} \in V$ and $A_k \in R^{d \times r}$, $k \in \{1,\dots,n\}$, such that
+\todo{$\epsilon_S$ definieren}
+\begin{equation}
+\epsilon_{S}(f - \sum_{k=1}^n \hat{f}_k \circ t_{A_k}) \leq \epsilon_{max}
+\end{equation}
+
+\section{Surrogate error correlation}
 
 \chapter{Implementation}
 
