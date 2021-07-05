@@ -589,17 +589,103 @@ There exist many different algorithms to approximate the quantile function for c
 The variant that is used in this thesis is presented in \cite{} and is basically a combination of different algorithms that excel for specific ranges of values for $U$.
 The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
 
-\chapter{Grid point reduction strategies}
+\chapter{Overview of grid point reduction strategies}
 
-The main driver for the runtime of operations on all different types of grids is the amount of grid points.
+%Curse of dim. definition
+The presented grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality.
+This means that as the dimension of the models grow, the amount of grid points required to generate a grid grows exponentially.
+%Effects of curse of dim. definition
+As a result, the required model function evaluations also
+Since evaluating the model functions of many real-world problems at only one grid point already require a lot of computational resources, e.g. when solving a a differential equation, Sparse Grids hit a limit on how many dimensions are feasible.
+Even if the model function is easy to compute, the main driver for the runtime of operations on all different types of grids is also the amount of grid points.
+
+% Motivation for this chapter
 Therefore, especially in higher dimensions, employing some strategy for grid point reduction is necessary.
+Sparse grids itself are already an effective strategy to reduce the consequences the curse of dimensionality, as they provide a good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids, but they only weaken the effects of the curse of dimensionality.
 Of course these strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
-Sparse grids themselves are already a relatively good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids.
-However, the amount of grid points needed for a sparse grid grows exponentially with the dimensionality.
-This effect is called the curse of dimensionality.
-In this chaper we show a few already established approaches to mitigate this issue.
+In this chaper we show a few already established approaches to mitigate this issue and look at their advantages and disadvantages.
 
-\chapter{ANOVA-based methods}
+\section{Spatially adaptive sparse grids}
+
+By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
+This creation of new grid points of a parent is called refinement of a grid point.
+To choose the best grid points to refine, a refinement criterion $\xi(x_{\underline{l},\underline{i}})$ is introduced.
+This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
+\begin{definition}
+Let $x_{\underline{l},\underline{i}} \in X$ be a grid point.
+We then define
+\begin{equation}
+c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k - 1}, \dots, x_{l_d,i_d}), ~~ 
+\end{equation}
+as its left child if $i_k > 0$ and
+\begin{equation}
+c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k + 1}, \dots, x_{l_d,i_d}), ~~ 
+\end{equation}
+as its right child if $i_k < 2^{l_k}$.
+Then
+\begin{equation}
+c_{k}(x_{\underline{l},\underline{i}})=
+\begin{cases}
+\{c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})\}&, i_k=0\\
+\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})\}&,i_k= 2^{l_k}\\
+\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}}),c_{k}^{\text{right}}(x_{\underline{l},\underline{i}}) \}&, \text{else}
+\end{cases}
+\end{equation}
+is the set of possible children of a grid point in dimension $k$ and 
+\begin{equation}
+c(x_{\underline{l},\underline{i}})= \bigcup_{k=1}^d \{c_{k}(x_{\underline{l},\underline{i}})\}
+\end{equation}
+is the set of children of a grid point. It holds that $|c(x_{\underline{l},\underline{i}})| \leq 2d$ and $|c(x_{\underline{l},\underline{i}})| =2d$ if there is no boundary involved.
+\end{definition}
+\begin{definition}
+We define a grid point $x_{\underline{l},\underline{i}} \in X$ as a leaf if
+\begin{equation}
+c(x_{\underline{l},\underline{i}}) \cap X = \emptyset
+\end{equation}
+\end{definition}
+\begin{definition}[Refinement criterion]
+Let $X$ be a set of grid points.
+Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assins each grid point a value that determines the suitability of a refinement of that grid point.
+
+Let $\hat{f}(x) = \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x), ~\hat{f} \in V^X$.
+The commonly used surplus criterion is defined as
+\begin{equation}
+\xi_s(x_{\underline{l},\underline{i}}) = |\alpha_{\underline{l},\underline{i}}|
+\end{equation}
+Since in this thesis we also assume that the input is distributed according to the probability density $\rho$, we also introduce the distribution surplus criterion with
+\begin{equation}
+\xi_{ds}(x_{\underline{l},\underline{i}}) =\rho(x_{\underline{l},\underline{i}}) |\alpha_{\underline{l},\underline{i}}|
+\end{equation}
+\end{definition}
+We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
+A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X_{\underline{l}}$.
+Then during the $m$-th iteration, we first order all leaf grid points $x_i$ with $x_1, \dots, x_p \in X_a^{(k-1)}, ~~ \xi(x_1) \geq \dots \geq \xi(x_p)$ and then refine with $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_r)$.
+Usually, if a leaf grid point is refined, all children are created because selective grid point creation would create additional overhead.
+After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
+The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
+
+\section{Dimensionally adaptive sparse grids}
+
+\todo{Really the same spatially adap. ?}
+
+Dimensionally adaptive sparse grids are closely related to spatially adaptive sparse grids.
+In fact, they can be defined as a special case of spatial adaptivity in which all grid points of a subspace $W_{\underline{l}}$ are refined in a specific dimension $k$ during each step.
+The set of grid points of a dimensionally adaptive sparse grid after $m$ steps is denoted as $X_{\text{da}}^{(m)}$.
+Furthermore we define the refinement criterion for a subspace $W_{\underline{l}}$ as $\xi(W_{\underline{l}})$.
+As before we refine the subspace $W_{\underline{l}}$ with the highest value for $\xi(\underline{l})$.
+\begin{definition}
+Let $W_{\underline{l}} \in W$ be a subspace. Then
+\begin{equation}
+c_k(W_{\underline{l}})=\{x_{\underline{l}',\underline{i}} \mid \underline{i} \in H_{\underline{l}'} \}, ~ \underline{l}'=(l_1, \dots, l_k + 1, \dots, l_d)
+\end{equation}
+are the child grid points of that subspace in dimension $k$.
+\end{definition}
+By adding all grid points of $c_k(W_{\underline{l}})$, we effectively add a new subspace $W_{(l_1, \dots, l_k + 1, \dots, l_d)}$ as well.
+Which subspaces can be refined during each step is a little bit more complex than in the spatially adaptive case and since in this paper we will only use spatially adaptive sparse grids, it will be omitted.
+
+\section{Sparse Grid based ANOVA}
+
 
 Functional ANOVA is a well established method in statistics to 
 The fundemental goal is to obtain the ANOVA decomposition of a function $f$ that has the form of
@@ -730,6 +816,7 @@ T_{\rho}^{(i)}=\frac{\sum_{k=1}^n (f(x_k) - f(x_k^{(i)}))^2}{2n \sigma_{\rho}(f)
 \end{equation}
 \end{lemma}
 
+
 \newpage
 \subsection{Eliminating dimensions}
 
@@ -779,100 +866,70 @@ Such an approximation is useful for certain problems with a low effective dimens
 This method also has its limitations however, specifically the need to first construct a $d$-dimensional sparse grid to accurately compute the variances $\sigma^2(f_c)$, the need for boundaries and the analysis of $2^d$ terms.
 
 
-\subsection{Combining both methods}
-
-\chapter{Adaptive sparse grids}
 
 
-\section{Spatially adaptive sparse grids}
+\section{Other strategies}
 
-By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
-This creation of new grid points of a parent is called refinement of a grid point.
-To choose the best grid points to refine, a refinement criterion $\xi(x_{\underline{l},\underline{i}})$ is introduced.
-This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
-\begin{definition}
-Let $x_{\underline{l},\underline{i}} \in X$ be a grid point.
-We then define
-\begin{equation}
-c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k - 1}, \dots, x_{l_d,i_d}), ~~ 
-\end{equation}
-as its left child if $i_k > 0$ and
-\begin{equation}
-c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})=(x_{l_1,i_1}, \dots, x_{l_k + 1,2  i_k + 1}, \dots, x_{l_d,i_d}), ~~ 
-\end{equation}
-as its right child if $i_k < 2^{l_k}$.
-Then
-\begin{equation}
-c_{k}(x_{\underline{l},\underline{i}})=
-\begin{cases}
-\{c_{k}^{\text{right}}(x_{\underline{l},\underline{i}})\}&, i_k=0\\
-\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}})\}&,i_k= 2^{l_k}\\
-\{c_{k}^{\text{left}}(x_{\underline{l},\underline{i}}),c_{k}^{\text{right}}(x_{\underline{l},\underline{i}}) \}&, \text{else}
-\end{cases}
-\end{equation}
-is the set of possible children of a grid point in dimension $k$ and 
-\begin{equation}
-c(x_{\underline{l},\underline{i}})= \bigcup_{k=1}^d \{c_{k}(x_{\underline{l},\underline{i}})\}
-\end{equation}
-is the set of children of a grid point. It holds that $|c(x_{\underline{l},\underline{i}})| \leq 2d$ and $|c(x_{\underline{l},\underline{i}})| =2d$ if there is no boundary involved.
-\end{definition}
-\begin{definition}
-We define a grid point $x_{\underline{l},\underline{i}} \in X$ as a leaf if
-\begin{equation}
-c(x_{\underline{l},\underline{i}}) \cap X = \emptyset
-\end{equation}
-\end{definition}
-\begin{definition}[Refinement criterion]
-Let $X$ be a set of grid points.
-Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assins each grid point a value that determines the suitability of a refinement of that grid point.
 
-Let $\hat{f}(x) = \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
-\underline{l},\underline{i}}(x), ~\hat{f} \in V^X$.
-The commonly used surplus criterion is defined as
-\begin{equation}
-\xi_s(x_{\underline{l},\underline{i}}) = |\alpha_{\underline{l},\underline{i}}|
-\end{equation}
-Since in this thesis we also assume that the input is distributed according to the probability density $\rho$, we also introduce the distribution surplus criterion with
-\begin{equation}
-\xi_{ds}(x_{\underline{l},\underline{i}}) =\rho(x_{\underline{l},\underline{i}}) |\alpha_{\underline{l},\underline{i}}|
-\end{equation}
-\end{definition}
-We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
-A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X_{\underline{l}}$.
-Then during the $m$-th iteration, we first order all leaf grid points $x_i$ with $x_1, \dots, x_p \in X_a^{(k-1)}, ~~ \xi(x_1) \geq \dots \geq \xi(x_p)$ and then refine with $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_r)$.
-Usually, if a leaf grid point is refined, all children are created because selective grid point creation would create additional overhead.
-After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
-The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
-
-\section{Dimensionally adaptive sparse grids}
-
-Dimensionally adaptive sparse grids are closely related to spatially adaptive sparse grids.
-In fact, they can be defined as a special case of spatial adaptivity in which all grid points of a subspace $W_{\underline{l}}$ are refined in a specific dimension $k$ during each step.
-The set of grid points of a dimensionally adaptive sparse grid after $m$ steps is denoted as $X_{\text{da}}^{(m)}$.
-Furthermore we define the refinement criterion for a subspace $W_{\underline{l}}$ as $\xi(W_{\underline{l}})$.
-As before we refine the subspace $W_{\underline{l}}$ with the highest value for $\xi(\underline{l})$.
-\begin{definition}
-Let $W_{\underline{l}} \in W$ be a subspace. Then
-\begin{equation}
-c_k(W_{\underline{l}})=\{x_{\underline{l}',\underline{i}} \mid \underline{i} \in H_{\underline{l}'} \}, ~ \underline{l}'=(l_1, \dots, l_k + 1, \dots, l_d)
-\end{equation}
-are the child grid points of that subspace in dimension $k$.
-\end{definition}
-By adding all grid points of $c_k(W_{\underline{l}})$, we effectively add a new subspace $W_{(l_1, \dots, l_k + 1, \dots, l_d)}$ as well.
-Which subspaces can be refined during each step is a little bit more complex than in the spatially adaptive case and since in this paper we will only use spatially adaptive sparse grids, it will be omitted.
-
-\section{Coarse boundaries}
-
-A compromise between having no boundary and having a full boundary are coarse boundaries.
+\begin{description}
+\item[Coarse boundaries] A compromise between having no boundary and having a full boundary are coarse boundaries.
 These are trailing boundaries
+\end{description}
 
-\section{Grid point count comparision}
+
+
+\section{Example}
+
+The first example model function to investigate the properties of the presented methods, is designed to be a good fit for them and is also simple.
+
+\begin{equation}
+f_1(x)=(x_1 + 1) x_2 + \frac{1}{10}\sin(x_3)
+\nonumber
+\end{equation}
+
+It is a four-dimensional function, where the first two input components are the ... and should be preserved .
+The third input dimension is used, but does not contribute a lot to the overall function and can be kept or removed by the methods, depending on the method configuration.
+The fourth and last input dimension is completely unused and should be detected and removed by dimension reduction methods.
+
 
 graph
 
+\section{Bad example}
 
+For example, the function $f(x_1,x_2)=x_1 + x_2$ can be interpolated perfectly using a linear boundary grid with level 0 and using the ANOVA method, it can also be represented as a sum of two one-dimensional basis functions, since the effective dimensionality is 1.
+However, just by rotating the function by a few degrees with
+\begin{equation}
+f'(x_1,x_2)=x_1' + x_2', ~~ \begin{pmatrix}
+    x_1' \\ x_2'
+    \\
+  \end{pmatrix} = \begin{pmatrix}
+    \cos(0.1 \pi) & -\sin(0.1 \pi)\\
+    \sin(0.1 \pi) & \cos(0.1 \pi)
+    \\
+  \end{pmatrix}\begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix}
+\end{equation}
+the function can not be interpolated perfectly anymore and the ANOVA method fails, since the function is no longer aligned to the axes.
+This can be seen in figure \ref{fig:fcomp}.
+Even without the additional rotation, the ANOVA method and others do not detect that the function can be represented with a single one-dimensional term with
+\begin{equation}
+f(x_1,x_2)=g(\begin{pmatrix}
+    1 & 1
+    \\
+  \end{pmatrix} \begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix}), ~ g(x)=x
+\end{equation}
+, because this single term is not axis-aligned.
 
+\section{Summary}
 
+A fundamental property of any axis-aligned mesh-based method that uses basis functions created by using the tensor product approach is that their quality depends on whether the model function primarily also has axis-aligned structures.
+
+In contrast, mesh-free methods do not ...
 
 
 
@@ -1759,11 +1816,19 @@ The goal is to answer the following questions:
 
 Every question will be answered by looking at one or more example functions or datasets.
 
+\appendix
+
+
+\chapter{Appendix}
+
+
+Test
+
+\newpage
 \printbibliography
 
 All links were last followed on March 17, 2018.
 
-\appendix
 
 \pagestyle{empty}
 \renewcommand*{\chapterpagestyle}{empty}
