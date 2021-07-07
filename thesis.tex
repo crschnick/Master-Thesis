@@ -589,6 +589,8 @@ There exist many different algorithms to approximate the quantile function for c
 The variant that is used in this thesis is presented in \cite{} and is basically a combination of different algorithms that excel for specific ranges of values for $U$.
 The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
 
+\section{Radial basis function interpolation}
+
 \chapter{Overview of grid point reduction strategies}
 
 %Curse of dim. definition
@@ -883,16 +885,21 @@ These are trailing boundaries
 The first example model function to investigate the properties of the presented methods, is designed to be a good fit for them and is also simple.
 
 \begin{equation}
-f_1(x)=(x_1 + 1) x_2 + \frac{1}{10}\sin(x_3)
+f_1(x)=2 x_1 + \frac{1}{10}\sin(2 \pi x_2) + 1
 \nonumber
 \end{equation}
 
-It is a four-dimensional function, where the first two input components are the ... and should be preserved .
+It is a three-dimensional function, where the first two input components are the ... and should be preserved .
 The third input dimension is used, but does not contribute a lot to the overall function and can be kept or removed by the methods, depending on the method configuration.
 The fourth and last input dimension is completely unused and should be detected and removed by dimension reduction methods.
 
+\todo{Spatially adaptive grid point graph}
 
-graph
+\todo{Dimensionally adaptive grid point graph}
+
+\todo{ANOVA grid point graph}
+
+\todo{Errror graph with SA, DA, RBF, ANOVA}
 
 \section{Bad example}
 
