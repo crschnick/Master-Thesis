@@ -591,7 +591,7 @@ The rest of the implementation just needs to generate a set of a quasirandom sam
 
 \section{Radial basis function interpolation}
 
-\chapter{Overview of grid point reduction strategies}
+\chapter{Surrogates for high dimensions}
 
 %Curse of dim. definition
 The presented grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality.
@@ -667,48 +667,32 @@ Usually, if a leaf grid point is refined, all children are created because selec
 After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
 The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
 
-\section{Dimensionally adaptive sparse grids}
+\section{Other types of adaptive Sparse Grids}
 
-\todo{Really the same spatially adap. ?}
-
-Dimensionally adaptive sparse grids are closely related to spatially adaptive sparse grids.
-In fact, they can be defined as a special case of spatial adaptivity in which all grid points of a subspace $W_{\underline{l}}$ are refined in a specific dimension $k$ during each step.
-The set of grid points of a dimensionally adaptive sparse grid after $m$ steps is denoted as $X_{\text{da}}^{(m)}$.
-Furthermore we define the refinement criterion for a subspace $W_{\underline{l}}$ as $\xi(W_{\underline{l}})$.
-As before we refine the subspace $W_{\underline{l}}$ with the highest value for $\xi(\underline{l})$.
-\begin{definition}
-Let $W_{\underline{l}} \in W$ be a subspace. Then
-\begin{equation}
-c_k(W_{\underline{l}})=\{x_{\underline{l}',\underline{i}} \mid \underline{i} \in H_{\underline{l}'} \}, ~ \underline{l}'=(l_1, \dots, l_k + 1, \dots, l_d)
-\end{equation}
-are the child grid points of that subspace in dimension $k$.
-\end{definition}
-By adding all grid points of $c_k(W_{\underline{l}})$, we effectively add a new subspace $W_{(l_1, \dots, l_k + 1, \dots, l_d)}$ as well.
-Which subspaces can be refined during each step is a little bit more complex than in the spatially adaptive case and since in this paper we will only use spatially adaptive sparse grids, it will be omitted.
+The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededding dimensionally adaptive sparse grids \cite{} or the more recent spatially dimension adaptive Sparse Grids \cite{}.
+One downside of the classical version of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
+In a dimension reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
+Spatially dimension adaptive Sparse Grids do exactly that, and are therefore better suited for dimension reduction.
 
 \section{Sparse Grid based ANOVA}
 
-
-Functional ANOVA is a well established method in statistics to 
+Functional ANOVA is a well established method in statistics to identify important inputs of a model.
+It is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}.
+In contrast to the previously described methods, Sparse Grid based ANOVA is purposefully designed for dimension reduction.
 The fundemental goal is to obtain the ANOVA decomposition of a function $f$ that has the form of
 \begin{equation}
 f(x)=f_0 + \sum_{t=1}^d \sum_{i_1 < \dots < i_t} f_{i_1,\dots,i_t}(x_{i_1},\dots,x_{i_t})
 \label{anovaBase}
 \end{equation}
-
-\begin{definition}[Dimension indices]
+where all terms have to be orthogonal.
 Let $D=\{1,\dots,d\}$ be the set of dimension indices.
-Then
-\begin{equation}
-C \coloneqq \mathcal{P}(D)
-\end{equation}
-is the set of ANOVA-components, where an ANOVA-component $c \in C$ that contains a specific dimension index $i \in D$ indicates that the function term is non-constant in the $i$-th dimension.
-\end{definition}
+Then $C \coloneqq \mathcal{P}(D)$ is the set of ANOVA-components, where an ANOVA-component $c \in C$ that contains a specific dimension index $i \in D$ indicates that the function term is non-constant in the $i$-th dimension.
 We can then express the decomposition \eqref{anovaBase} as a componentwise sum with
 \begin{equation}
 f(x)=\sum_{c \in \mathcal{P}(D)} f_{c}(x)
+\label{anovaComp}
 \end{equation}
-A requirement of this decomposition is that all terms have to be orthogonal, i.e. for $c,c' \in C, c \neq c'$ it has to hold that
+As mentioned before, a requirement of this decomposition is that all terms have to be orthogonal, i.e. for $c,c' \in C, c \neq c'$ it has to hold that
 \begin{equation}
 \int_{\Omega} f_c(x) f_{c'}(x) \text{d}x = 0
 \end{equation}
@@ -720,178 +704,42 @@ It can be shown that this property can be fullfilled by having terms that averag
 
 
 A decomposition of a high dimensional function $f$ into $2^d$ lower dimensional function terms allows for an examination of individual terms with the goal identifying the terms that contribute the least amount of variance to the total function variance.
-This decomposition can also be performed on a sparse grid by using the right basis functions and grid point partition.
+This decomposition can be employed on sparse grids by using an orthogonal basis, e.g. a wavelet basis, with a constant basis function to represent the $f_c$.
 
-\begin{definition}[Variance]
-Let $f$ be a function and $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$.
-Then
+Since the terms $f_i$ fullfil the orthogonality property \eqref{ortho}, we can define a variance function $\sigma^2(f)$ in an additive manner:
 \begin{equation}
-\sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x
+\sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c)
 \end{equation}
-denotes the so-called variance of a function with regards to the input distribution $\rho$.
-\end{definition}
-
-It holds that 
-\begin{equation}
-\sigma^2(f)=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c)
-\end{equation}
-because the terms $f_i$ fullfil the orthogonality property \eqref{ortho} and therefore the variance function $\sigma^2(f)$ is additive.
-
-\begin{definition}[Sobol indices]
-Let $c \in C$ be an ANOVA-component.
-Then
+For every ANOVA component $c \in C$, we can then calculate the variance share, also called Sobol index, for each term:
 \begin{equation}
 S_{c}=\frac{\sigma^2(f_{\underline{c}} )}{\sigma^2(f)}, ~~ \sum_{c \in \mathcal{P}(D)} S_{c} = 1
 \nonumber
 \end{equation}
-is the Sobol index of a function term $f_c$. It indicates the share of the total variance of the function term.
-\end{definition}
 
-
-\begin{definition}[Total-effect indices]
-Adding all indices of a dimension together results in the so called total-effect indices 
+This can then be used for effective dimensionality reduction as shown in \cite{G13,F10}, where the focus lies on minimizing the ANOVA order $|c|$, i.e. the number of non-constant dimensions of the function terms used in \eqref{anovaBase}, to approximate $f(x)$.
+In other words, we try to find a $u < d$ with
 \begin{equation}
-T_i \coloneqq \sum_{c \in \mathcal{P}(D), i \in c} S_{c}
-\label{total_effect}
+f(x) \approx \sum_{c \in \mathcal{P}(D), |c| \leq u} f_c(x)
+\label{effectiveAnova}
 \end{equation}
-\end{definition}
-Note that for practical implementations, calculations of these total-effect indices \eqref{total_effect} do not require calculating an exponential amount of Sobol indices $S_{c}$.
-
-\newpage
-\subsection{Sparse grid based ANOVA}
-
-\begin{definition}[Component grid points]
-Let $c \in C$ be an ANOVA-component and $X$ be a set of grid points.
-Then
-\begin{equation}
-X_c=\{x_{\underline{l},\underline{i}} \in X \mid l_t=i_t=0 \oplus t \in c, ~ 1 \leq t \leq d\}
-\end{equation}
-is the set of grid points that support basis functions that are only active in the dimensions included in $c$.
-\end{definition}
-
-\begin{lemma}
-The componentwise grid point sets $X_c$ form a partition of $X$, i.e.
-\begin{equation}
-X=\bigcup_{c \in C} X_c, ~~ X_c \cap X_{c'} = \emptyset
-\end{equation}
-\end{lemma}
-\begin{proof}
-\end{proof}
-
-\begin{theorem}
-Let $\hat{f} \in V_{X}^{\phi^p}$ be the interpolant of $f$.
-It then holds that
-\begin{equation}
-\hat{f}(x)=\sum_{c \in C} \hat{f}_{c}(x), ~~ \hat{f}_c \in V_{X_c}^{\phi^p}
-\end{equation}
-is an ANOVA decomposition of $\hat{f}$ since every function term in that decomposition averages zero over all its dimension indices, i.e.
-\begin{equation}
-\int_0^1 \hat{f}_c(x) ~ \text{d}x_k = 0, ~ k \in c
-\end{equation}
-\end{theorem}
-
-\begin{definition}[Remaining ANOVA grid points]
-Let $R \subseteq D$ be the set of remaining dimension indices and $X$ be a set of grid points.
-Then
-\begin{equation}
-\text{A}_R(X)=\{x_{\underline{l},\underline{i}} \in X \mid l_t=i_t=0 \lor t \in R, ~ 1 \leq t \leq d\}
-\end{equation}
-is the set of grid points that support basis functions that are only active in the dimensions included in $R$.
-\end{definition}
-
-
-\newpage
-\subsection{MC ANOVA}
-
-\begin{lemma}
-Let $\{x_i \sim \rho\}_{i=1}^n$ and $\{y_i \sim \rho\}_{i=1}^n$ be two sets of $n$ independently drawn samples from $\rho$.
-By defining the mixed sample points
-\begin{equation}
-x_k^{(i)}=(x_{k,1}, \dots,x_{k,i-1}, y_{k,i}, x_{k,i+1},\dots,x_{k,d})^T
-\end{equation}
-which are ... we can calculate the total effect indices with
-\begin{equation}
-S_{\rho}^{(i)}=\frac{\sum_{k=1}^n f(y_k) (f(x_k^{(i)}) - f(x_k))}{n \sigma_{\rho}(f)}
-\end{equation}
-\begin{equation}
-T_{\rho}^{(i)}=\frac{\sum_{k=1}^n (f(x_k) - f(x_k^{(i)}))^2}{2n \sigma_{\rho}(f)}
-\end{equation}
-\end{lemma}
-
-
-\newpage
-\subsection{Eliminating dimensions}
-
-The first dimension reduction method introduced is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}.
-The goal here is to identify important inputs of a model by examining its ANOVA-decomposition and its total-effect indices.
-
-The removal of unessential dimensions is then accomplished by a stepwise algorithm that starts with $R=D$ and in which during each step all the reduced set dimension indices $R=\{d_1, \dots,d_r\}$ that are left are ranked based on their total-effect indices with $T_{d_1} \geq \dots \geq T_{d_i}$ and the one with the lowest total-effect index is eliminated with $R=R \setminus \{d_i\}$.
-This process can be continued until there are no more dimensions left ($R=\emptyset$) or the variance share left is less than the required minium ($\sum_{c \in \mathcal{P}(R)} S_{c} < \epsilon_{min}$).
-
-After the dimension removal algorithm has finished and there are only $r$ dimensions left with $R=\{d_1, \dots, d_r\}$,
-we define the transformation function using the matrix $T_R \in \{0,1\}^{(r \times d)}$ which is used for removing inactive dimensions as follows:
-\begin{equation}
-t_R^{ANOVA}(x) \coloneqq T_R \, x, ~~
-(T_R)_{i,j} \coloneqq\begin{cases}
-    1,  d_i = j\\
-    0,  else
-\end{cases}
-\nonumber
-\end{equation}
-The reduced function is then constructed by only keeping the active dimensions included in $R$:
-\begin{equation}
-\eta_R^{ANOVA}(x) = \sum_{c \in \mathcal{P}(R)} f_c(x), ~~ f_c \in \tilde{V}_{n}^c
-\label{anovaComponentWise}
-\end{equation}
-
-This decomposition can be employed on sparse grids by using an orthogonal basis, e.g. a wavelet basis, with a special constant basis function to represent the $f_c$.
-
-\newpage
-\subsection{Reducing the effective dimensionality}
-
-This can then be used for effective dimensionality reduction as shown in \cite{G13,F10}, where the focus lies on minimizing the ANOVA order $a$, i.e. the number of non-constant dimensions of the function terms used in \eqref{anovaBase}, to approximate $f(x)$.
-In other words, we try to find a $a < d$ with
-\begin{equation}
-f(x) \approx \sum_{c \in \mathcal{P}(D), |c| \leq a} f_c(x)
-\end{equation}
-
-\begin{definition}[ANOVA grid points]
-Let $X$ be a set of grid points and $1 \leq a \leq d$ the ANOVA order.
-Then
-\begin{equation}
-X^{\text{ANOVA}(a)}=\{x_{\underline{l},\underline{i}} \in X \mid |\{1 \leq t \leq d \mid l_t=0 \land i_t = 0\}| \leq a\}
-\end{equation}
-is the set of grid points that support a basis function with at most $a$ non-constant dimensions.
-\end{definition}
-
 Such an approximation is useful for certain problems with a low effective dimensionality as presented in \cite{H08}.
 This method also has its limitations however, specifically the need to first construct a $d$-dimensional sparse grid to accurately compute the variances $\sigma^2(f_c)$, the need for boundaries and the analysis of $2^d$ terms.
 
-
-
-
-\section{Other strategies}
-
-
-\begin{description}
-\item[Coarse boundaries] A compromise between having no boundary and having a full boundary are coarse boundaries.
-These are trailing boundaries
-\end{description}
-
+Alternatively, the variances of the function terms can also be calculated with a Monte-Carlo approach \cite{} beforehand and the grid can be generated accordingly, removing the need to first generate all functions term in \ref{anovaComp} and then cutting some of them off again in \ref{effectiveAnova}.
+However, one way or the other, one has to deal with the negative effects of the curse of dimensionality, since all calculations to determine variances are done only on the original high-dimensional model.
 
 
 \section{Example}
 
 The first example model function to investigate the properties of the presented methods, is designed to be a good fit for them and is also simple.
+It is a two-dimensional function, where the first component contributes the most to the total function value while the second one does not:
 
 \begin{equation}
-f_1(x)=2 x_1 + \frac{1}{10}\sin(2 \pi x_2) + 1
+f_1(x)=e^{x_1 + 1} + \frac{1}{10}\sin(2 \pi x_2) + 1
 \nonumber
 \end{equation}
 
-It is a three-dimensional function, where the first two input components are the ... and should be preserved .
-The third input dimension is used, but does not contribute a lot to the overall function and can be kept or removed by the methods, depending on the method configuration.
-The fourth and last input dimension is completely unused and should be detected and removed by dimension reduction methods.
+
 
 \todo{Spatially adaptive grid point graph}
 
