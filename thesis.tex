@@ -380,184 +380,7 @@ as the hat basis function.
 \end{definition}
 The classic piecewise linear basis functions are easy to understand, easy to implement and the hierarchical surplusses can be computed without solving an sle.
 
-\subsection{B-Spline basis}
-
-One downside of the hat basis is that the functions do not have a continuous derivative.
-Instead, there are discontinuities at the grid point $x_{l,i}$ itself where the derivative flips its sign and at the neighbouring grid points $x_{l,i+2}$ and $x_{l,i-2}$ where the derivative changes to zero.
-One solution to eliminating these discontinuities are B-Splines, which are just piecewise polynomials.
-\begin{definition}[B-Splines]
-Let $p \in \mathds{N}$.
-Then
-\begin{equation}
-b^0(x) \coloneqq
-\begin{cases}
-    1, & x \in [0,1) \\
-   0, & \text{else}
-\end{cases}
-\end{equation}
-is a B-Spline of degree $0$ and
-\begin{equation}
-b^p(x) \coloneqq \frac{1}{p} xb^{p-1}(x) + (p + 1 - x) b^{p-1}(x-1) 
-\end{equation}
-is a B-Spline of degree $p$.
-\end{definition}
-This definition of B-Splines is based on the Cox-de-Boor recursion.
-
-\begin{definition}[B-Spline basis functions]
-Let $l,i \in \mathds{N}_0$.
-Then
-\begin{equation}
-\phi^b_{l,i}(x) \coloneqq b^p \left( 2^l x + \frac{p+1}{2} -i \right)
-\end{equation}
-is an univariate B-Spline basis function of degree $p$.
-\end{definition}
-
-\subsection{Mod B-Spline basis}
-
-\begin{definition}[Knots]
-Let $m,p \in \mathds{N}_0$.
-We then define
-\begin{equation}
-\underline{\xi}=(\xi_0, \dots, \xi_{m + p}) \in \mathds{R}^{m + p}, ~~ \xi_0 \leq \dots \leq \xi_{m + p}
-\end{equation}
-as a sequence of knots.
-\end{definition}
-
-\begin{definition}[B-Splines]
-Let $p \in \mathds{N}$.
-Then
-\begin{equation}
-b^0_{i,\underline{\xi}}(x) \coloneqq
-\begin{cases}
-    1, & x \in [\xi_i,x_i] \\
-   0, & \text{else}
-\end{cases}
-\end{equation}
-is a B-Spline of degree $0$ and
-\begin{equation}
-b_{i,\underline{\xi}}^p(x) \coloneqq \frac{x - \xi_i}{\xi_{i + p} - \xi_i} b_{i,\underline{\xi}}^{p-1}(x) + \frac{\xi_{i+p+1} - \xi_i}{\xi_{i + p} - \xi_i} b_{i+1,\underline{\xi}}^{p-1}(x) 
-\end{equation}
-is a B-Spline of degree $p$.
-\end{definition}
-
-\begin{definition}[Mod B-Spline basis functions]
-Let
-\begin{equation}
-\phi_l^p(x) \coloneqq \sum_{i=0}^{\lceil (p+1)/2 \rceil} (i+1) \phi^p_{l,1-k}(x)
-\end{equation}
-be the boundary...
-\begin{equation}
-\phi^{p,\text{mod}}_{l,i}(x) \coloneqq
-\begin{cases}
-1 &, l=1\\
-\phi^p_{l}(x)&, l>1, i=1\\
-\phi^p_{l}(x)&, l>1, i=2^l - 1\\
-\phi_{l,i}(x)&, \text{else}
-\end{cases}
-\nonumber
-\end{equation}
-\end{definition}
-
-
-\subsection{Modified basis functions}
-
-One method of removing the need of using boundary grid points at least to some degree are modified basis functions.
-These basis functions do not require grid points at the boundary.
-Instead at every grid level, they extrapolate the values at the boundaries from the grid points closest to the boundaries using a special kind of basis function.
-Therefore, it is possible to modify any non-boundary basis $\phi_{l,i}$ by defining the modified basis as follows:
-\begin{equation}
-\phi^{\text{mod}}_{l,i}(x) \coloneqq
-\begin{cases}
-1 &, l=1\\
-\phi^{\text{left}}_{l}(x)&, l>1, i=1\\
-\phi^{\text{right}}_{l}(x)&, l>1, i=2^l - 1\\
-\phi_{l,i}(x)&, \text{else}
-\end{cases}
-\nonumber
-\end{equation}
-where $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are the special boundary extrapolation functions.
-Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with regards to their structure of the normal basis functions $\phi_{l,i}$, e.g. a hat basis is usually modified with special hat functions.
-
-
-
-\subsection{Prewavelets}
-
-A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
-Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
-One of these properties is the orthogonality property with $\langle \phi_{i},\phi_{j} \rangle = 0$ for all wavelets with $i \neq j$.
-Furthermore,  the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
-One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
-In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
-However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
-
-\begin{definition}[Semi-Orthogonality]
-Let $m,n \in \mathds{N}_0, m \neq n$ be two different levels and $\phi_{l,i}$ a basis.
-We then call this basis semi-orthogonal if
-\begin{align}
-\begin{split}
-&\langle \phi_{m,i},\phi_{n,j} \rangle = 0
-\nonumber
-\end{split}
-\end{align}
-\end{definition}
-
-The basis functions that are used in this thesis are prewavelets with boundary support \cite{GO95,HP17}, which are linear combinations of the hierarchical hat functions $\phi_{l,i}^h(x)$ and have the desirable property of being semi-orthogonal.
-
-\begin{definition}[Boundary prewavelet basis]
-The first basis functions are defined as
-\begin{equation}
-\phi^p_{0,0} = 1\\
-\phi^p_{0, 1} = -\phi_{0,0} + \phi_{0,1}\\
-\phi^p_{1, 1} = -\phi_{1,0} + \phi_{1,1} -\phi_{1,2}
-\end{equation}
-For $l \geq 2$ the basis function are defined as 
-\begin{equation}
-\phi^p_{l,i} = \frac{1}{10} \phi_{l,i-2} - \frac{6}{10} \phi_{l,i-1} + \frac{10}{10} \phi_{l,i} - \frac{6}{10} \phi_{l,i+1} + \frac{1}{10} \phi_{l,i+2}
-\label{prewavelet_def}
-\end{equation}
-with the special boundary cases
-\begin{equation}
-\phi^p_{l,1} = -\frac{12}{10} \phi_{l,0} + \frac{11}{10} \phi_{l,1} - \frac{6}{10} \phi_{l,2} + \frac{1}{10} \phi_{l,3}\\ \phi^p_{l,2^l-1}(x)=\phi^p_{l,1}(1-x)
-\end{equation}
-\end{definition}
-The multivariate basis functions $\phi^p_{\underline{l},\underline{i}}$ are obtained by applying the tensor-product approach to the univariate basis functions $\phi^p_{l,i}$ to get $\phi^p_{\underline{l},\underline{i}} \coloneqq \prod_{t=1}^{d} \phi^p_{l_t,i_t}$.
-These also fullfil the semi-orthogonality with $\langle \phi^p_{\underline{l},\underline{i}},\phi^p_{\underline{l'},\underline{i'}} \rangle = 0$ for $\underline{l} \neq \underline{l'}$.
-
-
-\newpage
 \section{Hierarchisation}
-
-\newpage
-
-\section{Regression}
-
-- useful if the model function has noise
-
-There are different ways of constructing the surrogate $\hat{f}$.
-The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
-The dataset used for the regression is then defined as
-\todo{Bezeichner $S$ ist schon der surrogate space}
-\begin{equation}
-S=\{(x_i,y_i) = (t(z_i),f(z_i)), ~ z_i \in Z\}
-\end{equation}
-
-We are aiming to construct the function $\hat{f}$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
-\begin{equation}
-\hat{f}(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
-\end{equation}
-Thus, we are trying to solve the least squares problem with the standard square loss function for the dataset $S$ with
-\begin{equation}
-\epsilon_{S}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (y_i - \hat{f}(x_i))^2 
-\end{equation}
-
-Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(x,y), (x',y') \in S, ~ x=x', y\neq y'$.
-Since the surrogate construction is usually an ill-posed problem and we are calculating a regressed function only based on the samples $S$, the regression method used employs regularization as well to prevent overfitting.
-We are therefore solving the regularized least squares problem with the smoothing factor $\lambda > 0$:
-\begin{equation}
-\hat{f} = \argmin_{\hat{f} \in V} \epsilon_{S}(\hat{f}) + \lambda R(\hat{f})
-\end{equation}
-
-\newpage
 
 \section{Sampling}
 
@@ -1444,33 +1267,68 @@ Therefore another non sparse grid based optimization can be performed on the set
 
 \chapter{Algorithm}
 
+We now covered all the tools needed to approximate the model function with a transformed surrogate.
+However, we can take a look at similar methods and take some inspirations from them.
+One of these related methods is projection pursuit regression \cite{}.
+
+\section{Projection pursuit regression}
+
+The projection pursuit regression method comes from the area of statistics and is in its core idea related to our approach with linear transformations.
+It tries to represent a dataset $P=\{(x_i, y_i)=(x_i, f(x_i))\}$ using the form
+\begin{equation}
+y_i=\beta_0 + \sum_{i=1}^m f(\beta_i^T x_i) + \epsilon_i
+\end{equation}
+where $\beta_0$ is a constant, $\beta_i$ are ..., and the $\epsilon_i$ are the residiuals.
+Using the $\beta_i$ to project inputs onto a lower-dimensional hyperplane is very similar to our concept of creating linear transformations.
+
+
+Going from this statistical model to our function approximation problem, we can 
+\begin{equation}
+f(x)=\sum_{i=1}^m f(\beta_i^T x_i)
+\end{equation}
+The functions $\hat{f}_i$ and projections $\beta_i$ of this additive model can be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the error function
+\begin{equation}
+e_k(x)=f(x) - \sum_{i=1}^k f(\beta_i^T x_i)
+\end{equation}
+
+\begin{algorithm}[H]
+\normalsize
+\begin{algorithmic}
+\Function{projectionPursuitRegression}{$f, m$}
+    \State $e_0 = f$
+    \For{$i = 1, \dots, m$}
+    	\State $\beta_i \gets$ best
+    	\State $e \gets e_{i - 1} - \hat{f}_i$
+    \EndFor
+    \State $\hat{f} \gets \sum_{i=1}^m f(\beta_i^T x_i)$
+    \State \Return{$\hat{f}$}
+\EndFunction
+\end{algorithmic}
+	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Alternatively, one could introduce an error exit condition that exists the loop if the regression error is small enough with $\epsilon(e) < \epsilon_{max}$.}
+\end{algorithm}
+
+\todo{Mean center function?}
+
 \section{An iterative approach}
 
-First of all, we take a look at the theoretical function representation using the iterative algorithm.
-We define a function $f$ as $r$-dimensional representable in one step if
-\todo{wo wird $t_A$ definiert?}
-\begin{equation}
-r_{min}(f) \leq r, ~~r_{min}(f)=\argmin_i \exists A \in R^{d \times i},\hat{f} \colon f(x)=\hat{f}(t_{A}(x))
-\end{equation}
+\begin{algorithm}[H]
+\normalsize
+\begin{algorithmic}
+\Function{transformedSurrogateSum}{$f, m$}
+    \State $e_0 = f$
+    \For{$i = 1, \dots, m$}
+    	\State $t_i \gets$ generateBestTransformation()
+    	\State $\hat{f}_{t_i,i} \gets$ generateBestSurroate($t_i$)
+    	\State $e \gets e_{i - 1} - \hat{f}_{t_i,i}$
+    \EndFor
+    \State $\hat{f} \gets \sum_{i=1}^m \hat{f}_{t_i, i} \circ t_i$
+    \State \Return{$\hat{f}$}
+\EndFunction
+\end{algorithmic}
+	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Alternatively, one could introduce an error exit condition that exists the loop if the regression error is small enough with $\epsilon(e) < \epsilon_{max}$.}
+\end{algorithm}
 
-When looking at a decomposition into a minimal sum of multiple function terms, one important factor is that each term has to contribute something to the function along a direction that no other term can do.
-I.e. one can not merge two function terms into one.
-Therefore, we define that two matrices $A,B$ are independent, if
-\begin{equation}
-\text{span } A \nsubseteq
-\text{span } B \land \text{span } B \nsubseteq
-\text{span } A
-\end{equation}
-
-If there are $n$ functions with $r_{min}(f_i) = r_i, ~ i \in \{1,\dots,n\}$ and the $A_i \in R^{d \times r_i}$ are independent with \todo{Summe bis $n$, nicht $i$ oder?} $f=\sum_{k=1}^i \hat{f}_k \circ t_{A_k}$, then we define a function $f$ as $r$-dimensional representable in $n$ steps, i.e. an optimal algorithm that correctly calculates $A_i$ needs a minimum of $n$ iterations to exactly approximate the function $f$.
-
-\subsection{Practical representations}
-
-We define a function $f$ as approximately $r$-dimensional representable in $n$ steps with $\epsilon_{max}$ if there exist $\hat{f_k} \in V$ and $A_k \in R^{d \times r}$, $k \in \{1,\dots,n\}$, such that
-\todo{$\epsilon_S$ definieren}
-\begin{equation}
-\epsilon_{S}(f - \sum_{k=1}^n \hat{f}_k \circ t_{A_k}) \leq \epsilon_{max}
-\end{equation}
+In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
 
 \chapter{Implementation}
 
@@ -1729,6 +1587,151 @@ The goal in this chapter is to provide good default configurations and also an a
 \appendix
 \chapter{Appendix}
 
+\subsection{B-Spline basis}
+
+One downside of the hat basis is that the functions do not have a continuous derivative.
+Instead, there are discontinuities at the grid point $x_{l,i}$ itself where the derivative flips its sign and at the neighbouring grid points $x_{l,i+2}$ and $x_{l,i-2}$ where the derivative changes to zero.
+One solution to eliminating these discontinuities are B-Splines, which are just piecewise polynomials.
+\begin{definition}[B-Splines]
+Let $p \in \mathds{N}$.
+Then
+\begin{equation}
+b^0(x) \coloneqq
+\begin{cases}
+    1, & x \in [0,1) \\
+   0, & \text{else}
+\end{cases}
+\end{equation}
+is a B-Spline of degree $0$ and
+\begin{equation}
+b^p(x) \coloneqq \frac{1}{p} xb^{p-1}(x) + (p + 1 - x) b^{p-1}(x-1) 
+\end{equation}
+is a B-Spline of degree $p$.
+\end{definition}
+This definition of B-Splines is based on the Cox-de-Boor recursion.
+
+\begin{definition}[B-Spline basis functions]
+Let $l,i \in \mathds{N}_0$.
+Then
+\begin{equation}
+\phi^b_{l,i}(x) \coloneqq b^p \left( 2^l x + \frac{p+1}{2} -i \right)
+\end{equation}
+is an univariate B-Spline basis function of degree $p$.
+\end{definition}
+
+\subsection{Mod B-Spline basis}
+
+\begin{definition}[Knots]
+Let $m,p \in \mathds{N}_0$.
+We then define
+\begin{equation}
+\underline{\xi}=(\xi_0, \dots, \xi_{m + p}) \in \mathds{R}^{m + p}, ~~ \xi_0 \leq \dots \leq \xi_{m + p}
+\end{equation}
+as a sequence of knots.
+\end{definition}
+
+\begin{definition}[B-Splines]
+Let $p \in \mathds{N}$.
+Then
+\begin{equation}
+b^0_{i,\underline{\xi}}(x) \coloneqq
+\begin{cases}
+    1, & x \in [\xi_i,x_i] \\
+   0, & \text{else}
+\end{cases}
+\end{equation}
+is a B-Spline of degree $0$ and
+\begin{equation}
+b_{i,\underline{\xi}}^p(x) \coloneqq \frac{x - \xi_i}{\xi_{i + p} - \xi_i} b_{i,\underline{\xi}}^{p-1}(x) + \frac{\xi_{i+p+1} - \xi_i}{\xi_{i + p} - \xi_i} b_{i+1,\underline{\xi}}^{p-1}(x) 
+\end{equation}
+is a B-Spline of degree $p$.
+\end{definition}
+
+\begin{definition}[Mod B-Spline basis functions]
+Let
+\begin{equation}
+\phi_l^p(x) \coloneqq \sum_{i=0}^{\lceil (p+1)/2 \rceil} (i+1) \phi^p_{l,1-k}(x)
+\end{equation}
+be the boundary...
+\begin{equation}
+\phi^{p,\text{mod}}_{l,i}(x) \coloneqq
+\begin{cases}
+1 &, l=1\\
+\phi^p_{l}(x)&, l>1, i=1\\
+\phi^p_{l}(x)&, l>1, i=2^l - 1\\
+\phi_{l,i}(x)&, \text{else}
+\end{cases}
+\nonumber
+\end{equation}
+\end{definition}
+
+
+\subsection{Modified basis functions}
+
+One method of removing the need of using boundary grid points at least to some degree are modified basis functions.
+These basis functions do not require grid points at the boundary.
+Instead at every grid level, they extrapolate the values at the boundaries from the grid points closest to the boundaries using a special kind of basis function.
+Therefore, it is possible to modify any non-boundary basis $\phi_{l,i}$ by defining the modified basis as follows:
+\begin{equation}
+\phi^{\text{mod}}_{l,i}(x) \coloneqq
+\begin{cases}
+1 &, l=1\\
+\phi^{\text{left}}_{l}(x)&, l>1, i=1\\
+\phi^{\text{right}}_{l}(x)&, l>1, i=2^l - 1\\
+\phi_{l,i}(x)&, \text{else}
+\end{cases}
+\nonumber
+\end{equation}
+where $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are the special boundary extrapolation functions.
+Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with regards to their structure of the normal basis functions $\phi_{l,i}$, e.g. a hat basis is usually modified with special hat functions.
+
+
+
+
+
+
+\subsection{Prewavelets}
+
+A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
+Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
+One of these properties is the orthogonality property with $\langle \phi_{i},\phi_{j} \rangle = 0$ for all wavelets with $i \neq j$.
+Furthermore,  the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
+One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
+In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
+However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
+
+\begin{definition}[Semi-Orthogonality]
+Let $m,n \in \mathds{N}_0, m \neq n$ be two different levels and $\phi_{l,i}$ a basis.
+We then call this basis semi-orthogonal if
+\begin{align}
+\begin{split}
+&\langle \phi_{m,i},\phi_{n,j} \rangle = 0
+\nonumber
+\end{split}
+\end{align}
+\end{definition}
+
+The basis functions that are used in this thesis are prewavelets with boundary support \cite{GO95,HP17}, which are linear combinations of the hierarchical hat functions $\phi_{l,i}^h(x)$ and have the desirable property of being semi-orthogonal.
+
+\begin{definition}[Boundary prewavelet basis]
+The first basis functions are defined as
+\begin{equation}
+\phi^p_{0,0} = 1\\
+\phi^p_{0, 1} = -\phi_{0,0} + \phi_{0,1}\\
+\phi^p_{1, 1} = -\phi_{1,0} + \phi_{1,1} -\phi_{1,2}
+\end{equation}
+For $l \geq 2$ the basis function are defined as 
+\begin{equation}
+\phi^p_{l,i} = \frac{1}{10} \phi_{l,i-2} - \frac{6}{10} \phi_{l,i-1} + \frac{10}{10} \phi_{l,i} - \frac{6}{10} \phi_{l,i+1} + \frac{1}{10} \phi_{l,i+2}
+\label{prewavelet_def}
+\end{equation}
+with the special boundary cases
+\begin{equation}
+\phi^p_{l,1} = -\frac{12}{10} \phi_{l,0} + \frac{11}{10} \phi_{l,1} - \frac{6}{10} \phi_{l,2} + \frac{1}{10} \phi_{l,3}\\ \phi^p_{l,2^l-1}(x)=\phi^p_{l,1}(1-x)
+\end{equation}
+\end{definition}
+The multivariate basis functions $\phi^p_{\underline{l},\underline{i}}$ are obtained by applying the tensor-product approach to the univariate basis functions $\phi^p_{l,i}$ to get $\phi^p_{\underline{l},\underline{i}} \coloneqq \prod_{t=1}^{d} \phi^p_{l_t,i_t}$.
+These also fullfil the semi-orthogonality with $\langle \phi^p_{\underline{l},\underline{i}},\phi^p_{\underline{l'},\underline{i'}} \rangle = 0$ for $\underline{l} \neq \underline{l'}$.
 
 Test
 
