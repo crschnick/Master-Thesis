@@ -590,6 +590,7 @@ The variant that is used in this thesis is presented in \cite{} and is basically
 The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
 
 
+\subsection{Sampling in high dimensions}
 
 
 
@@ -817,6 +818,7 @@ A fundamental property of any axis-aligned mesh-based method that uses basis fun
 
 In contrast, mesh-free methods do not ...
 
+\todo{Define as orientation agnostic}
 
 
 
@@ -1071,6 +1073,18 @@ t_{\text{Cube}}(x)=c_r + u_s
 While it is not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, later figures in this thesis use the described reversing to illustrate lower dimensional transformed sparse grids in the original and higher-dimensional space.
 It is therefore only shown in a more informal way.
 
+\textbf{Inverting the transformation  }
+For certain operations it is necessary to invert the transformation.
+For this we define the inverse transformation as follows:
+\begin{equation}
+t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
+\end{equation}
+In the case of a linear dimensionality preserving transformation, it holds that $|t^{\text{inv}}(x_{t})| \in \{0,1\}$.
+Otherwise, we can't infer anything about the cardinality of the inverse, i.e. $|t^{\text{inv}}(x_{t})| \geq 0$.
+Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conducting operations on the surrogate, it suffices to determine wether a point $x_t \in \Omega_t$ is unused, i.e. $|t^{\text{inv}}(x_{t})| = 0$, which can be done quickly.
+\\
+\\
+
 Let $y=t_{\text{Cube}}(x)$ be the transformed input. It then holds that
 \begin{equation}
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
@@ -1320,67 +1334,64 @@ Furthermore, defining a transformation function that maps from $\Omega$ onto the
 Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
 
 
-\chapter{Surrogate construction}
+\chapter{Surrogates for transformations}
 
-There are different ways of constructing the surrogate $\hat{f}$.
-The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $n$ samples $Z=(z_1,\dots,z_n), ~ z_i \in \Omega$ are drawn randomly according from the pdf $\rho$ and subsequently used to create an approximation of the unknown function.
-The dataset used for the regression is then defined as
-\todo{Bezeichner $S$ ist schon der surrogate space}
+Once a transformation function $t(x)$ has been created, the next step is creating a surrogate for the transformed input space $\Omega_r=t(\Omega)$.
+The original inputs $y_i \in S$, which were drawn randomly according from the pdf $\rho$, are transformed to obtain the transformed sample $S_r=t(S)$ where the $z_i \in S_r$ transformed inputs with $z_i \in \Omega_r$.
+There are many different ways of constructing the surrogate $\hat{f}_r$.
+The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $m \leq n$ samples are used to create an approximation of the model function.
+We are aiming to construct the function $\hat{f}_r$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
 \begin{equation}
-S=\{(x_i,y_i) = (t(z_i),f(z_i)), ~ z_i \in Z\}
+\hat{f}_r(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
 \end{equation}
 
-We are aiming to construct the function $\hat{f}$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
+The dataset used for the regression is then defined as
 \begin{equation}
-\hat{f}(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
+\{(t(y_i),f(y_i)), ~ y_i \in S, ~ 1 \leq i \leq m\}
 \end{equation}
 Thus, we are trying to solve the least squares problem with the standard square loss function for the dataset $S$ with
 \begin{equation}
-\epsilon_{S}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (y_i - \hat{f}(x_i))^2 
+\epsilon(\hat{f}_r)=\frac{1}{m} \sum_{i=1}^m (f(y_i) - \hat{f}_r(t(y_i)))^2 
 \end{equation}
 
-Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(x,y), (x',y') \in S, ~ x=x', y\neq y'$.
+Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(y_i,f(y_i)), (y_j,f(y_j)) \in S, ~ y_i=y_j, f(y_i) \neq f(y_j)$.
 Since the surrogate construction is usually an ill-posed problem and we are calculating a regressed function only based on the samples $S$, the regression method used employs regularization as well to prevent overfitting.
 We are therefore solving the regularized least squares problem with the smoothing factor $\lambda > 0$:
 \begin{equation}
-\hat{f} = \argmin_{\hat{f} \in V} \epsilon_{S}(\hat{f}) + \lambda R(\hat{f})
+\hat{f}_r^{\lambda^*} = \argmin_{\hat{f}_r^\lambda \in V} \epsilon_{S}(\hat{f}_r^\lambda) + \lambda R(\hat{f}_r^\lambda)
 \end{equation}
 
+\section{Multifidelity surrogates}
 
-\section{Why sparse grids?}
+The construction of the best possible Sparse Grid surrogate, given inputs, a transformation, and set of possible configuration parameters can become very computationally expensive, since every parameter combination has to be evaluated.
+To mitigate this problem, we employ the concept of multifidelity simulations \cite{}, i.e. reducing the cost of parametrization by using low fidelity Sparse Grids and datasets to evaluate a parameter combination and only using high fidelity Sparse Grids and datasets when creating the final surrogate using the determined to be optimal parameters.
 
-All approaches, basic transformations and dimensionality reducing transformations, can be implemented without using sparse grids at all in theory.
-There exist many other regression methods ...
-
-
-
-\subsection{Regression-based projection reduction}
-
+A low fidelity Sparse Grid surrogate $\hat{f}^l$ has less grid points compared to an otherwise identical high fidelity Sparse Grid surrogate $\hat{f}^h$.
+This means that the level of $\hat{f}^l$ is lower and less or not refinements at all are used.
+It is vital that the used low fidelity surrogates still stay representative when comparing the errors for different parameter combinations.
+They don't have to be representative of the high fidelity surrogate error, but should fullfil the following property:
 \begin{equation}
-A_r=\begin{bmatrix}
-  \\
-    a_1 ~ a_2 ~ \dots ~ a_{r-1} ~ a_r\\
-    \\
-  \end{bmatrix}
-\label{basis}
+\epsilon(\hat{f}_1^l) < \epsilon(\hat{f}_2^l) \Rightarrow \epsilon(\hat{f}_1^h) < \epsilon(\hat{f}_2^h)
 \end{equation}
+i.e. they should be indicative of the comparative quality of their high fidelity surrogates.
 
+This multifidelity approach will also be used in later chapters in a more extended fashion to also evaluate multiple different transformations to choose the best one.
+As already mentioned, the ability to evaluate transformations is critical for the random transformation method \ref{}, as it allows for the generation and evaluation of many more transformation to choose the best from.
 
-\subsection{Adapted Regression-based reduction}
+\section{Operations on transformed surrogates}
 
-\section{Operations on transformation surrogates}
-
+Now that a surrogate has been created and we can approximate the model function with $f(x) \approx \hat{f}_r(t(x))$,
+we can look at the differences when using transformed surrogates compared to the standard case of directly approximating the model function with $f(x) \approx \hat{f}(x)$ and not using a transformation.
 
 \textbf{Differentiation }
-Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, 
+Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, the gradient can be approximated using the chain rule and the gradient function of the transformed surrogate with
 \begin{equation}
-\nabla f(x) \approx \nabla \hat{f}(t(x)) = \nabla (\hat{f} \circ t)(x)=(Dt(x))^T \nabla \hat{f}(t(x))
+\nabla f(x) \approx \nabla \hat{f}_t(t(x)) = \nabla (\hat{f}_t \circ t)(x)=(Dt(x))^T \nabla \hat{f}_t(t(x))
 \end{equation}
-on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
 \\
 \\
 \textbf{Inverting the transformation  }
-For certain operations it is necessary to invert the transformation.
+For certain operations it is necessary to define the inverse of the transformation function.
 For this we define the inverse transformation as follows:
 \begin{equation}
 t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
@@ -1391,8 +1402,8 @@ Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conduct
 \\
 \\
 \textbf{Transformed distribution}
-The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also has to be transformed to work on the transformation surrogate.
-We therefore define the transformed distribution as
+The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also changes for the transformation surrogate.
+We define the transformed distribution as
 \begin{equation}
 \rho_r \colon \Omega_r \to \mathds{R_+}, ~~ \rho_r(x_r)=\int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x 
 \end{equation}
@@ -1400,23 +1411,24 @@ This is also a distribution since it holds that
 \begin{equation}
 \int_{\Omega_r} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
 \end{equation}
-The function $\rho_r$ can be approximated by a surrogate $\hat{\rho_t}$ using the same regression based approach used to construct $\hat{f}$.
+This means that in many cases for example a uniform distribution $\rho$ will be transformed into a non-uniform distribution $\rho_r$.
 \\
 \\
 \textbf{Density Quadrature}
-Given an input distribution $\rho$ and transformation $t$, we can construct $\rho_t$ and compute the integral
+Given an input distribution $\rho$ and transformation $t$, we can compute the integral with
 \begin{equation}
-\int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}(t(x)) \rho(x) \; \text{d}x
+\int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}_t(t(x)) \rho(x) \; \text{d}x
 =
-\int_{\Omega_r} \hat{f}(x_t) \left(\int_{t^{\text{inv}}(x_t)} \rho(x)  \; \text{d}x \right)  \; \text{d}x_t=
-\int_{\Omega_r} \hat{f}(x_t) \rho_t(x_t) \; \text{d}x_t
+\int_{\Omega_r} \hat{f}_t(z) \left(\int_{t^{\text{inv}}(z)} \rho(x)  \; \text{d}x \right)  \; \text{d}z=
+\int_{\Omega_r} \hat{f}_t(z) \rho_t(z) \; \text{d}z
 \end{equation}
-on the surrogate using a sparse grid quadrature algorithm that is supported by almost any basis.
+By introducing a transformation we lose the ability to easily use Sparse Grid based quadrature algorithms.
+However, since $r$ is usually smaller than $d$, Monte-Carlo based quadrature becomes a better option for transformed surrogates.
 \\
 \\
 \textbf{Quadrature}
 Given a transformation $t$, we can easily compute $\int_{\Omega} f(x) \; \text{d}x$ using the surrogate, since it is a special case of density quadrature with $\rho=\mathcal{U}(0,1)^d$.
-Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_t$ is usually not.
+Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_r$ is usually not.
 \\
 \\
 \textbf{Optimization}
@@ -1459,8 +1471,6 @@ We define a function $f$ as approximately $r$-dimensional representable in $n$ s
 \begin{equation}
 \epsilon_{S}(f - \sum_{k=1}^n \hat{f}_k \circ t_{A_k}) \leq \epsilon_{max}
 \end{equation}
-
-\section{Surrogate error correlation}
 
 \chapter{Implementation}
 
@@ -1707,9 +1717,16 @@ The goal is to answer the following questions:
 
 Every question will be answered by looking at one or more example functions or datasets.
 
+\chapter{Automatic configurations}
+
+As shown in the previous chapters, there are a lot of configuration options for the complete reduction pipeline.
+The goal in this chapter is to provide good default configurations and also an algorithm for automatic configuration generation based on a given model function, using the insights from the previous chapter.
+
+\chapter{Conclusion and outlook}
+
+
+
 \appendix
-
-
 \chapter{Appendix}
 
 
@@ -1717,8 +1734,6 @@ Test
 
 \newpage
 \printbibliography
-
-All links were last followed on March 17, 2018.
 
 
 \pagestyle{empty}
