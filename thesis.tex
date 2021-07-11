@@ -1332,11 +1332,28 @@ In the case that we use a linear transformation function, the algorithm is prett
 
 \chapter{Implementation}
 
+To make the shown results as transparent as possible, this chapter will focus on how the previsouly described process of transforming Sparse Grids is actually implemented.
 
+\begin{description}
+\item[Object] An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
+\item[Function] A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
+\item[Component] A component is a function declaration, where the actual implementation can be exchanged for many different function implementations.
+\item[Control flow + data flow] Arrows signal control flow and also data flow if an object is shown.
+\end{description}
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/definitions.pdf}
+\captionof{figure}{Notation used for different elements in the structure diagrams.}
+\label{fig:defs}
+\end{figure}
+
+Functions and components can also be customized by passing some configuration parameters, which is not explicitly shown in the structure diagrams but will be mentioned if it is done.
+
+\newpage
 \section{Pipeline}
 
-The whole reduction process is modeled and implemented as a pipeline made up of different sections to allow for maximum flexibility.
-Many sections can be
+The whole reduction process is modeled and implemented as a pipeline made up of different components to allow for maximum flexibility.
+All components can be exchanged for many different types, where instances of these types can also be customized by passing some configuration parameters.
 
 \begin{figure}[H]
 
@@ -1346,32 +1363,42 @@ Many sections can be
 \begin{mdframed}[linewidth=0.7px]
 
 \begin{description}
-\item[Components] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{transformationGenerator}}: A transformation generator instance (\ref{sec:tg}) that is called for each iteration.
-\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
-\end{enumerate}}
-
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{numIterations}}: Iterative transformation generator configuration options
-\item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample and that is subsequentially passed down to create the Active Subspaces.
-\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigen vectors, i.e. the lower bound for $r$.
-\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigen vectors, i.e. the upper bound for $r$.
-\item \texttt{\textbf{minEigenValueShare (= 0)}}: Defines a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
+\item \texttt{\textbf{numIterations}}: Maximum amount of iterations
+\item \texttt{\textbf{functionSample}}: A sample
 \end{enumerate}}
 \end{description}
 
 \end{mdframed}
-\captionof{figure}{Component structure of an Active Subspace transformation stream generator and the associated possible configuration options.}
+\captionof{figure}{Component structure of the transformation pipeline and the associated possible configuration options.}
 \label{fig:astsg}
 \end{figure}
 
 The core component of the reduction pipeline and also the most important one wrt. achieving good reduction results in the transformation function generator.
 
 \newpage
+\section {Transformation generators}
+\label{sec:tg}
 
-\section{Transformation stream generator}
+The transformation generator component has the responsibility of finding a good transformation function to use for a pipeline iteration.
 
-\subsection{Active Subpsace transformation stream generator}
+\subsection {Transformation stream generator}
+
+Chapter \ref{} covered the used transformation generation methods in detail.
+It described that for every calculated Active Subspace matrix or random orthogonal basis, family of transformations can be generated from them, usually accomplished by using different values for the reduced dimension $r$, i.e. cutting less or more dimensions off.
+To apply this concept and couple it with other components, such as transformation evaluators, this implementation makes use of so-called transformation generator streams.
+A transformation stream generator will generate as much different transformations as it can, where the range of possible transformations is defined by multiple specific parameters.
+It can be parallelized.
+Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
+\captionof{figure}{Component structure of a stream-based transformation generator and the associated possible configuration options.}
+\end{figure}
+
+\newpage
+
+\subsection{Active Subpsace stream generator}
 
 The already described Monte-Carlo Active Subspace method presented in \ref{sec:as} is implemented as a transformation stream generator component as seen in figure \ref{fig:astsg} , since there are multiple different cutoff possibilities.
 The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \ref{fig:astsg}.
@@ -1385,11 +1412,6 @@ The exact range of the cutoff dimensions can be customized using various paramet
 \begin{mdframed}[linewidth=0.7px]
 
 \begin{description}
-\item[Components] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{gradientSampleGenerator}}: A gradient sample generator instance (\ref{sec:gsg}) that is used to create generate the Active Subspaces from.
-\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
-\end{enumerate}}
-
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
 \item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample and that is subsequentially passed down to create the Active Subspaces.
 \item \texttt{\textbf{minDimensions}}: The minimum amount of used eigen vectors, i.e. the lower bound for $r$.
@@ -1403,7 +1425,18 @@ The exact range of the cutoff dimensions can be customized using various paramet
 \label{fig:astsg}
 \end{figure}
 
-\subsection {Random transformation stream generator}
+The Monte-Carlo Active Subspace method requires gradient samples as inputs.
+So for a gradient sample generator, four variants can be chosen depending on given inputs and requirements:
+\begin{description}
+\item[\texttt{\textbf{givenGradient()}}:] If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward by just evaluating the gradient function at the sample points.
+\item[\texttt{\textbf{finiteDifferences($h$)}}:] Alternatively, the sample gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
+\item[\texttt{\textbf{randomNeighbour($n'$)}}] Random neighbour approximation according to \ref{}.
+\item[\texttt{\textbf{nearestNeighbour($n', m$)}}] Nearest neighbour approximation according to \ref{}.
+\end{description}
+
+\newpage
+
+\subsection {Random stream generator}
 
 A completely different approach to finding a transformation function is just generating a random one.
 A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
@@ -1431,44 +1464,9 @@ It can also serve as a reference for comparision as one would expect that the Ac
 
 \newpage
 
-\section {Transformation generators}
-\label{sec:tg}
-
-The transformation generator component has the responsibility of finding a good transformation function to use for a reduction pipeline step.
-
-
-
-\subsection {Stream-based transformation generator}
-
-How exactly this is accomplished is not narrowly defined, but this implementation primarily makes use of transformation generator streams, since for every transformation generation method there are always many possible transformations to choose from.
-A transformation stream generator will sequentially generate as much different transformations as it can, where the range of possible transformations is defined by multiple specific parameters.
-Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
-
-
-
-\begin{figure}[H]
-\includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
-\vspace{-1.5mm}
-
-\begin{mdframed}[linewidth=0.7px]
-
-\begin{description}
-\item[Components] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{transformationStreamGenerator}}: A transformation stream generator instance (\ref{sec:tsg}) that is used to generate all possible transformations to choose from.
-\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
-\end{enumerate}}
-\end{description}
-
-\end{mdframed}
-\captionof{figure}{Component structure of a stream-based transformation generator and the associated possible configuration options.}
-\end{figure}
-
-\newpage
-
 \subsection {Iterative transformation generator}
 
-In some cases, especially when dealing with a random transformation generation as shown in \ref{sec:rtg}, the probability of finding a good transformation in one try is very low, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component.
-
+In some cases, especially when dealing with a random transformation generation as shown in \ref{sec:rtg}, the probability of finding a good transformation in one try is very low, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component, e.g. a stream-based one.
 It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
 
 \begin{figure}[H]
@@ -1479,11 +1477,6 @@ It can therefore also be used with the Active Subspace transformation generator 
 \begin{mdframed}[linewidth=0.7px]
 
 \begin{description}
-\item[Components] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{transformationGenerator}}: A transformation generator instance (\ref{sec:tg}) that is called for each iteration.
-\item \texttt{\textbf{transformationEvaluator}}: A transformation evaluator instance (\ref{sec:te}) that is used to evaluate each created transformation and then to choose the best one.
-\end{enumerate}}
-
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
 \item \texttt{\textbf{numIterations}}: Iterative transformation generator configuration options
 \end{enumerate}}
@@ -1493,63 +1486,65 @@ It can therefore also be used with the Active Subspace transformation generator 
 \captionof{figure}{Component structure of an iterative transformation generator and the associated possible configuration options}
 \end{figure}
 
+\newpage
+\section {Evaluators}
 
-\section {Gradient sample generator}
-
-The Monte-Carlo Active Subspace method requires gradient samples as inputs.
-If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/GradientGen_KGF.pdf}
-\end{center}
-\end{figure}
-
-Alternatively, the gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
-For high $d$ and a large amount of samples $n$, $dn$ function evaluations may become too costly.
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/GradientGen_FD.pdf}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/GradientGen_SA.pdf}
-\end{center}
-\end{figure}
-
-
-
-So for a gradient sample generator, four variants can be chosen depending on given inputs and requirements:
-\begin{enumerate}
-\item Nearest neighbour approximation of $n$ samples with $m$ neighbours each
-\item Random neighbour approximation of $n$ samples with $m$ neighbours each
-\item Finite differences gradient approximation of $n$ samples
-\item Given gradient function evaluation at $n$ samples
-\end{enumerate}
-
-
-
-
-\section {Transformation evaluator}
+\subsection {Surrogate evaluator}
 
 The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
+This is used for iterative and stream-based transformation generators and by the pipeline.
 While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
 
 \begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
-\end{center}
+\includegraphics[width=\textwidth]{graphics/SurrogateEval.pdf}
+\vspace{-4.5mm}
+\begin{mdframed}[linewidth=0.7px]
+\begin{description}
+\item[\texttt{\textbf{errorMetric}}:] Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
+Additionally, penalty terms for various features can be introduced, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
+\end{description}
+\end{mdframed}
 \end{figure}
+
+\subsection {Transformation evaluator}
+
+The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
+This is used for iterative and stream-based transformation generators and by the pipeline.
+While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
+\vspace{-1.5mm}
+\end{figure}
+
+\newpage
+\section {Surrogate generator}
+
+The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
+This is used for iterative and stream-based transformation generators and by the pipeline.
+While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
+
+
+\subsection {Sparse Grid surrogate generator}
 
 In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all required inputs like grid type, basis functions, level, adaptivity properties, and more.
 As runtime performance is important, especially when using evaluators with the iterative transformation generator, finding the right Sparse Grid level ...
 
-Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
-Additionally, penalty terms for various features can be introduced, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
+\begin{mdframed}[linewidth=0.7px]
+\begin{description}
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{gridType}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{basisType}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{approxGridPoints}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{maxTrainSamples}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{trainData}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{lambdas}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{refinements}}: Type of basis functions according to \ref{}
+\end{enumerate}}
+\end{description}
+\end{mdframed}
 
+\subsection {RBF surrogate generator}
 
 \chapter{Implementation and evaluation}
 
