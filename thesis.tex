@@ -179,11 +179,10 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\pagenumbering{arabic}
-\setcounter{page}{1}
 
 \chapter{Introduction}
-
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
 	However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
@@ -764,9 +763,11 @@ s_i=\sum_{k=1}^d |\langle e_i, b(e_k) \rangle| = \sum_{k=1}^d |(b(e_k))_i| = \su
 
 \section{Mapping between unit hypercubes}
 
-\subsection{Unit hypercubes}
+To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ for a given transformation matrix $W$, several adjustments have to be made to obtain a usable transformation function.
 
-To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$, we first define the center  as $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$.
+\subsection{Unit hypercube projections}
+
+When applying a linear projection defined by $W_r$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes.
 
 \begin{definition}[Zonotopes]
 
@@ -792,19 +793,24 @@ W_r^T x=~&W_r^T \sum_{i=1}^d x_i e_i\\
 =~&\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i
 \end{split}
 \end{equation}
-Therefore, since $x_i \in [0,1]$
+where the $p_i$ are just the projected unit vectors.
+Therefore, since $(x)_i \in [0,1]$ we can express the transformed inputs with
 \begin{equation}
 \{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}
 \end{equation}
-
-To get closer to the zonotope definition \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2:
+To get closer to the zonotope definition in equation \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2.
+Let $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$ be the center of the $i$-dimensional hypercube.
+Then
 \begin{equation}
 \begin{split}
 &\left\{W_r^T (x - c_d) \mid x \in \Omega\right\}\\
-=&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) p_i' \mid x \in \Omega \right\}, ~~ p_i'=W_r^T e_i\\
-=&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}\\
-=&\left\{\sum_{i=1}^d (x_i' - \frac{1}{2}) p_i' \mid 0 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} p_i'\\
-=&\left\{\sum_{i=1}^d x_i p_i' \mid -1 \leq x_i \leq 1 \right\}
+=&\left\{W_r^T \sum_{i=1}^d (x_i - \frac{1}{2}) e_i \mid x \in \Omega \right\}\\
+=&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) W_r^T e_i \mid x \in \Omega \right\}\\
+=&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) q_i \mid x \in \Omega \right\}, ~~ q_i=W_r^T e_i\\
+=&\left\{\sum_{i=1}^d (x_i - \frac{1}{2}) q_i \mid 0 \leq x_i \leq 1 \right\}\\
+=&\left\{\sum_{i=1}^d x_i p_i' \mid -\frac{1}{2} \leq x_i \leq \frac{1}{2} \right\}\\
+=&\left\{\sum_{i=1}^d \frac{1}{2} x_i q_i \mid -1 \leq x_i \leq 1 \right\}\\
+=&\left\{\sum_{i=1}^d x_i p_i \mid -1 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} q_i
 \end{split}
 \end{equation}
 
@@ -814,16 +820,16 @@ p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
 \end{equation}
 and
 \begin{equation}
-Z=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
+Z_{p}=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
 \end{equation}
 
-Then $Z=p(\Omega)$.
+Then $Z_{p}=p(\Omega)$.
 
 \subsection{Surrogate space}
 
-However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is then scaled and aligned to obtain the unit hypercube $\Omega_r$.
-To make the generation of the surrogate space easier, the generators $p_i$ are ordered by their magnitude.
-\todo{inwiefern wird es dadurch easier?}
+However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is then scaled and aligned to obtain the unit hypercube $\Omega_r$.
+To make the generation of the surrogate space easier, the generators $p_i$ of $Z_p$ are ordered by their magnitude.
+\todo{Proof that this will result in best possible encasement!}
 
 The generators $q_1, \dots, q_r$ of the encasing hypercube are calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ with
 \begin{equation}
