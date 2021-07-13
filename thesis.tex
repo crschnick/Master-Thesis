@@ -28,15 +28,15 @@
 
 
 \usepackage[
-  title={Is Oil the future?},
-  author={Lars K.},
-  type=bachelor,
-  institute=iaas, % or other institute names - or just a plain string using {Demo\\Demo...}
-  course={Medieninformatik},
-  examiner={Prof.\ Dr.\ Uwe Fessor},
-  supervisor={Dipl.-Inf.\ Roman Tiker,\\Dipl.-Inf.\ Laura Stern,\\Otto Normalverbraucher,\ M.Sc.},
-  startdate={July 5, 2018},
-  enddate={January 5, 2019}
+  title={Transformed Sparse Grids for high-dimensional models},
+  author={Christopher Schnick},
+  type=master,
+  institute=ipvs, % or other institute names - or just a plain string using {Demo\\Demo...}
+  course={Informatik},
+  examiner={Prof.\ Dr.\ Dirk Pflüger},
+  supervisor={Michael Rehme,\ M.Sc.},
+  startdate={April 24, 2021},
+  enddate={October 24, 2021}
 ]{scientific-thesis-cover}
 
 \makeindex
@@ -1013,10 +1013,10 @@ Alternatively, the gradients can be determined using a different approach that o
 \subsection{Directional derivatives}
 
 Another approach is to roughly approximate the gradient by looking at neighboring points in the same sample and using directional derivatives to create a system of linear equations for the gradient at a certain input.
-Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $d=y-x$ and the direction of the distance as the normalized distance with $r=\frac{d}{|d|}$.
-By extrapolating the gradient along the direction, we can define an approximation rule with
+Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $r=y-x$.
+By extrapolating the gradient along the direction in a linear fashion, we can define an approximation rule with
 \begin{equation}
-d (\nabla_x f) \approx f(y) - f(x)
+r \nabla_x f \approx f(y) - f(x)
 \end{equation}
 
 Using $m \in \mathds{N}$ neighbours of a sample point $x \in \Omega$ with $y_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$, we can create a system of linear equations with
@@ -1038,17 +1038,41 @@ The next sections introduce different ways of selecting the neighbours $y_i$ and
 
 \subsection{Random neighbour approximation}
 
-The random neighbour approximation method takes as an input a subsample $S' \subseteq S \setminus \{x\}$ with $|S'|=n' < n$.
-The set $S'=\{y_1', \dots, y_{n'}'\}$ is called a random neighbour set of $x$.
-This random neighbour set is then used as an input for \ref{dd_sle} to approximate the gradient $\nabla_x f$.
-For $n,n' \to \infty$, the approximated gradient does not converge to the actual gradients, since the expected distance to the neighbours in a random neighbour set does not go to zero.
+The random neighbour approximation method takes as an input a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$.
+The set $S_{\text{rn}}=\{y_1, \dots, y_{m}\}$ is called a random neighbour set of $x$.
+This random neighbour set is then used as an input for equation \ref{dd_sle} to approximate the gradient $\nabla_x f$.
+
+For $n,m \to \infty$, the approximated gradient does not converge to the actual gradients, since the expected distance to the neighbours in a random neighbour set does not go to zero.
+The problem of determining average neighbour distance is related to finding the mean line segment length $\Delta (d)$ in a d-dimensional unit hypercube \cite{}.
+There is no closed form solution for $\Delta (d)$, but several approximations have been made \cite{}, e.g. $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
 
 \subsection{Nearest neighbour approximation}
 
-The nearest neighbour variant picks a subset $S' \subseteq S$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $y_1',\dots,y_m' \in S'$ of the point $x$ with $|(y_1'-x)| < |(y_2'-x)|< \dots<|(y_{n'-1}'-x)| < |(y_{n'}'-x)|$.
-Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
+The nearest neighbour variant picks a subset $S' \subseteq S \setminus \{x\}$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $S_{\text{nn}}=\{y_1,\dots,y_m\} \subset S'$ of the point $x$ with $|(y_1-x)| < |(y_2-x)|< \dots<|(y_{m-1}-x)| < |(y_{m}-x)|$.
 
-\section{Approximation quality}
+Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
+However, this property comes at the cost of having to sort the available $n'$ neighbours by distance to pick the $m$ closest ones.
+The parameters $n'$ and $m$ also have to be chosen carefully, as a too low ... and a too large $m$ would increase the average distance to the neighbours again so that the effect of chosing the nearest neighbours would diminish.
+
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/as_rn}
+  \caption{Random neighbour method with $m=4$}
+  \label{fig:as_rn}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/as_nn}
+  \caption{Nearest neighbour method with $n'=7$ and $m=4$}
+  \label{fig:as_nn}
+\end{subfigure}
+\caption{Differences in sample selection between the two neighbour approximation methods. The red circle represents the sample point $x$, the black dots are the other available samples $S \setminus \{x\}$. In this example $|S|=10$. A filled black dot signals that it is considered when looking for neighbours. If the circle is circled blue, it is chosen as a neighbour.}
+\label{fig:as_approx}
+\end{figure}
+
+\subsection{Approximation quality}
 
 To get an idea of the actual quality of the different methods, this section will focus purely on the gradient approximation methods as a ... before the methods are used in the surrogate creation process later on.
 Two example functions are investigated with the focus being on first the gradient approximation quality and the subsequent Active Subspace approximation quality.
@@ -1057,22 +1081,13 @@ Two example functions are investigated with the focus being on first the gradien
 
 \subsection{Simple function}
 
+The first example function is a simple $3$-dimensional function with two-dimensional polynomial terms:
 \begin{equation}
 f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 \nonumber
 \end{equation}
 
-\begin{figure}[H]
-\begin{center}
-	\includegraphics[width=\textwidth]{graphics/as_grad_errors_f1}
-\end{center}
-	\captionof{figure}{Average $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_1$.}
-	\label{fig:as_grad_errors_f1}
-\end{figure}
 
-As seen in figure \ref{fig:as_grad_errors_f1}, the finite differences approximation error converges towards zero as the step size goes down as expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method, as it also slowly converges to zero.
-The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
 
 \begin{figure}[H]
 \begin{center}
@@ -1082,10 +1097,18 @@ The random neighbour methods do not converge but are instead in a range that is 
 	\label{fig:as_errors_f1}
 \end{figure}
 
-As a result of the approximation qualities shown in figure \ref{fig:as_grad_errors_f1}, the gradient approximation qualities behave similar.
-The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size.
+As seen on the left in figure \ref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method.
+The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on averages neighbours with a distance $|d| \approx 0.66$.
+It can be seen that the average gradient error for all $RN$ methods is a little bit worse than FD with $h=0.5$, which is consistent with the average distance differences between the two methods.
+
+As a result of the approximation qualities shown on the right in figure \ref{fig:as_errors_f1}, the gradient approximation qualities behave similar.
+The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
 The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
 Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be better.
+It can also be observed that the gradient approximation quality does not completely correlate with the Active Subspace approximation quality.
+While for example the $NN$ methods have a similar gradient approximation quality as $FD$ with $h=0.1$, the $NN$ calculated Active Subspaces have a far better quality than the $FD$ with $h=0.1$.
 
 \newpage
 
@@ -1130,23 +1153,23 @@ A completely different approach to finding a transformation function is just gen
 A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
 It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
 
-As shown in \cite{ABC}, generating uniformly distributed orthonormal matrices is not trivial.
-Therefore, this thesis uses the presented algorithm that works like this:
+Generating uniformly distributed orthonormal matrices is not trivial, but important when generating many of them to avoid any generation bias.
+\cite{ABC} presents an algorithm to generate unitary matrices and also a slightly modified version to uniformly generate elements from the orthogonal group $O(d)$.
+It starts off with generating a random matrix $Z$ with $z_{i,j} \sim \mathcal{N}\left(0, 1\right)$.
+The matrix $Z$ is then fed into a $QR$ decomposition with $Z=QR$.
+The entries of the diagonal matrix $R$ are then normalized to get
 \begin{equation}
-z_{i,j} \sim \mathcal{N}\left(0, 1\right)
+\Lambda=\text{diag}\left(\frac{r_{1,1}}{|r_{1,1}|}, \dots, \frac{r_{d,d}}{|r_{d,d}|}\right)
 \end{equation}
-
-The matrix $Z$ is then used in a $QR$ decomposition with $Z=QR$.
-The entries diagonal matrix $R$ are then normalized to get
-\begin{equation}
-\Phi=\text{diag}(\frac{r_{1,1}}{|r_{1,1}|}, \dots, \frac{r_{d,d}}{|r_{d,d}|},)
-\end{equation}
-
-The matrix $Q \Phi$ is then uniformly distributed with Haar measure.
+The matrix $W=Q \Lambda Q$ is then uniformly distributed with Haar measure, i.e. exactly what we are looking for.
 
 
+\section{Other transformations}
 
-\section{Periodic transformations}
+Until now, the focus was primarily on linear transformations because they are relatively easy to construct.
+However, in theory one can use arbitrary transformation functions.
+
+\subsection{Periodic transformations}
 
 Another use case for transformations are periodic functions.
 If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i\text{ mod } h, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } h) /h, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
@@ -1155,7 +1178,7 @@ Of course this can concept can be expanded upon with multiple periodic dimension
 
 \todo{Example with $f(x)=sin(2\pi x_1) x_2^2$}
 
-\section{Active Manifolds}
+\subsection{Active Manifolds}
 
 Inspired from Active Subspaces, which are purely linear in their nature, one can extend the concept to identifying a one-dimensional curve in the domain $\Omega$ along the flow of most active change, which is called the Active Manifold.
 Compared to Active Subspaces, calculating the Active Manifold is more complex and resource intensive.
@@ -1553,6 +1576,10 @@ As runtime performance is important, especially when using evaluators with the i
 \subsection {RBF surrogate generator}
 
 \chapter{Implementation and evaluation}
+
+\begin{enumerate}
+\item How much do different AS transofmrations influence the result?
+\end{enumerate}
 
 The goal is to answer the following questions:
 
