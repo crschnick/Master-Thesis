@@ -771,7 +771,7 @@ When applying a linear projection defined by $W_r$ on the elements of a hypercub
 
 \begin{definition}[Zonotopes]
 
-A $d$-dimensional zonotope $Z$ with $k \geq d$ generators $g_1, \dots g_k \in \mathds{R}^d$ corresponds to a $d$-dimensional minkowski sum with 
+A $l$-dimensional zonotope $Z$ with $k \geq l$ generators $g_1, \dots g_k \in \mathds{R}^l$ corresponds to a $l$-dimensional minkowski sum with 
 \begin{equation}
 Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
   \label{zonotope}
@@ -780,21 +780,20 @@ Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
 \begin{figure}[H]
 \centering
   \includegraphics[width=0.5\linewidth]{graphics/zonotope}
-  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $d=2$, $k=3$ and the three generators $p_1,p_2,p_3$.}
+  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$ and the three generators $p_1,p_2,p_3$.}
   \label{fig:zonotope}
 \end{figure}
 
 \end{definition}
 
-When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it can be seen that it holds:
+When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it holds that
 \begin{equation}
 \begin{split}
-W_r^T x=~&W_r^T \sum_{i=1}^d x_i e_i\\
-=~&\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i
+W_r^T x=~W_r^T \sum_{i=1}^d x_i e_i=~\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i
 \end{split}
 \end{equation}
 where the $p_i$ are just the projected unit vectors.
-Therefore, since $(x)_i \in [0,1]$ we can express the transformed inputs with
+Therefore, since for all components $x_i \in [0,1]$, we can express the transformed inputs with
 \begin{equation}
 \{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}
 \end{equation}
@@ -811,23 +810,23 @@ Then
 =&\left\{\sum_{i=1}^d x_i p_i' \mid -\frac{1}{2} \leq x_i \leq \frac{1}{2} \right\}\\
 =&\left\{\sum_{i=1}^d \frac{1}{2} x_i q_i \mid -1 \leq x_i \leq 1 \right\}\\
 =&\left\{\sum_{i=1}^d x_i p_i \mid -1 \leq x_i \leq 1 \right\}, ~~ p_i=\frac{1}{2} q_i
+\label{zonotope_form}
 \end{split}
 \end{equation}
 
-Therefore we define
+Therefore we define the projection function with
 \begin{equation}
 p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
 \end{equation}
-and
+This results in a projected input space that has the zonotope form as in equation \ref{zonotope} with
 \begin{equation}
 Z_{p}=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
 \end{equation}
-
-Then $Z_{p}=p(\Omega)$.
+Then according to equation \ref{zonotope_form}, it holds that $Z_{p}=p(\Omega)$.
 
 \subsection{Surrogate space}
 
-However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_R$, during the normalization step, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is then scaled and aligned to obtain the unit hypercube $\Omega_r$.
+However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_r$, during the normalization step, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is later scaled and aligned to obtain the unit hypercube $\Omega_r$.
 To make the generation of the surrogate space easier, the generators $p_i$ of $Z_p$ are ordered by their magnitude.
 \todo{Proof that this will result in best possible encasement!}
 
@@ -886,7 +885,7 @@ s.t. $(u_s)_i \in [\frac{1}{2},\frac{1}{2}]$.
 
 Then the $u_s$ just have to be translated again from the center away with
 \begin{equation}
-t_{\text{Cube}}(x)=c_r + u_s
+t_{\text{Cube}}(x)=c_r + u_s = W_r^T (x-c_d)
 \end{equation}
 
 \begin{figure}[H]
@@ -897,7 +896,7 @@ t_{\text{Cube}}(x)=c_r + u_s
 \end{figure}
 
 
-\subsection{Reversing the transformation}
+\subsection{Visualizing transformation}
 
 While it is not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, later figures in this thesis use the described reversing to illustrate lower dimensional transformed sparse grids in the original and higher-dimensional space.
 It is therefore only shown in a more informal way.
@@ -918,6 +917,13 @@ Let $y=t_{\text{Cube}}(x)$ be the transformed input. It then holds that
 \begin{equation}
 x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 \end{equation}
+
+\begin{figure}[H]
+\centering
+  \includegraphics{graphics/surrogate_vis}
+  \captionof{figure}{Transformation of $S$ from figure \ref{fig:space} into a unit hypercube according to \eqref{alignment}}
+  \label{fig:f2_combined_rel_errors_inter}
+\end{figure}
 
 \section{Active Subspaces}
 
