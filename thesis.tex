@@ -271,7 +271,7 @@ This transformation process is first explored Transform inputs in such a way tha
 - Therefore surrogate has to be differentiable, 
 
 
-\chapter{Basics}
+\chapter{Constructing surrogates}
 \label{chap:k1}
 
 More formally, the model is viewed as a function and is denoted as $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the input space,  a $d$-dimensional unit hypercube.
@@ -638,10 +638,14 @@ The first example model function to investigate the properties of the presented 
 It is a two-dimensional function, where the first component contributes the most to the total function value while the second one does not:
 
 \begin{equation}
-f_1(x)=e^{x_1 + 1} + \frac{1}{10}\sin(2 \pi x_2) + 1
+f_1(x_1, x_2)=e^{x_1 + 1} + \sin(2 \pi x_2) + 1
 \nonumber
 \end{equation}
-
+or
+\begin{equation}
+f_1(x_1, x_2)=x_1 + 1
+\nonumber
+\end{equation}
 
 
 \todo{Spatially adaptive grid point graph}
@@ -1023,10 +1027,32 @@ C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(y_i)) (\nabla f(y_i))^T
 
 
 
-\subsection{Estimating gradients}
+\subsection{Estimating gradients for Active Subspaces}
 
 If the gradient function is not known and can not be calculated analytically, the gradients can be approximated in various ways.
 There are various different methods of achieving that, however each method has its advantages and disadvantages as will be showcased in this section.
+
+\begin{definition}[$L^2$ norm]
+Let $v \in \mathds{R}^{n}$ be a vector. Then
+\begin{equation}
+\| v\|_2=\sqrt{\sum_{i=1}^n |v_{i}|^2}
+\nonumber
+\end{equation}
+is the $L^2$ norm of the vector $v$.
+\end{definition}
+
+To judge the quality of approximated gradients, we first have to define an error metric for them.
+
+\begin{definition}[Average gradient error]
+Let $S=\{x_1, \dots, x_n\}$ be a sample and $\widetilde{\nabla f(x_i)}$ the approximated gradient at sample point $x_i$. Then
+\begin{equation}
+e_{\text{grad}}(S)=\frac{1}{n} \sum_{i=1}^n \frac{\| \widetilde{\nabla f(x_i)} - \nabla f(x_i) \|_2}{\| \nabla f(x_i) \|_2}
+\nonumber
+\end{equation}
+is the average gradient approximation error of the sample.
+\end{definition}
+
+The approximated gradients are then used as inputs for equation \ref{} to obtain the approximated Active Subspace matrix.
 
 \begin{definition}[Frobenius norm]
 Let $A \in \mathds{R}^{m \times n}$ be a matrix. Then
@@ -1421,6 +1447,8 @@ e_k(x)=f(x) - \sum_{i=1}^k f(\beta_i^T x_i)
 \end{algorithm}
 
 In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
+
+\todo{local vs global optimization}
 
 \chapter{Implementation}
 
