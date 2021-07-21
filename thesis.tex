@@ -34,7 +34,7 @@
   institute=ipvs, % or other institute names - or just a plain string using {Demo\\Demo...}
   course={Informatik},
   examiner={Prof.\ Dr.\ Dirk Pflüger},
-  supervisor={Michael Rehme,\ M.Sc.},
+  supervisor={Dr. Michael Rehme},
   startdate={April 24, 2021},
   enddate={October 24, 2021}
 ]{scientific-thesis-cover}
@@ -185,46 +185,35 @@
 \setcounter{page}{1}
 
 Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
-	However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
-	Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
-	The first technique, Analysis of Variance (ANOVA) in the context of sparse grids \cite{F10}, has already been thoroughly investigated for this purpose.
-	It is based on the Sobol method \cite{S01}, which determines the importance of individual model inputs.
-	 Thus it allows to neglect less important ones.
-	Active Subspaces \cite{CG15} are another dimension reduction technique, which in contrast to ANOVA can replace parameters through linear combiniations of others.
-	Recently Active Subspaces have been applied in combination with sparse grids and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
-Both methods, ANOVA and Active Subspaces, view the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
+However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
+Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
+There already exist various approach to dimension reduction in the context of sparse grids, such as various types of adaptive sparse grids or Analysis of Variance (ANOVA).
+These methods aim to neglect less important dimensions of model functions.
+Active Subspaces \cite{CG15} are another dimension reduction technique, which in contrast to sparse grid based methods can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
+Recently Active Subspaces have been applied in combination with sparse grids and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
+The presented approach to dimension reduction views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
 These techniques are then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates and to show their advantages and disadvantages in different contexts and provide some guidance on which type of models suit a method better based on the results.
 
 \section{Overview}
 
-The first chapter of this thesis covers all the basics needed to use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
-Next, we will give an overview over the currently most commonly used methods for dimensionality and grid point reduction for sparse grids that will also be used as a baseline for later comparisions.
-The following chapter gives an introduction to the concept of input transformations and some basic transformations, which are the central focus of this thesis.
-Afterwards we focus on a few promising types of transformations, namely linear and reducing linear transformations, for which we investigate on how to optimally construct them.
-In the penultimate part, we try to combine these transformation with iterative approximation algorithms.
-The last part, which covers implementation and evaluation, will put these new transformation-based methods to the test by applying them to different models and comparing the results of them with the previously covered conventional state of the art dimensionality reduction methods.
 
 A parameter study is the process of exploring the influence of different function parameters on the function output.
 This gained knowlegde about the parameters can be used for parameter reduction, which refers to the elimination and replacement of certain function parameters.
 
 - Sparse grids
 
-In this thesis the focus lies on high dimensional functions with $d \geq 8$ that cause these sparse grids to run into problems, since they are affected by the curse of dimensionality.
-These problems are caused by the high amount of grid points that result in too high runtime and memory requirements for many algorithms that work on sparse grids.
-can not effectively
+Since all grid points and tensor product basis functions are effectively axis-aligned, sparse grids, and therefore all techniques based on them, become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
+This will be demonstrated later with the help of a simple example function by showing that grid point reduction techniques and ANOVA fares differently for functions with the same intrinsic dimensionality, based on their axis-alignment properties.
+This limitation is used as a motivation to look into ways into aligning the model function inputs, or more formally transforming the model inputs, in a better way prior to feeding them into sparse grids, s.t. the resulting sparse grid surrogates perform better wrt. the amount of grid points allocated and also the approximation error. 
 
-- use regression instead of interpolation, since dimension reduction is not suitable for interpolation
+In this thesis the focus lies on high dimensional functions with $d \geq 8$ that cause even sparse grids to run into problems, since they are affected by the curse of dimensionality when dimensions reach that size.
+These problems are caused by the high amount of grid points and result in too many required model function evaluations to first construct a sparse grid and also too high runtime and memory requirements for many algorithms that work on sparse grids.
 
-- Focus lies on high dimensional functions with $d \geq 8$ that can not effectively be represented using sparse grids, since the grid point count would be too high
 
 Parameter reduction, as shown in fig ..., aims at eliminating some function inputs and therefore reduce the amount of grid points substantially.
-Used methods for parameter reduction include a sparse grid based Sobol method covered in \cite{}, which is a variance based global sensitivity analysis.
-Grid point reduction methods aim to create sparse grids that have comparatively less grid points than naively created sparse grids without optimizations while still maintaining a good interpolation error.
-However, grid point reduction methods do need an existing surrogate to work on, since hierarchisation has to be performed.
 With adaptive sparse grids we start with a very low level grid and add more grid points where needed ...
 For higher input dimensions, the commonly used adaptive sparse grids effectively become a parameter reduction method, since they can only work on a surrogate by neglecting unimportant input parameters, effectively eliminating them.
 
-fig
 
 \section{Motivation}
 
@@ -244,32 +233,20 @@ This transformation process is first explored Transform inputs in such a way tha
 
 \section{Structure}
 
+The next chapter covers all the basics needed to understand and use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
+Next, we will give an overview over the currently most commonly used methods for dimensionality and grid point reduction for sparse grids that will also be used as a baseline for later comparisions.
+The following chapter covers the concept of input transformations, which are the central focus of this thesis.
+Various types of transformations are discussed, but the main focus lies on linear transformations generated with the help of Active Subspaces or also randomly.
+Afterwards we look at generating optimal sparse grid surrogates for a given transformation.
+In the next chapter, we try to combine these transformations with an iterative approach, inspired from projection pursuit regression.
+Next, we will cover the general structure of the implementation and explore various configuration options that can be used to fine tune different aspects of the surrogate creation process.
+The implementation is then put to the test in the penultimate chapter, which will apply the new transformation-based approach to different models and compares the results of them with the previously covered conventional state of the art dimensionality reduction methods.
+There is also a focus on deducing a decision process to determine optimal configuration options and to assign good default values to them.
+Finally, the evaluation results are used to draw conclusions about the technique in general and about its comparative quality.
+
 - different notion of regression (Only to reduce error function, no explanatatory vars)
 
-- Heuristic
-
-- Mesh based regression methods like ... are especially affected by the curse of dimensionality
-
-- Any method of 
-
-- Transform inputs in such a way that (a) interpolation error is lower or (b) regression error with lower dim is lower than normal
-
-- In theory every regression method can benefit from this
-
-- In practive the gains
-
-- While case (a) might be somewhat relevant at most, (b) has a lot more potential
-
-- dimension reduction after surrogate construction is easy (ANOVA)
-
-- goal is to do this before surrogate construction to allow for higher dims
-
 - Achieved by performing a change of basis on the inputs and oberserving whether applying existing methods for dim reduction on sparse grids get better results compared to untransformed
-
-- Similar to projection pursuit (i.e. goal to do this multiple times)
-
-- Therefore surrogate has to be differentiable, 
-
 
 \chapter{Constructing surrogates}
 \label{chap:k1}
@@ -554,8 +531,10 @@ Spatially dimension adaptive Sparse Grids do exactly that, and are therefore bet
 
 \section{Sparse Grid based ANOVA}
 
-Functional ANOVA is a well established method in statistics to identify important inputs of a model.
-It is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}.
+Functional Analysis of Variance (ANOVA)  is a well established method in statistics to identify important inputs of a model.
+It has also already been thoroughly investigated for this purpose in the context of sparse grids \cite{F10}.
+It is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}, which determines the importance of individual model inputs.
+Thus it allows to neglect less important ones.
 In contrast to the previously described methods, Sparse Grid based ANOVA is purposefully designed for dimension reduction.
 The fundemental goal is to obtain the ANOVA decomposition of a function $f$ that has the form of
 \begin{equation}
@@ -1448,7 +1427,14 @@ e_k(x)=f(x) - \sum_{i=1}^k f(\beta_i^T x_i)
 
 In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
 
+\section{Determining the best transformation and surrogate}
+
+T
+
 \todo{local vs global optimization}
+
+
+\section{Visualizing the algorithm}
 
 \chapter{Implementation}
 
