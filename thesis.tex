@@ -614,57 +614,103 @@ They are not alignment-based, i.e. given a transformation $t(x)$, the approximat
 \section{Example}
 
 The first example model function to investigate the properties of the presented methods, is designed to be a good fit for them and is also simple.
-It is a two-dimensional function, where the first component contributes the most to the total function value while the second one does not:
+It is a two-dimensional function, where only the first component and a constant term contribute to the total function value while the second component does not.
 
 \begin{equation}
-f_1(x_1, x_2)=e^{x_1 + 1} + \sin(2 \pi x_2) + 1
-\nonumber
-\end{equation}
-or
-\begin{equation}
-f_1(x_1, x_2)=x_1 + 1
+f_1(x_1, x_2)=\sin(2 \pi x_1) + 1
 \nonumber
 \end{equation}
 
-
-\todo{Spatially adaptive grid point graph}
-
-\todo{Dimensionally adaptive grid point graph}
-
-\todo{ANOVA grid point graph}
-
-\todo{Errror graph with SA, DA, RBF, ANOVA}
-
-\section{Bad example}
-
-For example, the function $f(x_1,x_2)=x_1 + x_2$ can be interpolated perfectly using a linear boundary grid with level 0 and using the ANOVA method, it can also be represented as a sum of two one-dimensional basis functions, since the effective dimensionality is 1.
-However, just by rotating the function by a few degrees with
+It is therefore an intrinsically one-dimensional function.
+However, just by rotating the function by a few degrees, we obtain
 \begin{equation}
-f'(x_1,x_2)=x_1' + x_2', ~~ \begin{pmatrix}
-    x_1' \\ x_2'
-    \\
-  \end{pmatrix} = \begin{pmatrix}
-    \cos(0.1 \pi) & -\sin(0.1 \pi)\\
-    \sin(0.1 \pi) & \cos(0.1 \pi)
-    \\
-  \end{pmatrix}\begin{pmatrix}
-    x_1 \\ x_2
-    \\
-  \end{pmatrix}
+f_2(x_1,x_2)=\sin(2 \pi x_1') + 1, ~~~~~ x_1'=\cos(0.15 \pi) x_1 -\sin(0.15 \pi) x_2
 \end{equation}
-the function can not be interpolated perfectly anymore and the ANOVA method fails, since the function is no longer aligned to the axes.
-This can be seen in figure \ref{fig:fcomp}.
-Even without the additional rotation, the ANOVA method and others do not detect that the function can be represented with a single one-dimensional term with
-\begin{equation}
-f(x_1,x_2)=g(\begin{pmatrix}
-    1 & 1
-    \\
-  \end{pmatrix} \begin{pmatrix}
-    x_1 \\ x_2
-    \\
-  \end{pmatrix}), ~ g(x)=x
-\end{equation}
-, because this single term is not axis-aligned.
+This function is still intrinsically one-dimensional.
+\\
+\\
+\textbf{Sparse grids}
+We can investigate how adaptive sparse grids handle both functions.
+
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/grid_f1}
+  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \label{fig:as_rn}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/grid_f2}
+  \caption{Spatially adaptive sparse grid points for $f_2$}
+  \label{fig:as_nn}
+\end{subfigure}
+\caption{Grid points of generated spatially adaptive sparse grids that started out as a regular sparse grid with level $l=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
+\label{fig:grids}
+\end{figure}
+
+
+Figure \ref{fig:grids} shows how sparse grids are affected by the different alignment of a function.
+The spatially adaptive strategy is able to exploit the one-dimensional nature of $f_1$ by only refining along the first dimension and therefore spending the grid points where they matter.
+However, the intrinsic one dimensional term can not be exploited for $f_2$, as it is no longer axis-aligned.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/rbf_errors}
+  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \label{fig:grid_errors}
+\end{figure}
+
+
+\textbf{ANOVA}
+This behaviour can also be observed for other sparse grid based methods, like ANOVA:
+
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \begin{tabular}{ l c c }
+\hline \hline
+& $2 \notin C~$ & $2 \in C$ \\
+\hline
+$1 \notin C$ & ? & 0.0\\
+$1 \in C$ & ? & 0.0\\
+\end{tabular}
+  \caption{Distribution of the variance of $f_1$ between the ANOVA components.}
+  \label{fig:anova_f1}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \begin{tabular}{ l c c }
+\hline \hline
+& $2 \notin C~$ & $2 \in C$ \\
+\hline
+$1 \notin C$ & ? & ?\\
+$1 \in C$ & ? & ?\\
+\end{tabular}
+  \caption{Distribution of the variance of $f_2$ between the ANOVA components.}
+  \label{fig:anova_f2}
+\end{subfigure}
+\end{figure}
+
+As we can see, the sparse grid based ANOVA method decomposes the functions into four terms.
+A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2\}}$, and a two dimensional term $f_{\{1,2\}}$.
+For the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
+Therefore the other terms can be dropped and the function can be completely represented with only a one-dimensional function.
+However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \ref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$.
+\\
+\\
+\textbf{RBFs}
+RBFs behave differently compared to sparse grids when being applied to the same functions, as their basis functions are not constructed with the tensor-product approach.
+Instead they are orientation agnostic, as only the radius relative a support point determines the basis function value.
+Therefore, as seen in figure \ref{fig:rbf_errors}, the approximation errors stay pretty much identical in both cases.
+However, the general approximation error is worse then the sparse grid errors in figure \ref{fig:grid_errors} as RBFs are not suited for these tasks compared to modified basis functions that come with a constant component.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/rbf_errors}
+  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \label{fig:rbf_errors}
+\end{figure}
 
 \section{Summary}
 
@@ -1426,15 +1472,90 @@ e_k(x)=f(x) - \sum_{i=1}^k f(\beta_i^T x_i)
 \end{algorithm}
 
 In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
+However, this algorithm is more generalized to allow for any type of transformation.
+The method generateBestTransformation() is realized according to chapter \ref{} and the presented generation methods there.
 
-\section{Determining the best transformation and surrogate}
+\section{Generating the best surrogate}
 
-T
+Trans...
 
-\todo{local vs global optimization}
+\begin{algorithm}[H]
+\normalsize
+\begin{algorithmic}
+\Function{generateBestSurroate}{S, C, $\epsilon$}
+    \State c*=$\emptyset$
+    \State $e_{min}=\infty$
+    \For{c : possibleConfigurations}
+      \State $\hat{f}_c^l$ = generateLofiSurroate(S, c)
+    	\State $e \gets \epsilon(\hat{f}_c^l)$
+    	\If{$e < e_{min}$}
+    	  \State $e_{min}\gets e$
+    	\State c* $\gets$ c
+    	\EndIf
+    \EndFor
+    \State \Return{generateHifiSurroate(S, c*)}
+\EndFunction
+\end{algorithmic}
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$}
+\end{algorithm}
+
+It determines the optimal configuration $c*$ with
+\begin{equation}
+c*=\argmin_{c \in C} \epsilon(\hat{f}_c^l)
+\end{equation}
+This algorithm works fine presuming that the low fidelity surrogates $\hat{f}_c^l$ are representative of the high fidelity one, as already discussed in chapter \ref{}.
+It is satisfactory as long as 
+\begin{equation}
+\epsilon(\hat{f}_{c*}^h)=\argmin_{c \in C} \epsilon(\hat{f}_c^h)
+\end{equation}
+
+The main driver of the runtime is the amount of configurations options $C$.
+This can especially blow up the runtime if all variations of multiple parameters are tested.
+For the grid learner, $\Lambda=\{\lambda_1, \dots, \lambda_p\}$ and $\Lambda=\{\lambda_1, \dots, \lambda_q\}$, results in $C=\Lambda \times \Lambda$ with $|C|=pq$
+
+
+\todo{pre convergence}
 
 
 \section{Visualizing the algorithm}
+
+The iterative algorithm can be visualized with a simple two-dimensional function, where the first component contributes the most to the total function value while the second one does not.
+Also, it is not axis-aligned to further visualize how the method handles non axis-aligned function terms.
+
+\begin{equation}
+f_1(x_1, x_2)=e^{x_1' + 1} + \sin(2 \pi x_2') + 1, ~~ \begin{pmatrix}
+    x_1' \\ x_2'
+    \\
+  \end{pmatrix} = \begin{pmatrix}
+    +\cos(0.1 \pi) & -\sin(0.1 \pi)\\
+    +\sin(0.1 \pi) & +\cos(0.1 \pi)
+    \\
+  \end{pmatrix}\begin{pmatrix}
+    x_1 \\ x_2
+    \\
+  \end{pmatrix}
+\end{equation}
+
+To better illustrate the surrogate construction, $r$ is always set to one, regardless of whether an $r=2$ would make sense or not.
+
+In the first step, we set $e_0=f_1$, determine the best transformation, and then construct the surrogate.
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
+  \caption{Error function $e_0$ and first active subspace direction $v_1$.}
+  \label{fig:as_rn}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/pipeline_local_1}
+  \caption{Transformed surrogate input samples and constructed surrogate.}
+  \label{fig:as_nn}
+\end{subfigure}
+\caption{First iteration of the iterative transformation algorithm. The eigenvalues computed for this step are $\lambda_1=30.32$ and $\lambda_2=0.98$. Therefore, a one-dimensional reduction makes sense.}
+\label{fig:pipeline_1}
+\end{figure}
 
 \chapter{Implementation}
 
