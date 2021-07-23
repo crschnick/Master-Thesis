@@ -401,6 +401,39 @@ Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with 
 They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
 \end{description}
 
+\section{Intrinsic dimension}
+
+The intrinsic dimension of a function or dataset is the minimal amount of variables required to completely represent it.
+It is a concept that used in signal processing and data ... .
+It can be used as a guidance to determine a lower bound on the complexity and optionally exploit the knowledge to construct lower-dimensional surrogates and thus perform a dimension reduction.
+\begin{definition}[Intrinsic dimensionality]
+A $d$-dimensional function $f(x_1, \dots, x_d)$ has intrinsic dimension $r \leq d$ if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, s.t.
+\begin{equation}
+f(x)=f_t(t(x)), ~~ x \in \Omega
+\end{equation}
+\end{definition}
+
+Even though the above definition does not specify $\Omega_r$, i.e. it can be an arbitrary definition space with $\Omega_r \in \mathds{R}$, we assume that the transformation is bounded and that $\Omega_r$ therefore is also bounded and can be w.l.o.g. scaled to a unit hypercube $\Omega_r=[0,1]^d$.
+
+Also the intrinsic dimension of a function is defined as the minimum dimensions $r*$.
+However, even if we are able to find a $r$-dimensional transformation with $r > r*$ that satisfies the requirement of definition \ref{}, we still have gained an advantage and can define that function as having an intrinsic dimension of at most $r$.
+Even if $r=r*$, we still call it as having an intrinsic dimension of at most $r$, since we usually don't know the actual intrinsic dimension $r*$.
+
+Since we are dealing with function approximation problems in this thesis, it makes sense to extend the definition to allow for approximation errors.
+\begin{definition}[Approximate intrinsic dimension]
+Let $f$ be $d$-dimensional function, $\epsilon$ an error metric.
+We then define $f$ as having an approximate intrinsic dimension of at most $r \leq d$ with an error of at most $e$ there exists a $t \colon \Omega \mapsto \Omega_r$, s.t.
+\begin{equation}
+e=\epsilon(f(x) - f_t(t(x)))
+\end{equation}
+\end{definition}
+Note that this definition uses the term `an error of at most' again, as we are not concerned about the finding and also do not know the optimum error $e*= \argmin_{t, f_t} \epsilon(f(x) - f_t(t(x)))$ for a given $r$.
+
+With the introduction of approximations into the intrinsic dimension definition, there is also room for a tradeoff between  intrinsic dimension and approximation error.
+Any function has an approximate intrinsic dimension with error $\epsilon(f)$ for all $0 \leq r \leq d$.
+The main goal to effectively make use of lower dimensional function approximations is therefore finding functions $t$ and $f_t$ that provide a good tradeoff between dimension and approximation error.
+
+
 \section{Sampling}
 
 We assume that the inputs of the model functions are distributed according to multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$, which consists out of $d$ independent distributions $\rho_i$.
@@ -409,7 +442,7 @@ For this purpose, even the relatively simple process of sampling a probality dis
 
 \subsection{Quasirandom sequences}
 
-A problem that arises when generating a sequence of random samples using a pseudorandom number generator is ...
+A problem that arises when generating a sequence of random samples using a pseudorandom number generator to draw samples from the input distribution $\rho$ is that the sequence does not cover the function domain as even and quick as it theoretically can.
 One solution are low-discrepancy sequences, also called quasirandom sequences to distinguish them from pseudorandom sequencens.
 These sequences are more evenly distributed than pseudorandom samples and therefore have a lower discrepancy.
 As a result they cause the result of a Monte-Carlo quadrature to converge faster than one using the same amount of pseudorandom samples.
@@ -434,9 +467,26 @@ The rest of the implementation just needs to generate a set of a quasirandom sam
 
 \subsection{Sampling in high dimensions}
 
+As mentioned earlier, to achieve a good convergence rate and general representativeness of a drawn set of samples, e.g. for quadrature, it is vital to achieve low-discrepancy and cover the input space $\Omega$.
+Under normal circumstances, to achieve the same discrepancy in a high-dimensional space as in a low-dimensional space,
+an exponential amount more samples are required.
+However, combining this requirement with the concept of intrinsic dimension, we observe that we effectively only need to cover $\Omega_r$.
+If $r < d$, we can weaken the curse of dimensionality by sampling from $\Omega_r$ and work on $f_t \circ t$.
+For that, the original input distribution also has to be transformed.
+\begin{definition}[Transformed distribution]
+Let $t^{-1}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}$ be the inverse transformation function.
+We then define the transformed distribution as
+\begin{equation}
+\rho_t \colon \Omega_r \to \mathds{R_+}, ~~ \rho_t(x_r)=\int_{t^{-1}(x_r)} \rho(x) \; \text{d}x 
+\end{equation}
+This is also a distribution since it holds that
+\begin{equation}
+\int_{\Omega_t} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{-1}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
+\end{equation}
+This means that in many cases for example a uniform distribution $\rho$ will be transformed into a non-uniform distribution $\rho_t$.
+\end{definition}
 
-
-
+\todo{Formalize}
 
 
 
