@@ -1336,11 +1336,20 @@ However, in theory one can use arbitrary transformation functions.
 \subsection{Periodic transformations}
 
 Another use case for transformations are periodic functions.
-If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i\text{ mod } h, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } h) /h, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
-This way, the function can be interpolated better because there are effectively $1 / h$ times more grid points spent along the $i$-th dimension.
+If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } p_i) /p_i, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
+This way, the function can be interpolated better because there are effectively $1 / h_i$ times more grid points spent along the $i$-th dimension.
 Of course this can concept can be expanded upon with multiple periodic dimensions, antiperiodic functions, offsets and combination with linear transformations.
 
-\todo{Example with $f(x)=sin(2\pi x_1) x_2^2$}
+A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both directions.
+This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown above with $t(x_1,x_2)=(\frac{1}{8} (x_1 \text{ mod } \frac{1}{8}), \frac{1}{8} (x_2 \text{ mod } \frac{1}{8}))^T$.
+To illustrate the improvement in multiple smaller steps, we also investigate periodic transformations with several configurations $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{graphics/periodic}
+\captionof{figure}{}
+\label{fig:periodic}
+\end{figure}
 
 \subsection{Active Manifolds}
 
