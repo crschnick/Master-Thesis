@@ -488,6 +488,57 @@ This means that in many cases for example a uniform distribution $\rho$ will be 
 
 \todo{Formalize}
 
+\section{Error mesaures}
+
+To evaluate the quality of a surrogate $\hat{f}$, we define a couple of error metrics.
+An established and commonly used error metric for function approximation is the $L_2$ error:
+\begin{definition}[$L_2$ error]
+Let
+\begin{equation}
+||g||_{L_p}^p \coloneqq \int_{\Omega} |g(x)|^p \text{d}x
+\end{equation}
+be the $L_p$ norm for real functions $g \colon \Omega \mapsto \mathds{R}$.
+We then define
+\begin{equation}
+\varepsilon_{\text{$L_2$}}(\hat{f})=\|f - \hat{f}\|_{L_2}=\sqrt{\int_{\Omega} |f(x) - \hat{f}(x)|^2 \text{d}x}
+\end{equation}
+as the $L_2$ surrogate approximation error.
+\end{definition}
+
+In statistics, to evaluate the accuracy of an estimator, the mean squared error and the root mean squared error are commonly used.
+They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors:
+\begin{definition}[Mean squared error]
+Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
+We then define
+\begin{equation}
+\varepsilon_{\text{MSE}}(\hat{f}) = \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2
+\end{equation}
+as the mean squared error for the surrogate based on the given sample.
+\end{definition}
+
+\begin{definition}[Root mean squared error]
+Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
+We then define
+\begin{equation}
+\varepsilon_{\text{RMSE}}(\hat{f}) = \sqrt{\varepsilon_{\text{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2}
+\end{equation}
+as the root mean squared error for the surrogate based on the given sample.
+\end{definition}
+
+The RMSE is closely related to the definition of the continous $L_2$ error \ref{}, as it is just a discrete version of it.
+It holds that $\lim_{n \to \infty} \varepsilon_{\text{RMSE}}(\hat{f}) = \varepsilon_{\text{$L_2$}}(\hat{f})$.
+
+
+Absolute error metrics have the problem of being sensitive to the size of the function values.
+To allow for a comparision of the results between different model functions that have a different range of function values, we also define normalized errors:
+\begin{definition}[Normalized root mean squared error]
+Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
+We then define
+\begin{equation}
+\varepsilon_{\text{NRMSE}}(\hat{f}) = \frac{\varepsilon_{\text{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
+\end{equation}
+as the normalized root mean squared error for the surrogate based on the given sample.
+\end{definition}
 
 
 \chapter{Surrogates in high dimensions}
