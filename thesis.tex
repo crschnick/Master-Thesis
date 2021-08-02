@@ -324,6 +324,15 @@ We then define a $d-$dimensional basis function at a supporting grid point $x_{\
 \end{equation}
 \end{definition}
 
+\begin{definition}[Grid]
+Let $\phi_{\underline{l},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
+Then we define the grid as
+\begin{equation}
+V_X=\text{span} \{\phi_{\underline{l},\underline{i}} \mid x_{\underline{l},\underline{i}} \in X\}
+\end{equation}
+i.e. the space spanned by it.
+\end{definition}
+
 The grid points are then grouped together by level.
 
 \begin{definition}[Hierarchical subspaces]
@@ -340,25 +349,6 @@ V^X=\text{span} \{\phi_{\underline{l},\underline{i}} \mid x_{\underline{l},\unde
 In the case of a regular sparse grid, i.e. $X=X_{l}$ for some $l$, the interpolant is
 \begin{equation}
 V_l=V^{X_l}=\bigoplus_{|\underline{l}|_1 \leq l} W^X_{\underline{l}}
-\end{equation}
-\end{definition}
-
-\begin{definition}[Interpolants]
-Let $\phi_{\underline{l},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
-Then we define the space spanned by that sparse grid as
-\begin{equation}
-V_X=\text{span} \{\phi_{\underline{l},\underline{i}} \mid x_{\underline{l},\underline{i}} \in X\}
-\end{equation}
-Let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
-Then a sparse grid interpolant $\hat{f} \in V_X$ can be represented as
-\begin{equation}
-\hat{f}(x) \coloneqq \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
-\underline{l},\underline{i}}(x)
-\end{equation}
-In the case of a regular sparse grid, i.e. $X=X_{l}$ for some $l$, the interpolant is
-\begin{equation}
-\hat{f}(x) \coloneqq \sum_{|\underline{l}|_1 \leq l} \sum_{\underline{i} \in {H_{\underline{l}}}} \alpha_{\underline{l},\underline{i}} ~ \phi_{
-\underline{l},\underline{i}}(x).
 \end{equation}
 \end{definition}
 
@@ -400,6 +390,37 @@ Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with 
 \item[Splines] One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
 They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
 \end{description}
+
+\section{Sparse grid approximation methods}
+
+The are multiple different approaches of constructing a sparse grid surrogate to approximate a model function.
+The interpolation method is the most simple and common one.
+It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical basis function weights, also called hierarchical surplusses, $\alpha_{\underline{l},\underline{i}}$.
+
+\begin{definition}[Interpolants]
+Let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
+Then a sparse grid interpolant $\hat{f} \in V_X$ can be represented as
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x)
+\end{equation}
+In the case of a regular sparse grid, i.e. $X=X_{l}$ for some $l$, the interpolant is
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{|\underline{l}|_1 \leq l} \sum_{\underline{i} \in {H_{\underline{l}}}} \alpha_{\underline{l},\underline{i}} ~ \phi_{
+\underline{l},\underline{i}}(x).
+\end{equation}
+\end{definition}
+
+The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{l},\underline{i}} \in X \colon f(x)=\hat{f}_{\text{hier}}(x)$.
+Furthermore, the method requires the model function to be evaluated at every grid point, which means that it requires exactly $|X|$ function evaluations and it can not be used to approximate a function from a given function sample.
+
+Another method of constructing the surrogate is by using regression \cite{}.
+In contrast to interpolation, we no longer require the function values at the grid points to interpolate between them.
+Instead, the regression method uses established regression approaches to iteratively improve the $\alpha_{\underline{l},\underline{i}}$. wrt. to the approximation error with the help of train and validation samples taken from the model function and input distribution.
+As a result, the size of the function sample and therefore function evaluations, does no longer have to be equal to the amount of grid points.
+Therefore there is greater level of flexibility as the amount of model function evaluations and the amount of grid points can vary.
+
+\todo{Formalize}
 
 \section{Spatially adaptive sparse grids}
 
@@ -650,12 +671,6 @@ Sparse grids itself are already an effective strategy to reduce the consequences
 Of course these strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
 In this chaper we show a few already established approaches to mitigate this issue and look at their advantages and disadvantages.
 
-Important metrics for surrogates are:
-\begin{itemize}
-  \item The amount of model function evaluations required to construct the surrogate
-  \item The amount of grid points/support points. Note that this can differ from the model function evaluations
-\end{itemize}
-
 
 \section{Example}
 
@@ -771,44 +786,19 @@ In contrast, mesh-free methods do not ...
 
 
 
-\chapter{Transforming inputs}
+\chapter{Input transformations}
 
 The previous chapter shows that a lot of work has gone into exploring optimizations for high-dimensional Sparse Grids.
 The primary focus was optimizing the basis functions and structure of $\hat{f}$ when looking at the generalized approximation problem $f(x) \approx \hat{f}(x)$.
 Less focus lied on inspecting and altering the inputs $x \in \Omega$ itself.
-
 The basic idea of this thesis is that instead of directly using the Sparse Grid to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V_l$, we insert another layer of flexibility by introducing an input transformation function $t$ and creatingthe surrogate $\hat{f}$ in tandem with $t$ such that $f(x) \approx \hat{f}(t(x))$.
 Of course, this idea can and will be expanded upon, from different kinds of transformation functions to using sums of separately transformed Sparse Grids.
-
-\section{Basics}
-
-\begin{definition}
-For a transformation function $t$ we define the set of all transformed inputs as
-\begin{equation}
-T=\{t(\omega)\mid \omega\in\Omega\}, ~~ T \subseteq \Omega_t
-\end{equation}
-and as we will see later, a useful metric for determining the usability of a linear transformation $t$ for surrogate construction is the relative share of the set of unused inputs for the surrogate $U=\Omega_r \setminus T$.
-This ratio is defined as
-\begin{equation}
-u_t = |U| / |\Omega|
-\end{equation}
-\end{definition}
-
-In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
-
-The previous section showed how a simple orthogonal transformation, i.e. a change of basis, to align the active directions along the axes.
-If we go one step further and now also try to eliminate the most inactive directions, which are also now the most inactive dimensions after aligning the active directions along the axes, we have to possibility of drastically reducing the amount of grid points while only suffering a small increase in error.
-This process is still broken up into two parts.
-
-We can formalize this by defining a change of basis transformation $b \colon \Omega \to \mathds{R}^d$ that transforms the inputs $x \in \Omega$ using a basis $A$, i.e. $t(x)=A^Tx, ~ A \in \mathds{R}^{d \times d}, ~ rank(A)=d$.
-Since we are primarily focusing on the alignment, we choose $A$ to be an orthonormal basis.
-
 
 
 \section{Intrinsic dimension}
 
+There already exist several concepts used in signal processing and data science that are related to the idea of input transformations to exploit certain characteristics of data like PCA \cite{} or the concept of intrinsic dimension \cite{}.
 The intrinsic dimension of a function or dataset is the minimal amount of variables required to completely represent it.
-It is a concept that used in signal processing and data ... .
 It can be used as a guidance to determine a lower bound on the complexity and optionally exploit the knowledge to construct lower-dimensional surrogates and thus perform a dimension reduction.
 \begin{definition}[Intrinsic dimensionality]
 A $d$-dimensional function $f(x_1, \dots, x_d)$ has intrinsic dimension $r \leq d$ if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, s.t.
@@ -837,8 +827,6 @@ With the introduction of approximations into the intrinsic dimension definition,
 Any function has an approximate intrinsic dimension with error $\epsilon(f)$ for all $0 \leq r \leq d$.
 The main goal to effectively make use of lower dimensional function approximations is therefore finding functions $t$ and $f_t$ that provide a good tradeoff between dimension and approximation error.
 
-
-
 \section{Transformed sampling}
 
 As mentioned earlier, to achieve a good convergence rate and general representativeness of a drawn set of samples, e.g. for quadrature, it is vital to achieve low-discrepancy and cover the input space $\Omega$.
@@ -861,6 +849,38 @@ This means that in many cases for example a uniform distribution $\rho$ will be 
 \end{definition}
 
 \todo{Formalize}
+
+\section{Basics}
+
+As the concept of intrinsic dimension makes it possible in theory to use arbitrary transformations, there are many possible types of transformations to choose from.
+The previous chapter showed how a simple change of basis of the function inputs, can have a huge impact on the sparse grid surrogate construction.
+Therefore the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function is the best possible way.
+We then go one step further and now also try to eliminate the most inactive directions, i.e. performing a dimensionality reduction, which are also now the most inactive dimensions after aligning the active directions along the axes, we have to possibility of drastically reducing the amount of grid points while only suffering a small increase in error in theory.
+In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
+
+
+\begin{definition}[Transformed input space]
+For a transformation function $t \colon \Omega \mapsto \Omega_r$, we define the set of all transformed inputs as
+\begin{equation}
+T=\{t(\omega)\mid \omega\in\Omega\}, ~~ T \subseteq \Omega_r
+\end{equation}
+\end{definition}
+
+The difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ is not.
+As we will show later, in many cases $T \subset \Omega_r$.
+We should strive to have $T$ cover $\Omega_r$ as much as possible to not waste space when constructing the surrogate as spending grid points for regions outside of $T$ is not optimal.
+
+\begin{definition}[Transformation matrix]
+We define the active direction matrix as
+\begin{equation}
+W \in \mathds{R}^{d \times d}, ~~  W^T W=I
+\end{equation}
+Given a reduced dimension $r \leq d$, then
+\begin{equation}
+W_r \in \mathds{R}^{d \times r}
+\end{equation}
+is the transformation matrix.
+\end{definition}
 
 \section{Mapping between unit hypercubes}
 
