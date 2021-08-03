@@ -20,3 +20,5 @@ thesis.run.xml
 *.code
 *.bcf
 *.alg
+*.bak
+*.sav
