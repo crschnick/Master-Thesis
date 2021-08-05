@@ -88,7 +88,14 @@
   \section*{Abstract}
 \fi
 
-<Short summary of the thesis>
+Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
+However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
+Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
+There already exist various approach to dimension reduction in the context of sparse grids, such as various types of adaptive sparse grids or sparse grid based Analysis of Variance (ANOVA), where the goal is to neglect less important dimensions of model functions.
+Active Subspaces \cite{Constantine2014} are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
+Recently Active Subspaces have been applied in combination with sparse grids \cite{}, and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
+The presented approach to dimension reduction views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
+These techniques are then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates and to show their advantages and disadvantages in different contexts and provide some guidance on which type of models suit a method better based on the results.
 
 \cleardoublepage
 
@@ -186,52 +193,21 @@
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
-However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
-Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
-There already exist various approach to dimension reduction in the context of sparse grids, such as various types of adaptive sparse grids or sparse grid based Analysis of Variance (ANOVA).
-These methods aim to neglect less important dimensions of model functions.
-Active Subspaces \cite{Constantine2014} are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
-Recently Active Subspaces have been applied in combination with sparse grids and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
-The presented approach to dimension reduction views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
-These techniques are then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates and to show their advantages and disadvantages in different contexts and provide some guidance on which type of models suit a method better based on the results.
-
-\section{Overview}
-
-
 A parameter study is the process of exploring the influence of different function parameters on the function output.
 This gained knowlegde about the parameters can be used for parameter reduction, which refers to the elimination and replacement of certain function parameters.
 
-- Sparse grids
-
-Since all grid points and tensor product basis functions are effectively axis-aligned, sparse grids, and therefore all techniques based on them, become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
-This will be demonstrated later with the help of a simple example function by showing that grid point reduction techniques and ANOVA fares differently for functions with the same intrinsic dimensionality, based on their axis-alignment properties.
-This limitation is used as a motivation to look into ways into aligning the model function inputs, or more formally transforming the model inputs, in a better way prior to feeding them into sparse grids, s.t. the resulting sparse grid surrogates perform better wrt. the amount of grid points allocated and also the approximation error. 
-
-In this thesis the focus lies on high dimensional functions with $d \geq 8$ that cause even sparse grids to run into problems, since they are affected by the curse of dimensionality when dimensions reach that size.
+Sparse grids, a discretimzation scheme for functions on hypercubes, were introduced as an alternative to the more simple full grid discretisization scheme, which suffers heavily from the curse of dimensionality as the dimension of the functions grow, the amount of grid points required to generate a full grid grows exponentially.
+As a result, the required model function evaluations also grow exponentially.
+While all grid-based methods all share the common problem of being affected by the curse of dimensionality, sparse grids manage to reduce the impact of it and therefore delay the point where they become infeasible to use.
+In this thesis the focus lies on high dimensional functions with $d > 8$ that cause even sparse grids to run into problems, since they are affected by the curse of dimensionality when dimensions reach that size.
 These problems are caused by the high amount of grid points and result in too many required model function evaluations to first construct a sparse grid and also too high runtime and memory requirements for many algorithms that work on sparse grids.
 
+Furthermore, since all grid points and tensor product basis functions used for sparse grids, are effectively axis-aligned, sparse grids, and therefore all techniques based on them, become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
+This limitation is used as a motivation to look into ways into aligning the model function inputs, or more formally transforming the model inputs, in a better way prior to feeding them into sparse grids, s.t. the resulting sparse grid surrogates perform better wrt. the amount of grid points allocated and also the approximation error. 
 
-Parameter reduction, as shown in fig ..., aims at eliminating some function inputs and therefore reduce the amount of grid points substantially.
-With adaptive sparse grids we start with a very low level grid and add more grid points where needed ...
-For higher input dimensions, the commonly used adaptive sparse grids effectively become a parameter reduction method, since they can only work on a surrogate by neglecting unimportant input parameters, effectively eliminating them.
-
-
-\section{Motivation}
-
-Therefore in high dimensions, working with established methods is limited in its capabilities, since they all are parameter reduction methods.
-If there is no good tradeoff between the added regression error and the elimination of a certain parameter, it can't be eliminated. If this is the case for too many parameters, this process of parameter reduction has reached a dead end.
-However, we can find better ways to reduce the number of parameters instead of straight up parameter elimination, we can create more powerful methods for sparse grid based regression.
-This process of improved input reduction is broken down into two parts in this thesis, first an input transformation and then the subsequent parameter elimination as shown in fig .
-
-fig
-
-One approach for transformation and subsequent input reduction presented in this thesis, takes insipiration from common dimension reduction methods such as PCA , which takes a dataset $X$ as input and tries to reduce feature dimension while maintaining feature variance.
-Since we are working with functional data, i.e. a set of function samples $S$ where $x_i$ is distributed according to some probability distribution and $y_i$ are the function values, the goal here is to reduce the input dimension (or surrogate dimension) while maintaining output variance of the surrogate.
-
-
-This transformation process is first explored Transform inputs in such a way that (a) interpolation error is lower than normal or (b) regression error with lower amount of parameters is lower than normal
- 
+Lastly, inspired from the concept of intrinsic dimension in signal processing and common dimension reduction methods in data science such as PCA, we try to combine the process of determining the optimal model input alignment along active directions with dimension reduction.
+Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still achieving an acceptable additional approximation error.
+Overall, this enables us to apply sparse grids to much higher-dimensional problems as before.
 
 \section{Structure}
 
@@ -440,11 +416,13 @@ Therefore there is greater level of flexibility as the amount of model function 
 
 \section{Spatially adaptive sparse grids}
 
+In many cases, generating a regular sparse grid can be improved upon by introducing adaptivity into the process.
+This allows us to spent more grid points, and therefore be more accurate, in regions that are more important and conversely reduce the amount of grid points is less important regions.
+One method of realizing adaptivity in sparse grids are spatially adaptive sparse grids \cite{}.
 By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
 This creation of new grid points of a parent is called refinement of a grid point.
-To choose the best grid points to refine, a refinement criterion $\xi(x_{\underline{l},\underline{i}})$ is introduced.
-This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
-\begin{definition}
+
+\begin{definition}[Grid point children]
 Let $x_{\underline{l},\underline{i}} \in X$ be a grid point.
 We then define
 \begin{equation}
@@ -469,13 +447,15 @@ is the set of possible children of a grid point in dimension $k$ and
 c(x_{\underline{l},\underline{i}})= \bigcup_{k=1}^d \{c_{k}(x_{\underline{l},\underline{i}})\}
 \end{equation}
 is the set of children of a grid point. It holds that $|c(x_{\underline{l},\underline{i}})| \leq 2d$ and $|c(x_{\underline{l},\underline{i}})| =2d$ if there is no boundary involved.
-\end{definition}
-\begin{definition}
 We define a grid point $x_{\underline{l},\underline{i}} \in X$ as a leaf if
 \begin{equation}
 c(x_{\underline{l},\underline{i}}) \cap X = \emptyset
 \end{equation}
 \end{definition}
+
+To choose the best grid points to refine, a refinement criterion is introduced.
+This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
+
 \begin{definition}[Refinement criterion]
 Let $X$ be a set of grid points.
 Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assins each grid point a value that determines the suitability of a refinement of that grid point.
@@ -498,9 +478,7 @@ Usually, if a leaf grid point is refined, all children are created because selec
 After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
 The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
 
-\section{Other types of adaptive Sparse Grids}
-
-The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededding dimensionally adaptive sparse grids \cite{} or the more recent spatially dimension adaptive Sparse Grids \cite{}.
+The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededing dimensionally adaptive sparse grids \cite{} or the more recent spatially dimension adaptive Sparse Grids \cite{}.
 One downside of the classical version of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
 In a dimension reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
 Spatially dimension adaptive Sparse Grids do exactly that, and are therefore better suited for dimension reduction.
@@ -673,13 +651,6 @@ as the normalized root mean squared error for the surrogate based on the given s
 
 \chapter{Surrogate properties}
 
-%Curse of dim. definition
-The presented grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality.
-This means that as the dimension of the models grow, the amount of grid points required to generate a grid grows exponentially.
-%Effects of curse of dim. definition
-As a result, the required model function evaluations also
-Since evaluating the model functions of many real-world problems at only one grid point already require a lot of computational resources, e.g. when solving a a differential equation, Sparse Grids hit a limit on how many dimensions are feasible.
-Even if the model function is easy to compute, the main driver for the runtime of operations on all different types of grids is also the amount of grid points.
 
 % Motivation for this chapter
 Therefore, especially in higher dimensions, employing some strategy for grid point reduction is necessary.
@@ -798,6 +769,12 @@ In contrast, mesh-free methods do not ...
 \todo{Define as orientation agnostic}
 
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/dimension_range.pdf}
+  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \label{fig:grid_errors}
+\end{figure}
 
 
 
