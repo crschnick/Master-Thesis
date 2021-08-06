@@ -91,11 +91,11 @@
 Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
 However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
 Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
-There already exist various approach to dimension reduction in the context of sparse grids, such as various types of adaptive sparse grids or sparse grid based Analysis of Variance (ANOVA), where the goal is to neglect less important dimensions of model functions.
-Active Subspaces \cite{Constantine2014} are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
-Recently Active Subspaces have been applied in combination with sparse grids \cite{}, and we now combine them with regression on spatially adaptive sparse grids \cite{P10}.
-The presented approach to dimension reduction views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
-These techniques are then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates and to show their advantages and disadvantages in different contexts and provide some guidance on which type of models suit a method better based on the results.
+There already exist various approaches to dimension reduction in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
+Active subspaces are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
+The active subspace method is then applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimension reduction method that exploits the best of both worlds.
+This presented approach views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
+It is then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates show their advantages and disadvantages in different contexts.
 
 \cleardoublepage
 
@@ -649,17 +649,54 @@ as the normalized root mean squared error for the surrogate based on the given s
 \end{definition}
 
 
-\chapter{Surrogate properties}
+\chapter{Input transformations}
 
+The previous chapter shows that a lot of work has already gone into exploring all kinds of variants and optimizations for sparse grids that resulted in many different types of basis functions and grid structures that allow us to apply them to many different kinds of problems.
+The primary focus there was on optimizing the basis functions and structure of $\hat{f}$ when looking at the generalized approximation problem $f(x) \approx \hat{f}(x)$.
+Less focus lied on inspecting and altering the inputs $x \in \Omega$ itself.
+The basic idea of this thesis that this chapter will touch on, is that instead of directly using the Sparse Grid to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V_l$, we insert another layer of flexibility by introducing an input transformation function $t$ and creatingthe surrogate $\hat{f}$ in tandem with $t$ such that $f(x) \approx \hat{f}(t(x))$.
+Of course, this idea can and will be expanded upon later on, from different kinds of transformation functions to using sums of separately transformed Sparse Grids.
 
-% Motivation for this chapter
-Therefore, especially in higher dimensions, employing some strategy for grid point reduction is necessary.
+\section{Intrinsic dimension}
+
+There already exist several concepts used in signal processing and data science that are related to the idea of input transformations to exploit certain characteristics of data like PCA \cite{} or the concept of intrinsic dimension \cite{}.
+The intrinsic dimension of a function or dataset is the minimal amount of variables required to completely represent it.
+It can be used as a guidance to determine a lower bound on the complexity and optionally exploit the knowledge to construct lower-dimensional surrogates and thus perform a dimension reduction.
+\begin{definition}[Intrinsic dimensionality]
+A $d$-dimensional function $f(x_1, \dots, x_d)$ has intrinsic dimension $r \leq d$ if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, s.t.
+\begin{equation}
+f(x)=f_t(t(x)), ~~ x \in \Omega
+\end{equation}
+\end{definition}
+
+Even though the above definition does not specify $\Omega_r$, i.e. it can be an arbitrary definition space with $\Omega_r \in \mathds{R}$, we assume that the transformation is bounded and that $\Omega_r$ therefore is also bounded and can be w.l.o.g. scaled to a unit hypercube $\Omega_r=[0,1]^d$.
+
+Also the intrinsic dimension of a function is defined as the minimum dimensions $r*$.
+However, even if we are able to find a $r$-dimensional transformation with $r > r*$ that satisfies the requirement of definition \ref{}, we still have gained an advantage and can define that function as having an intrinsic dimension of at most $r$.
+Even if $r=r*$, we still call it as having an intrinsic dimension of at most $r$, since we usually don't know the actual intrinsic dimension $r*$.
+
+Since we are dealing with function approximation problems in this thesis, it makes sense to extend the definition to allow for approximation errors.
+\begin{definition}[Approximate intrinsic dimension]
+Let $f$ be $d$-dimensional function, $\epsilon$ an error metric.
+We then define $f$ as having an approximate intrinsic dimension of at most $r \leq d$ with an error of at most $e$ there exists a $t \colon \Omega \mapsto \Omega_r$, s.t.
+\begin{equation}
+e=\epsilon(f(x) - f_t(t(x)))
+\end{equation}
+\end{definition}
+Note that this definition uses the term `an error of at most' again, as we are not concerned about the finding and also do not know the optimum error $e*= \argmin_{t, f_t} \epsilon(f(x) - f_t(t(x)))$ for a given $r$.
+
+With the introduction of approximations into the intrinsic dimension definition, there is also room for a tradeoff between  intrinsic dimension and approximation error.
+Any function has an approximate intrinsic dimension with error $\epsilon(f)$ for all $0 \leq r \leq d$.
+The main goal to effectively make use of lower dimensional function approximations is therefore finding functions $t$ and $f_t$ that provide a good tradeoff between dimension and approximation error.
+
+\section{Motivation}
+
+The previously presented grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality.
+This means that as the dimension of the models grow, the amount of grid points and the model function evaluations required to generate a sparse grid grow too fast and therefore put a limit on how many dimensions are feasible.
 Sparse grids itself are already an effective strategy to reduce the consequences the curse of dimensionality, as they provide a good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids, but they only weaken the effects of the curse of dimensionality.
+Therefore, in higher dimensions, employing some strategy for dimension reduction is necessary.
 Of course these strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
-In this chaper we show a few already established approaches to mitigate this issue and look at their advantages and disadvantages.
-
-
-\section{Example}
+In this chaper we show a few already established approaches to sparse grid based dimension reduction and look at their advantages and disadvantages.
 
 The first example model function to investigate the properties of the presented methods, is designed to be a good fit for them and is also simple.
 It is a two-dimensional function, where only the first component and a constant term contribute to the total function value while the second component does not.
@@ -675,9 +712,8 @@ However, just by rotating the function by a few degrees, we obtain
 f_2(x_1,x_2)=\sin(2 \pi x_1') + 1, ~~~~~ x_1'=\cos(0.15 \pi) x_1 -\sin(0.15 \pi) x_2
 \end{equation}
 This function is still intrinsically one-dimensional.
-\\
-\\
-\textbf{Sparse grids}
+
+\subsection{Sparse grids}
 We can investigate how adaptive sparse grids handle both functions.
 
 \begin{figure}[H]
@@ -709,7 +745,7 @@ However, the intrinsic one dimensional term can not be exploited for $f_2$, as i
 \end{figure}
 
 
-\textbf{ANOVA}
+\subsection{ANOVA}
 This behaviour can also be observed for other sparse grid based methods, like ANOVA:
 
 \begin{figure}[H]
@@ -744,9 +780,9 @@ A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2
 For the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
 Therefore the other terms can be dropped and the function can be completely represented with only a one-dimensional function.
 However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \ref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$.
-\\
-\\
-\textbf{RBFs}
+
+
+\subsection{RBFs}
 RBFs behave differently compared to sparse grids when being applied to the same functions, as their basis functions are not constructed with the tensor-product approach.
 Instead they are orientation agnostic, as only the radius relative a support point determines the basis function value.
 Therefore, as seen in figure \ref{fig:rbf_errors}, the approximation errors stay pretty much identical in both cases.
@@ -760,13 +796,13 @@ However, the general approximation error is worse then the sparse grid errors in
   \label{fig:rbf_errors}
 \end{figure}
 
-\section{Summary}
+\subsection{Summary}
 
 A fundamental property of any axis-aligned mesh-based method that uses basis functions created by using the tensor product approach is that their quality depends on whether the model function primarily also has axis-aligned structures.
+In contrast, other basis functions like RBF do not depend on the orientation of the function terms they are trying to approximate, i.e. they can be seen as orientation agnostic.
+In turn this means that an effective dimension reduction with sparse grids is highly dependent on the orientation of the model function.
+Without adding another layer of flexibility with an input transformation function, sparse grids can not use their full potential in many cases.
 
-In contrast, mesh-free methods do not ...
-
-\todo{Define as orientation agnostic}
 
 
 \begin{figure}[H]
@@ -778,47 +814,6 @@ In contrast, mesh-free methods do not ...
 
 
 
-
-\chapter{Input transformations}
-
-The previous chapter shows that a lot of work has gone into exploring optimizations for high-dimensional Sparse Grids.
-The primary focus was optimizing the basis functions and structure of $\hat{f}$ when looking at the generalized approximation problem $f(x) \approx \hat{f}(x)$.
-Less focus lied on inspecting and altering the inputs $x \in \Omega$ itself.
-The basic idea of this thesis is that instead of directly using the Sparse Grid to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V_l$, we insert another layer of flexibility by introducing an input transformation function $t$ and creatingthe surrogate $\hat{f}$ in tandem with $t$ such that $f(x) \approx \hat{f}(t(x))$.
-Of course, this idea can and will be expanded upon, from different kinds of transformation functions to using sums of separately transformed Sparse Grids.
-
-
-\section{Intrinsic dimension}
-
-There already exist several concepts used in signal processing and data science that are related to the idea of input transformations to exploit certain characteristics of data like PCA \cite{} or the concept of intrinsic dimension \cite{}.
-The intrinsic dimension of a function or dataset is the minimal amount of variables required to completely represent it.
-It can be used as a guidance to determine a lower bound on the complexity and optionally exploit the knowledge to construct lower-dimensional surrogates and thus perform a dimension reduction.
-\begin{definition}[Intrinsic dimensionality]
-A $d$-dimensional function $f(x_1, \dots, x_d)$ has intrinsic dimension $r \leq d$ if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, s.t.
-\begin{equation}
-f(x)=f_t(t(x)), ~~ x \in \Omega
-\end{equation}
-\end{definition}
-
-Even though the above definition does not specify $\Omega_r$, i.e. it can be an arbitrary definition space with $\Omega_r \in \mathds{R}$, we assume that the transformation is bounded and that $\Omega_r$ therefore is also bounded and can be w.l.o.g. scaled to a unit hypercube $\Omega_r=[0,1]^d$.
-
-Also the intrinsic dimension of a function is defined as the minimum dimensions $r*$.
-However, even if we are able to find a $r$-dimensional transformation with $r > r*$ that satisfies the requirement of definition \ref{}, we still have gained an advantage and can define that function as having an intrinsic dimension of at most $r$.
-Even if $r=r*$, we still call it as having an intrinsic dimension of at most $r$, since we usually don't know the actual intrinsic dimension $r*$.
-
-Since we are dealing with function approximation problems in this thesis, it makes sense to extend the definition to allow for approximation errors.
-\begin{definition}[Approximate intrinsic dimension]
-Let $f$ be $d$-dimensional function, $\epsilon$ an error metric.
-We then define $f$ as having an approximate intrinsic dimension of at most $r \leq d$ with an error of at most $e$ there exists a $t \colon \Omega \mapsto \Omega_r$, s.t.
-\begin{equation}
-e=\epsilon(f(x) - f_t(t(x)))
-\end{equation}
-\end{definition}
-Note that this definition uses the term `an error of at most' again, as we are not concerned about the finding and also do not know the optimum error $e*= \argmin_{t, f_t} \epsilon(f(x) - f_t(t(x)))$ for a given $r$.
-
-With the introduction of approximations into the intrinsic dimension definition, there is also room for a tradeoff between  intrinsic dimension and approximation error.
-Any function has an approximate intrinsic dimension with error $\epsilon(f)$ for all $0 \leq r \leq d$.
-The main goal to effectively make use of lower dimensional function approximations is therefore finding functions $t$ and $f_t$ that provide a good tradeoff between dimension and approximation error.
 
 \section{Transformed sampling}
 
@@ -1346,6 +1341,13 @@ Also they are currently limited to one dimension, for which the surrogate constr
 
 
 \chapter{Surrogates for transformations}
+
+
+\section{Method selection}
+
+If $d=r$, the transformation can be seen as orientation changing only.
+
+\section{Sparse grid regression}
 
 Once a transformation function $t(x)$ has been created, the next step is creating a surrogate for the transformed input space $\Omega_r=t(\Omega)$.
 The original inputs $y_i \in S$, which were drawn randomly according from the pdf $\rho$, are transformed to obtain the transformed sample $S_r=t(S)$ where the $z_i \in S_r$ transformed inputs with $z_i \in \Omega_r$.
