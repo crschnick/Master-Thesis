@@ -342,6 +342,8 @@ V_l=V^{X_l}=\bigoplus_{|\underline{l}|_1 \leq l} W^X_{\underline{l}}
 \end{equation}
 \end{definition}
 
+\todo{Image}
+
 \section{Basis functions}
 
 The basis functions, as defined in \ref{}, are a central aspect of sparse grids.
@@ -379,6 +381,8 @@ Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with 
 \item[Splines] One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
 They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
 \end{description}
+
+\todo{Image}
 
 \section{Sparse grid approximation methods}
 
@@ -845,18 +849,6 @@ The previous chapter showed how a simple change of basis of the function inputs,
 Therefore the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function is the best possible way.
 We then go one step further and now also try to eliminate the most inactive directions, i.e. performing a dimensionality reduction, which are also now the most inactive dimensions after aligning the active directions along the axes, we have to possibility of drastically reducing the amount of grid points while only suffering a small increase in error in theory.
 In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
-
-
-\begin{definition}[Transformed input space]
-For a transformation function $t \colon \Omega \mapsto \Omega_r$, we define the set of all transformed inputs as
-\begin{equation}
-T=\{t(\omega)\mid \omega\in\Omega\}, ~~ T \subseteq \Omega_r
-\end{equation}
-\end{definition}
-
-The difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ is not.
-As we will show later, in many cases $T \subset \Omega_r$.
-We should strive to have $T$ cover $\Omega_r$ as much as possible to not waste space when constructing the surrogate as spending grid points for regions outside of $T$ is not optimal.
 
 \begin{definition}[Transformation matrix]
 We define the active direction matrix as
@@ -1340,22 +1332,88 @@ Furthermore, defining a transformation function that maps from $\Omega$ onto the
 Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
 
 
-\chapter{Surrogates for transformations}
+\chapter{Transformed surrogates}
+
+Once a transformation function $t(x)$ has been created, the next step is creating a surrogate in the reduced input space $\Omega_r$.
+As we will see in this chapter, this is not trivial to do with sparse grids and requires special care as there are several challenges that come with the usage of input transformations.
+Some of these are specific to sparse grids while others are independent of the used surrogate type.
+
+
+\section{Transformed input space}
+
+All transformed inputs form the transformed input space, which is a part of the reduced surrogate space $\Omega_r$.
+The transformation function was constructed in the last chapter in such a way that every transformed inputs lies in $\Omega_r$, while also applying scaling to use as much space of $\Omega_r$ as possible.
+
+\begin{definition}[Transformed input space]
+Let $t \colon \Omega \mapsto \Omega_r$ be transformation function.
+We define the transformed input space as
+\begin{equation}
+T=\{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r
+\end{equation}
+\end{definition}
+
+The main difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ might not be one.
+As we will show later, in many cases $T$ is not a unit hypercube and it holds that $T \subset \Omega_r$.
+We should strive to have $T$ cover $\Omega_r$ as much as possible to not make a portion of $\Omega_r$ go unused when constructing the surrogate.
+
+\begin{definition}[Unusued reduced surrogate inputs]
+Let $t \colon \Omega \mapsto \Omega_r$ be transformation function, and let $U_t=T \setminus \Omega_r$ be the unused reduced surrogate space.
+Then
+\begin{equation}
+\tilde{u}_t=\frac{|U_t|}{|\Omega_r|}
+\end{equation}
+is the share of unused inputs of the reduced surrogate space.
+\end{definition}
+
+The greater $U_t$ and therefore the unused input share $\tilde{u}_t$, the more grid points can potentially be generated outside of $T$ if sparse grids are created in a regular way instead of employing adaptivity.
+Note that even if a grid point lies outside of $T$, it can still contribute to some degree to the approximation error of the surrogate if the support of the basis function $\phi$ intersects with $T$.
+Thus, grid points are only completely unused if their basis function support does not intersect with $T$.
+Other surrogate types do not have the same issue, as RBFs for example can freely choose their support points and therefore automatically adapt to $T$.
+
+\todo{Image}
 
 
 \section{Method selection}
 
-If $d=r$, the transformation can be seen as orientation changing only.
+If it holds that $r=d$, i.e. we do not perform a dimension reduction, the transformation can be seen as orientation changing only.
+In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective with $t(\Omega) \subseteq \Omega$.
+Therefore, it is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we either define a rule on how to treat function evaluations for grid points outside of $\Omega$ or ensure that grid points outside of $\Omega$ never are created.
+Restricting grid point creation in $U_t$ is difficult as the grid point hierarchy, which dictates that every grid point has a parent, should be kept intact to work effectively with a sparse grid.
+Thus, restricting grid point creation in $U_t$ can prevent large areas in $\Omega$ not being covered by grid points as a basic parent grid point might lie outside of $T$.
+Another approach would be to create a modified model function $f' \colon \Omega \mapsto \mathds{R}$ that can be evaluated outside of $\Omega$.
+We can either set all values outside $\Omega$ to 0 with
+\begin{equation}
+f'_0(x)=\begin{cases}
+f(x)&, \text{if $x \in \Omega$}\\
+0&,\text{else}
+\end{cases}
+\end{equation}
+or evaluate the model function outside of $\Omega$ with $f'_{\text{ext}}(x)=f(x)$.
+
+Note that even if there are many grid points that were generated using spatial adaptivity outside of $T$, as seen in figure \ref{}, no grid point is actually completely unused, i.e. the support of every grid point basis function intersects at least barely with $T$.
+
+\todo{Image}
+
+However, if we perform a dimension reduction with $r < d$, we can no longer effectively make use of sparse grid interpolation as the transformation is longer injective, i.e. many inputs can be projected onto one point with $t(x_1)=\dots=t(x_n)$.
+We are then dealing with data that might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(t(x_i),f(x_i)), (t(x_j),f(x_j)) \in S, ~ t(x_i)=t(x_j), f(x_i) \neq f(x_j)$.
+As a result, the transformed surrogate construction is usually an ill-posed problem for $r < d$, and we have to employ sparse grid based regression methods to successfully create a surrogate for the transformed data.
+
+\begin{figure}
+\centering
+  \includegraphics[width=.5\linewidth]{graphics/aligned_grid}
+\caption{Illustration of a possible case with $r=d=2$. The orange square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$. The orange part not included in the green square is $U$ with $U=\Omega \setminus T$. The brown square represents the support of the grid point in its center.}
+\label{fig:pipeline_2}
+\end{figure}
+
+\todo{Image}
 
 \section{Sparse grid regression}
 
-Once a transformation function $t(x)$ has been created, the next step is creating a surrogate for the transformed input space $\Omega_r=t(\Omega)$.
-The original inputs $y_i \in S$, which were drawn randomly according from the pdf $\rho$, are transformed to obtain the transformed sample $S_r=t(S)$ where the $z_i \in S_r$ transformed inputs with $z_i \in \Omega_r$.
-There are many different ways of constructing the surrogate $\hat{f}_r$.
-The approach used here is function regression with spatially adaptive sparse grids as described in \cite{P10} where $m \leq n$ samples are used to create an approximation of the model function.
-We are aiming to construct the function $\hat{f}_r$ using spatially adaptive sparse grids and an arbitrary basis , i.e.
+As the primary focus of this thesis lies on exploting lower dimensionalities with $r < d$, we focus on the regression method for constructing sparse grid surrogates.
+The original input samples $S=\{x_1,\dots,x_n\} \subseteq \Omega$, which were drawn randomly according from the pdf $\rho$, are transformed to obtain the transformed sample $S_t=t(S)$ where the $t_i \in S_t$ transformed inputs with $t_i \in T$.
+We are aiming to construct the function $\hat{f}_t$ using sparse grids with the grid point set $X$ and arbitrary basis functions $\phi_{\underline{l},\underline{i}}$ with
 \begin{equation}
-\hat{f}_r(x) \coloneqq \sum_{\underline{l},\underline{i}} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
+\hat{f}_t(x) \coloneqq \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
 \end{equation}
 
 The dataset used for the regression is then defined as
@@ -1373,6 +1431,7 @@ We are therefore solving the regularized least squares problem with the smoothin
 \begin{equation}
 \hat{f}_r^{\lambda^*} = \argmin_{\hat{f}_r^\lambda \in V} \epsilon_{S}(\hat{f}_r^\lambda) + \lambda R(\hat{f}_r^\lambda)
 \end{equation}
+
 
 \section{Multifidelity surrogates}
 
@@ -1457,8 +1516,21 @@ Therefore another non sparse grid based optimization can be performed on the set
 
 \chapter{Algorithm}
 
-We now covered all the tools needed to approximate the model function with a transformed surrogate.
-However, we can take a look at similar methods and take some inspirations from them.
+We now covered all the required steps to approximate the model function with a transformed surrogate.
+However, we can easily see that using just one transformed surrogate for approximation is not as powerful as it needs to be for many models.
+In many cases, a multistep approach that generates a sum of transformed surrogates suits a model function better than a single one.
+We can construct a simple example function that shows the limitations of a single step approach.
+
+\begin{equation}
+f(x_1, x_2)=\sin(2 \pi x_1) + x_2
+\nonumber
+\end{equation}
+
+This function is a sum of two one-dimensional terms.
+
+\todo{Example}
+
+We take a look at similar methods and take some inspirations from them.
 One of these related methods is projection pursuit regression \cite{}.
 
 \section{Projection pursuit regression}
@@ -1588,13 +1660,14 @@ To better illustrate the surrogate construction, $r$ is always set to one, regar
 In the first step, we set $e_0=f_1$, determine the best transformation, and then construct the surrogate.
 
 \begin{figure}
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
   \caption{Error function $e_0$ and first active subspace direction $v_1$.}
   \label{fig:as_rn}
 \end{subfigure}%
-\begin{subfigure}{.5\textwidth}
+\hspace{0.07\textwidth}
+\begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_local_1}
   \caption{Transformed surrogate input samples and constructed surrogate.}
@@ -1602,6 +1675,24 @@ In the first step, we set $e_0=f_1$, determine the best transformation, and then
 \end{subfigure}
 \caption{First iteration of the iterative transformation algorithm. The eigenvalues computed for this step are $\lambda_1=30.32$ and $\lambda_2=0.98$. Therefore, a one-dimensional reduction makes sense.}
 \label{fig:pipeline_1}
+\end{figure}
+
+\begin{figure}
+\begin{subfigure}{.45\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_2}
+  \caption{Error function $e_1$ and first active subspace direction $v_1$.}
+  \label{fig:as_rn}
+\end{subfigure}%
+\hspace{0.07\textwidth}
+\begin{subfigure}{.45\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{graphics/pipeline_local_2}
+  \caption{Transformed surrogate input samples and constructed surrogate.}
+  \label{fig:as_nn}
+\end{subfigure}
+\caption{Second iteration of the iterative transformation algorithm. The eigenvalues computed for this step are $\lambda_1=30.32$ and $\lambda_2=0.98$. Therefore, a one-dimensional reduction makes sense.}
+\label{fig:pipeline_2}
 \end{figure}
 
 \chapter{Implementation}
