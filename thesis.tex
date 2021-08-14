@@ -1370,17 +1370,29 @@ Note that even if a grid point lies outside of $T$, it can still contribute to s
 Thus, grid points are only completely unused if their basis function support does not intersect with $T$.
 Other surrogate types do not have the same issue, as RBFs for example can freely choose their support points and therefore automatically adapt to $T$.
 
-\todo{Image}
-
 
 \section{Method selection}
 
+In the standard approach, we make use of sparse grid interpolation, which is able to generate an accurate interpolant quickly as described in section \ref{}.
+However, as we will show in this section, sparse grid interpolation is not suitable for many scenarios with transformed sparse grids and we will therefore differentiate between two cases.
 If it holds that $r=d$, i.e. we do not perform a dimension reduction, the transformation can be seen as orientation changing only.
-In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective with $t(\Omega) \subseteq \Omega$.
-Therefore, it is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we either define a rule on how to treat function evaluations for grid points outside of $\Omega$ or ensure that grid points outside of $\Omega$ never are created.
+In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective and it maps from $\Omega$ into $T \subseteq \Omega$.
+Figure \ref{fig:aligned_grid} illustrates this case.
+
+\begin{figure}[H]
+\centering
+  \includegraphics[width=.5\linewidth]{graphics/aligned_grid}
+\caption{Illustration of a possible case with $r=d=2$. The orange square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$. The orange part not included in the green square is $U$ with $U=\Omega \setminus T$. The brown square represents the support of the grid point in its center.}
+\label{fig:aligned_grid}
+\end{figure}
+
+It is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we define how to treat function evaluations for grid points outside of $\Omega$.
+For that we can either define a rule on how to treat these function evaluations, or ensure that grid points outside of $T$ never are created.
 Restricting grid point creation in $U_t$ is difficult as the grid point hierarchy, which dictates that every grid point has a parent, should be kept intact to work effectively with a sparse grid.
 Thus, restricting grid point creation in $U_t$ can prevent large areas in $\Omega$ not being covered by grid points as a basic parent grid point might lie outside of $T$.
-Another approach would be to create a modified model function $f' \colon \Omega \mapsto \mathds{R}$ that can be evaluated outside of $\Omega$.
+Note that even if there are many grid points that were generated outside of $T$, as seen in figure \ref{}, no grid point is actually completely unused, as the support of every grid point basis function intersects at least barely with $T$ and contributes to the approximation error.
+
+The alternative approach would first require to create a modified model function $f' \colon \mathds{R}^d \mapsto \mathds{R}$ that can be evaluated outside of $\Omega$.
 We can either set all values outside $\Omega$ to 0 with
 \begin{equation}
 f'_0(x)=\begin{cases}
@@ -1389,23 +1401,25 @@ f(x)&, \text{if $x \in \Omega$}\\
 \end{cases}
 \end{equation}
 or evaluate the model function outside of $\Omega$ with $f'_{\text{ext}}(x)=f(x)$.
+As the transformation function is an automorphism of $\Omega$ when $r=d$, it is invertible for elements $t \in T$ and the inverse function $t^{-1} \colon T \mapsto \Omega$ can easily be constructed as $t$ is linear.
+We can extend the inverse transformation $t^{-1}$ to accept all elements $x \in \Omega$ without a problem with $t^{-1}_{\text{ext}} \colon \Omega \mapsto \mathds{R}$ and use it to create the function $\tilde{f}(x)=f'(t^{-1}_{\text{ext}}(x))$ that can be used for sparse grid interpolant creation.
 
-Note that even if there are many grid points that were generated using spatial adaptivity outside of $T$, as seen in figure \ref{}, no grid point is actually completely unused, i.e. the support of every grid point basis function intersects at least barely with $T$.
-
-\todo{Image}
-
-However, if we perform a dimension reduction with $r < d$, we can no longer effectively make use of sparse grid interpolation as the transformation is longer injective, i.e. many inputs can be projected onto one point with $t(x_1)=\dots=t(x_n)$.
-We are then dealing with data that might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(t(x_i),f(x_i)), (t(x_j),f(x_j)) \in S, ~ t(x_i)=t(x_j), f(x_i) \neq f(x_j)$.
+However, if we perform a dimension reduction with $r < d$, we can no longer effectively make use of sparse grid interpolation as the transformation is longer invertible, as many inputs can be projected onto one point with $t(x_1)=\dots=t(x_n)$.
+We are then dealing with data that might be, depending on the model function and the transformation, very noisy and there also might be multiple different values for the same inputs, with
+\begin{equation}
+t(x_i)=t(x_j), f(x_i) \neq f(x_j), ~ x_i \neq x_j
+\end{equation}
 As a result, the transformed surrogate construction is usually an ill-posed problem for $r < d$, and we have to employ sparse grid based regression methods to successfully create a surrogate for the transformed data.
 
-\begin{figure}
+\begin{figure}[H]
 \centering
-  \includegraphics[width=.5\linewidth]{graphics/aligned_grid}
-\caption{Illustration of a possible case with $r=d=2$. The orange square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$. The orange part not included in the green square is $U$ with $U=\Omega \setminus T$. The brown square represents the support of the grid point in its center.}
+  \includegraphics[width=.5\linewidth]{graphics/reduced_grid}
+\caption{Illustration of a possible case with $r=1$ and $d=2$, where the process in broken down into two steps. The surrounding white square represents $\Omega$, the orange line represents $\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$.}
 \label{fig:pipeline_2}
 \end{figure}
 
-\todo{Image}
+The interpolation based approach will however not be used or investigated in this thesis, as the focus lies on cases with $r < d$ and the regression approach also being able to handle the case with $r=d$.
+It is however a certainly interesting approach worthy of being investigated further mainly with the goal of improving the approximation errors for sparse grid interpolants even further.
 
 \section{Sparse grid regression}
 
@@ -1694,6 +1708,8 @@ In the first step, we set $e_0=f_1$, determine the best transformation, and then
 \caption{Second iteration of the iterative transformation algorithm. The eigenvalues computed for this step are $\lambda_1=30.32$ and $\lambda_2=0.98$. Therefore, a one-dimensional reduction makes sense.}
 \label{fig:pipeline_2}
 \end{figure}
+
+\section{Finding the optimal reduced dimension}
 
 \chapter{Implementation}
 
