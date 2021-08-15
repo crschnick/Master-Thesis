@@ -1021,7 +1021,7 @@ x=(W_r Q \Gamma^{-1} (y - c_r)) + c_d
 
 \begin{figure}[H]
 \centering
-  \includegraphics{graphics/surrogate_vis}
+  \includegraphics[width=.7\linewidth]{graphics/surrogate_vis}
   \captionof{figure}{Transformation of $S$ from figure \ref{fig:space} into a unit hypercube according to \eqref{alignment}}
   \label{fig:f2_combined_rel_errors_inter}
 \end{figure}
@@ -1216,7 +1216,7 @@ Two example functions are investigated with the focus being on first the gradien
 
 \newpage
 
-\subsection{Simple function}
+\subsubsection{Simple function}
 
 The first example function is a simple $3$-dimensional function with two-dimensional polynomial terms:
 \begin{equation}
@@ -1249,7 +1249,7 @@ While for example the $NN$ methods have a similar gradient approximation quality
 
 \newpage
 
-\subsection{Complex function}
+\subsubsection{Complex function}
 
 The second case study is a 20-dimensional function:
 
@@ -1300,6 +1300,24 @@ The entries of the diagonal matrix $R$ are then normalized to get
 \end{equation}
 The matrix $W=Q \Lambda Q$ is then uniformly distributed with Haar measure, i.e. exactly what we are looking for.
 
+
+\subsection{Limitations}
+
+Active subspaces are
+A larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector $v_i$ with $\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]$ \cite{CG14}.
+However, a high rate of average squared change does not necessarily indicate that a direction $v_i$ is worth keeping.
+For example, we can create a simple function with
+\begin{equation}
+f(x_1, x_2)=10x_1 + \frac{1}{10} \sin(100 \pi x_2)
+\end{equation}
+that illustrates the limitations of active subspaces.
+The optimal active direction worth keeping would be the first component only, as the second term can be seen as a highly changing noise term that does not effect the approximation error if removed, as the amplitude of the sin is small.
+However, as the average squared directional derivative along the second dimension $(0,1)^T$ is way higher than along the first one, the calculated active subspace is biased heavily along the second dimension.
+
+A positive aspect of the active subspace approximation methods is that they introduce a regularization through discretization \cite{}, i.e. as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
+In certain cases, like the one presented in this section, this will lead to better function approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences, as we will show later on.
+
+\todo{image}
 
 \section{Other transformations}
 
@@ -1423,28 +1441,32 @@ It is however a certainly interesting approach worthy of being investigated furt
 
 \section{Sparse grid regression}
 
-As the primary focus of this thesis lies on exploting lower dimensionalities with $r < d$, we focus on the regression method for constructing sparse grid surrogates.
-The original input samples $S=\{x_1,\dots,x_n\} \subseteq \Omega$, which were drawn randomly according from the pdf $\rho$, are transformed to obtain the transformed sample $S_t=t(S)$ where the $t_i \in S_t$ transformed inputs with $t_i \in T$.
-We are aiming to construct the function $\hat{f}_t$ using sparse grids with the grid point set $X$ and arbitrary basis functions $\phi_{\underline{l},\underline{i}}$ with
+The original function samples
+\begin{equation}
+S=\{(x_1, f(x_1), \dots, (x_n, f(x_n))\} \subseteq \Omega \times \mathds{R}
+\end{equation}
+that were generated randomly according to the given input probability distribution $\rho$, are transformed to obtain the transformed sample
+\begin{equation}
+S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
+\end{equation}
+We are aiming to construct the surrogate function $\hat{f}_t$ using sparse grids with the sparse grid point set $X$ and basis functions $\phi_{\underline{l},\underline{i}}$ for the transformed sample $S_t$ with
 \begin{equation}
 \hat{f}_t(x) \coloneqq \sum_{x_{\underline{l},\underline{i}} \in X} \alpha_{\underline{l},\underline{i}} \phi_{\underline{l},\underline{i}}(x)
 \end{equation}
 
-The dataset used for the regression is then defined as
+The basic approach would be to solve the least squares problem with the standard square loss function
 \begin{equation}
-\{(t(y_i),f(y_i)), ~ y_i \in S, ~ 1 \leq i \leq m\}
-\end{equation}
-Thus, we are trying to solve the least squares problem with the standard square loss function for the dataset $S$ with
-\begin{equation}
-\epsilon(\hat{f}_r)=\frac{1}{m} \sum_{i=1}^m (f(y_i) - \hat{f}_r(t(y_i)))^2 
+\epsilon(\hat{f}_t)=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}_r(t(x_i)))^2 
 \end{equation}
 
-Note that this data might be, depending on the model to reduce, very noisy and there even might be multiple different values for the same inputs, i.e. $(y_i,f(y_i)), (y_j,f(y_j)) \in S, ~ y_i=y_j, f(y_i) \neq f(y_j)$.
-Since the surrogate construction is usually an ill-posed problem and we are calculating a regressed function only based on the samples $S$, the regression method used employs regularization as well to prevent overfitting.
+Since the surrogate construction for a transformation is usually an ill-posed problem, might contain random noise, and we are calculating a regressed function only based on the transformed samples $S_t$, the regression method used employs regularization as well to prevent overfitting.
 We are therefore solving the regularized least squares problem with the smoothing factor $\lambda > 0$:
 \begin{equation}
-\hat{f}_r^{\lambda^*} = \argmin_{\hat{f}_r^\lambda \in V} \epsilon_{S}(\hat{f}_r^\lambda) + \lambda R(\hat{f}_r^\lambda)
+\hat{f}_t^{\lambda^*} = \argmin_{\hat{f}_r^\lambda \in V} \epsilon(\hat{f}_r^\lambda) + \lambda R(\hat{f}_r^\lambda)
 \end{equation}
+
+Compared to sparse grid interpolation, the regression method takes longer to construct a well fitting surrogate as an optimization problem that involves all grid points has to be solved.
+The regression algorithm also provides the ability to make use of spatially adaptivity to refine the grid in areas where the difference between surrogate value and training data $\hat{f}_t(x_i) - f(x_i)$ is large.
 
 
 \section{Multifidelity surrogates}
@@ -1532,81 +1554,80 @@ Therefore another non sparse grid based optimization can be performed on the set
 
 We now covered all the required steps to approximate the model function with a transformed surrogate.
 However, we can easily see that using just one transformed surrogate for approximation is not as powerful as it needs to be for many models.
-In many cases, a multistep approach that generates a sum of transformed surrogates suits a model function better than a single one.
-We can construct a simple example function that shows the limitations of a single step approach.
-
-\begin{equation}
-f(x_1, x_2)=\sin(2 \pi x_1) + x_2
-\nonumber
-\end{equation}
-
-This function is a sum of two one-dimensional terms.
-
-\todo{Example}
-
-We take a look at similar methods and take some inspirations from them.
-One of these related methods is projection pursuit regression \cite{}.
+In many cases, a multistep approach that generates a sum of transformed surrogates suits a model function better than a single one, especially if the model function is a sum of function terms itself.
+For example, having multiple surrogates allows us to approximate model functions that consist out of multiple terms with a low intrinsic dimension, such as $f(x_1, x_2)=\sin(2 \pi x_1) + x_2$, which has two terms with an intrinsic dimension of one.
 
 \section{Projection pursuit regression}
 
+We take a look at similar methods and take some inspirations from them.
+One of these related methods is projection pursuit regression \cite{}.
 The projection pursuit regression method comes from the area of statistics and is in its core idea related to our approach with linear transformations.
-It tries to represent a dataset $P=\{(x_i, y_i)=(x_i, f(x_i))\}$ using the form
+It tries to represent a dataset
 \begin{equation}
-y_i=\beta_0 + \sum_{i=1}^m f(\beta_i^T x_i) + \epsilon_i
+P=\{(x_i, y_i)\}=\{(x_i, f(x_i))\}
 \end{equation}
-where $\beta_0$ is a constant, $\beta_i$ are ..., and the $\epsilon_i$ are the residiuals.
-Using the $\beta_i$ to project inputs onto a lower-dimensional hyperplane is very similar to our concept of creating linear transformations.
-
-
-Going from this statistical model to our function approximation problem, we can 
+using the form
 \begin{equation}
-f(x)=\sum_{i=1}^m f(\beta_i^T x_i)
+y_i=\beta_0 + \sum_{k=1}^m f_k(\beta_k^T x_i) + \epsilon_i
+\label{ppr}
 \end{equation}
-The functions $\hat{f}_i$ and projections $\beta_i$ of this additive model can be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the error function
+where $\beta_0$ is a constant, $\beta_k$ are projection matrices, the $f_k$ are lower dimensional function surrogates, and the $\epsilon_i$ are the residiuals.
+Using the $\beta_k$ to project inputs onto a lower-dimensional space is very similar to our concept of creating linear transformations.
+The functions $f_k$ and projection matrices $\beta_k$ of this additive model can then be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the error function
 \begin{equation}
-e_k(x)=f(x) - \sum_{i=1}^k f(\beta_i^T x_i)
+e_k(x)=f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
-
+This sum can be computed using an iterative approach, as seen in algorithm \ref{alg:ppr}.
 \begin{algorithm}[H]
 \normalsize
 \begin{algorithmic}
-\Function{projectionPursuitRegression}{$f, m$}
+\Function{projectionPursuitRegression}{$f, k_{\text{max}}$}
     \State $e_0 = f$
-    \For{$i = 1, \dots, m$}
-    	\State $\beta_i \gets$ best
-    	\State $e \gets e_{i - 1} - \hat{f}_i$
+    \For{$k = 1, \dots, k_{\text{max}}$}
+    	\State $\beta_k \gets$ determineBestProjection($e_k$)
+    	\State $f_k \gets$ determineBestSurrogate($e_k, \beta_k$)
+    	\State $e_k \gets e_{k - 1} - f_k$
     \EndFor
-    \State $\hat{f} \gets \sum_{i=1}^m f(\beta_i^T x_i)$
+    \State $\hat{f}(x) \gets \sum_{f_k}^m f_k(\beta_k^T x)$
     \State \Return{$\hat{f}$}
 \EndFunction
 \end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Alternatively, one could introduce an error exit condition that exists the loop if the regression error is small enough with $\epsilon(e) < \epsilon_{max}$.}
+	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm.}
+	\label{alg:ppr}
 \end{algorithm}
-
-\todo{Mean center function?}
+Alternatively, one could also introduce an error exit condition that exits the loop if the regression error is small enough with $\epsilon(e_i) < \epsilon_{max}$.
 
 \section{An iterative approach}
 
+Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by dropping the constant term $\beta_0$ and residuals $\epsilon_i$ from equation \ref{ppr} to get
+\begin{equation}
+\hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i))
+\end{equation}
+where the $t_i$ are linear transformations similar to the projection with $\beta_k^T$ and the $\hat{f_{t_i}}$ are the surrogate equivalents of the $f_k$.
+The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the adapted error function
+\begin{equation}
+e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x))
+\end{equation}
+
 \begin{algorithm}[H]
 \normalsize
 \begin{algorithmic}
-\Function{transformedSurrogateSum}{$f, m$}
+\Function{transformedSurrogateSum}{$f, $}
     \State $e_0 = f$
     \For{$i = 1, \dots, m$}
-    	\State $t_i \gets$ generateBestTransformation()
-    	\State $\hat{f}_{t_i,i} \gets$ generateBestSurroate($t_i$)
-    	\State $e \gets e_{i - 1} - \hat{f}_{t_i,i}$
+    	\State $t_i \gets$ generateBestTransformation($f$)
+    	\State $\hat{f}_{t_i} \gets$ generateBestSurroate($f, t_i$)
+    	\State $e_i \gets e_{i - 1} - \hat{f}_{t_i}$
     \EndFor
-    \State $\hat{f} \gets \sum_{i=1}^m \hat{f}_{t_i, i} \circ t_i$
+    \State $\hat{f} \gets \sum_{\hat{f}_{t_i}=1} \hat{f}_{t_i} \circ t_i$
     \State \Return{$\hat{f}$}
 \EndFunction
 \end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Alternatively, one could introduce an error exit condition that exists the loop if the regression error is small enough with $\epsilon(e) < \epsilon_{max}$.}
+	\captionof{algorithm}{Pseudocode of the iterative transformed surrogate generation algorithm.}
 \end{algorithm}
 
 In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
 However, this algorithm is more generalized to allow for any type of transformation.
-The method generateBestTransformation() is realized according to chapter \ref{} and the presented generation methods there.
 
 \section{Generating the best surrogate}
 
@@ -1649,6 +1670,34 @@ For the grid learner, $\Lambda=\{\lambda_1, \dots, \lambda_p\}$ and $\Lambda=\{\
 
 \todo{pre convergence}
 
+
+\section{Finding the optimal reduced dimension}
+
+Until now, we assumed that the reduced dimension $r$ was given and did not cover ways on how to determine the optimal reduced dimension $r*$.
+It was mentioned in the active subspace sections in the previous chapter that even though the active subspace method provides a suggested criterion to determine the optimal cutoff dimension $r*$, i.e. looking for the largest gap in the sequence of eigenvalues, this criterion was not always optimal and could be influenced by various factors.
+Furthermore, alternative transformation creation methods, like the random transformations, can not make use of such a cutoff criterion.
+
+A solution would be to use the exploratory look ahead approach from the previous section to determine the optimal $r*$.
+
+\begin{algorithm}[H]
+\normalsize
+\begin{algorithmic}
+\Function{generateBestTransformation}{S, $\epsilon$}
+    \State c*=$\emptyset$
+    \State $e_{min}=\infty$
+    \For{r = 1\,dots,d}
+      \State $\hat{f}_c^l$ = generateLofiSurroate(S, c)
+    	\State $e \gets \epsilon(\hat{f}_c^l)$
+    	\If{$e < e_{min}$}
+    	  \State $e_{min}\gets e$
+    	\State c* $\gets$ c
+    	\EndIf
+    \EndFor
+    \State \Return{generateHifiSurroate(S, c*)}
+\EndFunction
+\end{algorithmic}
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$}
+\end{algorithm}
 
 \section{Visualizing the algorithm}
 
@@ -1708,8 +1757,6 @@ In the first step, we set $e_0=f_1$, determine the best transformation, and then
 \caption{Second iteration of the iterative transformation algorithm. The eigenvalues computed for this step are $\lambda_1=30.32$ and $\lambda_2=0.98$. Therefore, a one-dimensional reduction makes sense.}
 \label{fig:pipeline_2}
 \end{figure}
-
-\section{Finding the optimal reduced dimension}
 
 \chapter{Implementation}
 
