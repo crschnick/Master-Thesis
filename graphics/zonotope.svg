@@ -365,9 +365,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="-258.36103"
-     inkscape:cy="187.0633"
+     inkscape:zoom="1.4"
+     inkscape:cx="-128.34492"
+     inkscape:cy="168.31122"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -384,7 +384,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -504,7 +504,8 @@
            x="25"
            y="10.457376"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00010681px;font-family:'Baskerville Old Face';-inkscape-font-specification:'Baskerville Old Face, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start" /></flowRegion><flowPara
-         id="flowPara9336">p</flowPara></flowRoot>    <flowRoot
+         id="flowPara9336"
+         style="-inkscape-font-specification:'Bell MT';font-family:'Bell MT';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">g</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot9338"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00068283px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
@@ -530,7 +531,8 @@
            x="25"
            y="10.457376"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00010681px;font-family:'Baskerville Old Face';-inkscape-font-specification:'Baskerville Old Face, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start" /></flowRegion><flowPara
-         id="flowPara9336-1">p</flowPara></flowRoot>    <flowRoot
+         id="flowPara9336-1"
+         style="-inkscape-font-specification:'Bell MT';font-family:'Bell MT';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">g</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot9338-5"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00020886px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;opacity:1;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter9306);"
@@ -556,7 +558,8 @@
            x="25"
            y="10.457376"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00010681px;font-family:'Baskerville Old Face';-inkscape-font-specification:'Baskerville Old Face, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start" /></flowRegion><flowPara
-         id="flowPara9336-3">p</flowPara></flowRoot>    <flowRoot
+         id="flowPara9336-3"
+         style="-inkscape-font-specification:'Bell MT';font-family:'Bell MT';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">g</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot9338-0"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.00020886px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;opacity:1;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter9306);"
