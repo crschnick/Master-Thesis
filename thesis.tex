@@ -48,6 +48,29 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
+\definecolor{charcoal}{HTML}{264653}
+\definecolor{persian_green}{HTML}{2A9D8F}
+\definecolor{light_cornflower_blue}{HTML}{8ECAE6}
+\definecolor{eggshell}{HTML}{F4F1DE}
+\definecolor{silver}{HTML}{C0C0C0}
+
+\mdfdefinestyle{style}{%
+linecolor=charcoal,
+linewidth=1.3px,
+innermargin=0,
+innertopmargin=0,
+frametitlebackgroundcolor=eggshell,
+frametitlealignment=\center,
+frametitlerulewidth=1.3px,
+frametitlerule=true,
+frametitlerulecolor=silver,
+frametitleaboveskip=6.5pt,
+frametitlebelowskip=3.5pt,
+frametitlefont=\small\normalfont\bfseries
+}
+
+\newcommand{\delimit}{{\color{charcoal}\noindent\rule{\textwidth}{1pt}}}
+
 \begin{document}
 
 %tex4ht-Konvertierung verschönern
@@ -962,7 +985,7 @@ We can perform a change of basis on every element $z \in S$ that has been projec
 Per surrogate space definition \ref{surrogate_space}, we know that $v_i \in [-1,1]$ holds as $v \in S$.
 Once the projected inputs are represented by the new basis, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
 \begin{equation}
-t_{W_r}(x)=c_r + \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right) v = c_r + \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right) p(x)
+t_{W_r}(x)= c_r + \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right) Q^T p(x)
 \label{linear_trans}
 \end{equation}
 
@@ -980,7 +1003,7 @@ The described transformation process can be visualized by illustrating where gri
 While it is normally not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, we require it for the visualization and it is therefore only shown in a more informal way.
 Equation \ref{linear_trans} can be rearranged to solve for $p(x)$ with
 \begin{equation}
-p(x)=\left(\left(2, \dots, 2\right) (y - c_r)\right)
+p(x)=\left(\text{diag}\left(2, \dots, 2\right) (y - c_r)\right)
 \label{proj}
 \end{equation}
 To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases the inverse $p^{\text{inv}}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, i.e. $|p^{\text{inv}}(x_p)| > 1$.
@@ -1322,6 +1345,14 @@ Compared to Active Subspaces, calculating the Active Manifold is more complex an
 Furthermore, defining a transformation function that maps from $\Omega$ onto the local one-dimensional space of the curve is way more complex and can be constructed in many ways.
 Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
 
+\section{Conclusion}
+
+This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
+We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
+The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
+We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W*$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
+
+Now that we are able to create a transformation function $t(x)$
 
 \chapter{Transformed surrogates}
 
@@ -1748,157 +1779,203 @@ In theory, an optimal method should be able to approximate $f$ without a resultu
 
 To make the shown results as transparent as possible, this chapter will focus on how the previsouly described process of transforming Sparse Grids is actually implemented.
 
-\begin{description}
-\item[Object] An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
-\item[Function] A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
-\item[Component] A component is a function declaration, where the actual implementation can be exchanged for many different function implementations.
-\item[Control flow + data flow] Arrows signal control flow and also data flow if an object is shown.
-\end{description}
 
+\begin{mdframed}[style=style,frametitle={Notation}]
 \begin{figure}[H]
+
+
 \includegraphics[width=\textwidth]{graphics/definitions.pdf}
-\captionof{figure}{Notation used for different elements in the structure diagrams.}
-\label{fig:defs}
-\end{figure}
+\vspace{-7.5mm}
 
-Functions and components can also be customized by passing some configuration parameters, which is not explicitly shown in the structure diagrams but will be mentioned if it is done.
+\delimit
 
-\newpage
-\section{Pipeline}
-
-The whole reduction process is modeled and implemented as a pipeline made up of different components to allow for maximum flexibility.
-All components can be exchanged for many different types, where instances of these types can also be customized by passing some configuration parameters.
-
-\begin{figure}[H]
-
-\includegraphics[width=\textwidth]{graphics/ReductionPipeline.pdf}
-\vspace{-1.5mm}
-
-\begin{mdframed}[linewidth=0.7px]
+\vspace{3.5mm}
 
 \begin{description}
-\item[Parameters] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{numIterations}}: Maximum amount of iterations
-\item \texttt{\textbf{functionSample}}: A sample
+\item[Elements] {~ \begin{enumerate}[\indent{}]
+\item \textbf{Object}: An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
+\item \textbf{Function}: A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
+\item \textbf{Component}: A component is a function declaration, where the actual implementation can be exchanged for many different function implementations.
+\item \textbf{Control flow + data flow}: Arrows signal control flow and also data flow if an object is shown.
+\item \textbf{Gateway}: A gateway evaluates an attached condition and decides which outgoing control flow to follow.
 \end{enumerate}}
 \end{description}
 
-\end{mdframed}
-\captionof{figure}{Component structure of the transformation pipeline and the associated possible configuration options.}
-\label{fig:astsg}
-\end{figure}
+\delimit
 
-The core component of the reduction pipeline and also the most important one wrt. achieving good reduction results in the transformation function generator.
+\captionof{figure}{Notation used for different elements in the component structure diagrams in this chapter.}
+\label{fig:defs}
+\end{figure}
+\end{mdframed}
+
+
+\newpage
+\section{Transformation pipeline}
+\label{sec:tp}
+
+The complete transformation process is modeled and implemented as an iterative pipeline that is made up of different components to allow for maximum flexibility.
+Every pipeline iteration has the goal of adding another transformed surrogate to the current sum of surrogates to further improve the approximation.
+Many pipeline components can be exchanged for many different implementation types, where instances of these types can also be customized by passing configuration parameters.
+The pipeline structure is visualized in figure \ref{fig:tp}.
+
+\begin{mdframed}[style=style,frametitle={Transformation Pipeline}]
+\begin{figure}[H]
+
+\includegraphics[width=\textwidth]{graphics/TransformationPipeline.pdf}
+\vspace{-7.5mm}
+
+\delimit
+
+\begin{description}
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can be using a variety of conditions such as a maximum iteration count or a maximum approximation error.
+\item \texttt{\textbf{sampleCount}}: The amount of function samples $n$ used during pipeline execution. These samples are used for a variety of operations and split into train, validate, and test datasets in each iteration.
+\end{enumerate}}
+\end{description}
+
+\delimit
+
+\captionof{figure}{Component structure of the transformation pipeline and its associated possible configuration parameters.}
+\label{fig:tp}
+\end{figure}
+\end{mdframed}
+
+The most important component of the transformation pipeline wrt. achieving good approximation results is the transformation generator \ref{sec:tg}, as the quality of a transformation will be passed down the line in each iteration.
+The generated transformation is then fed into a surrogate generator \ref{sec:sg}, which will generate the transformed surrogate.
+Note that in the abstract pipeline, any type of surrogate like sparse grids and RBFs can be generated in theory.
+The newly generated surrogate is then added to the sum of previously generated surrogates to obtain the new transformed surrogate sum.
+At the end of each iteration, we decide whether to exit the pipeline or continue.
+
 
 \newpage
 \section {Transformation generators}
 \label{sec:tg}
 
 The transformation generator component has the responsibility of finding a good transformation function to use for a pipeline iteration.
+We covered the creation of input transformation extensively in chapter \ref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods, with the goal to provide a uniform interface.
 
 \subsection {Transformation stream generator}
 
-Chapter \ref{} covered the used transformation generation methods in detail.
-It described that for every calculated Active Subspace matrix or random orthogonal basis, family of transformations can be generated from them, usually accomplished by using different values for the reduced dimension $r$, i.e. cutting less or more dimensions off.
-To apply this concept and couple it with other components, such as transformation evaluators, this implementation makes use of so-called transformation generator streams.
-A transformation stream generator will generate as much different transformations as it can, where the range of possible transformations is defined by multiple specific parameters.
-It can be parallelized.
-Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
+We saw previsouly that we can generate a whole family of transformations for every calculated active subspace matrix or random orthogonal basis, which is usually accomplished by using different values for the reduced dimension $r$, i.e. cutting less or more dimensions off.
+To apply this concept and to couple it with other components introduced later on, such as transformation evaluators, this implementation makes use of so-called transformation stream generators.
 
+\begin{mdframed}[style=style,frametitle={Transformation generator (stream-based)}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
-\captionof{figure}{Component structure of a stream-based transformation generator and the associated possible configuration options.}
+\delimit
+
+\captionof{figure}{Component structure of a stream-based transformation generator.}
 \end{figure}
+\end{mdframed}
+
+A transformation stream generator will generate as much different transformations as it can, where the range of possible transformations is defined by multiple parameters.
+Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
 
 \newpage
 
 \subsection{Active Subpsace stream generator}
 
-The already described Monte-Carlo Active Subspace method presented in \ref{sec:as} is implemented as a transformation stream generator component as seen in figure \ref{fig:astsg} , since there are multiple different cutoff possibilities.
+Transformation generation with the active subspace method as covered in \ref{sec:as} is implemented as a transformation stream generator componen, since there are multiple different cutoff possibilities with $r$.
 The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \ref{fig:astsg}.
 
+\begin{mdframed}[style=style,frametitle={Transformation stream generator (active subspaces)}]
 \begin{figure}[H]
-
+\vspace{5px}
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
 
-\vspace{-1.5mm}
-
-\begin{mdframed}[linewidth=0.7px]
+\delimit
 
 \begin{description}
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample and that is subsequentially passed down to create the Active Subspaces.
-\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigen vectors, i.e. the lower bound for $r$.
-\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigen vectors, i.e. the upper bound for $r$.
-\item \texttt{\textbf{minEigenValueShare (= 0)}}: Defines a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
+\item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample.
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigenvectors, i.e. the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigenvectors, i.e. the upper bound for $r$.
+\item \texttt{\textbf{minEigenValueShare (= 0)}}: Imposes a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
 \end{enumerate}}
 \end{description}
-
-\end{mdframed}
-\captionof{figure}{Component structure of an Active Subspace transformation stream generator and the associated possible configuration options.}
+\delimit
+\captionof{figure}{Component structure of an active subspace transformation stream generator and the associated possible configuration parameters.}
 \label{fig:astsg}
 \end{figure}
+\end{mdframed}
 
-The Monte-Carlo Active Subspace method requires gradient samples as inputs.
-So for a gradient sample generator, four variants can be chosen depending on given inputs and requirements:
+Setting a \texttt{minEigenValueShare} value allows us to flexibly adjust the upper bound of $r$ such that we do not consider the last few eigenvectors with way smaller eigenvalues compared to the first few.
+A common values used is $\texttt{minEigenValueShare=0.95}$.
+
+The Monte-Carlo based active subspace method requires gradient samples as inputs.
+These are generated by a gradient sample generator component.
+Possible implementations for gradient computation that we already covered in section \ref{} are available to choose from, as seen in figure \ref{fig:gg}.
+
+
+\newpage
+
+\begin{mdframed}[style=style,frametitle={Gradient sample generator}]
+\begin{figure}[H]
 \begin{description}
 \item[\texttt{\textbf{givenGradient()}}:] If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward by just evaluating the gradient function at the sample points.
 \item[\texttt{\textbf{finiteDifferences($h$)}}:] Alternatively, the sample gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
 \item[\texttt{\textbf{randomNeighbour($n'$)}}] Random neighbour approximation according to \ref{}.
 \item[\texttt{\textbf{nearestNeighbour($n', m$)}}] Nearest neighbour approximation according to \ref{}.
 \end{description}
-
-\newpage
+\delimit
+\captionof{figure}{List of available gradient sample generator implementations.}
+\label{fig:gg}
+\end{figure}
+\end{mdframed}
 
 \subsection {Random stream generator}
 
-A completely different approach to finding a transformation function is just generating a random one.
-A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
-It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
+An alternative approach to finding a transformation function is just generating a random orthonormal basis, as covered in \ref{}.
+This random transformation generator is easy to implement, as shown in figure \ref{rtsg}, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
 
+\begin{mdframed}[style=style,frametitle={Transformation stream generator (random)}]
 \begin{figure}[H]
 
+\vspace{5px}
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
 
-\vspace{-1.5mm}
-
-\begin{mdframed}[linewidth=0.7px]
-
+\delimit
 \begin{description}
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
 \item \texttt{\textbf{minDimensions}}: The minimum amount of used basis vectors, i.e. the lower bound for $r$.
 \item \texttt{\textbf{maxDimensions}}: The maximum amount of used basis vectors, i.e. the upper bound for $r$.
 \end{enumerate}}
 \end{description}
-
-\end{mdframed}
-\captionof{figure}{Component structure of an random transformation stream generator and the associated possible configuration options.}
+\delimit
+\captionof{figure}{Component structure of an random transformation stream generator and the associated possible configuration paremeters.}
 \label{fig:rtsg}
 \end{figure}
+\end{mdframed}
 
 \newpage
 
 \subsection {Iterative transformation generator}
 
 In some cases, especially when dealing with a random transformation generation as shown in \ref{sec:rtg}, the probability of finding a good transformation in one try is very low, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component, e.g. a stream-based one.
-It can therefore also be used with the Active Subspace transformation generator to try to find the best transformation out of several Active Subspace calculations with different input samples.
+It can also be used with the active subspace transformation generator to try to find the best transformation out of several active subspace calculations with different input samples.
 
+\begin{mdframed}[style=style,frametitle={Transformation generator (iterative)}]
 \begin{figure}[H]
 	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
 
-\vspace{-1.5mm}
-
-\begin{mdframed}[linewidth=0.7px]
+\delimit
 
 \begin{description}
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
-\item \texttt{\textbf{numIterations}}: Iterative transformation generator configuration options
+\item \texttt{\textbf{numIterations}}: The amount of iterations that should be executed.
 \end{enumerate}}
 \end{description}
 
-\end{mdframed}
-\captionof{figure}{Component structure of an iterative transformation generator and the associated possible configuration options}
+\delimit
+\captionof{figure}{Component structure of an iterative transformation generator and the associated possible configuration parameters.}
+\label{fig:itg}
 \end{figure}
+\end{mdframed}
+
+
+Note that this iterative approach is independent from the pipeline iterations, i.e. an iterative transformation generator executes all of its iterations during one pipeline step to determine the best transformation to be used in the one pipeline step.
+
+\todo{Lofi}
 
 \newpage
 \section {Evaluators}
