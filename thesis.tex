@@ -53,6 +53,7 @@
 \definecolor{light_cornflower_blue}{HTML}{8ECAE6}
 \definecolor{eggshell}{HTML}{F4F1DE}
 \definecolor{silver}{HTML}{C0C0C0}
+\definecolor{persian_red}{HTML}{D03030}
 
 \mdfdefinestyle{style}{%
 linecolor=charcoal,
@@ -68,6 +69,13 @@ frametitleaboveskip=6.5pt,
 frametitlebelowskip=3.5pt,
 frametitlefont=\small\normalfont\bfseries
 }
+
+\usepackage[normalem]{ulem}
+
+\newcommand\coloruline{\bgroup\markoverwith{\textcolor{light_cornflower_blue}{\rule[-0.6ex]{2pt}{0.3pt}}}\ULon}
+
+\crefformat{figure}{\coloruline{#2fig.$~$#1#3}}
+\crefformat{equation}{\coloruline{#2(#1#3)}}
 
 \newcommand{\delimit}{{\color{charcoal}\noindent\rule{\textwidth}{1pt}}}
 
@@ -743,22 +751,29 @@ This function is still intrinsically one-dimensional.
 \subsection{Sparse grids}
 We can investigate how adaptive sparse grids handle both functions.
 
+\begin{mdframed}[style=style]
+
+\vspace{2.5mm}
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/grid_f1}
-  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \caption{Grid points for $f_1$}
   \label{fig:as_rn}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/grid_f2}
-  \caption{Spatially adaptive sparse grid points for $f_2$}
+  \caption{Grid points for $f_2$}
   \label{fig:as_nn}
 \end{subfigure}
-\caption{Grid points of generated spatially adaptive sparse grids that started out as a regular sparse grid with level $l=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
+
+\vspace{2.5mm}
+\delimit
+\caption{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $l=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
 \label{fig:grids}
 \end{figure}
+\end{mdframed}
 
 
 Figure \ref{fig:grids} shows how sparse grids are affected by the different alignment of a function.
@@ -897,13 +912,18 @@ A $l$-dimensional zonotope $Z$ with $k \geq l$ generators $g_1, \dots g_k \in \m
 Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
   \label{zonotope}
 \end{equation}
+\end{definition}
+
+
+\begin{mdframed}[style=style,frametitle={Zonotope}]
 \begin{figure}[H]
 \centering
   \includegraphics[width=0.5\linewidth]{graphics/zonotope}
+  \delimit
   \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$ and the three generators $g_1,g_2,g_3$.}
   \label{fig:zonotope}
 \end{figure}
-\end{definition}
+\end{mdframed}
 
 
 When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it holds that
@@ -945,22 +965,33 @@ and according to equation \ref{zonotope_form}, it holds that the projected input
 However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_r$, during the normalization step, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is later scaled and aligned to obtain the unit hypercube $\Omega_r$.
 The generators $q_1, \dots, q_r$ of the encasing hypercube are calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ with
 \begin{equation}
-q_i=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
-\nonumber
+q_i'=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
+\label{q}
 \end{equation}
+and
+\begin{equation}
+q_i=s_i \frac{q_i'}{\| q_i' \|},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
+\label{q_scaled}
+\end{equation}
+
 The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
 \begin{equation}
-S=\left\{\sum_{i=1}^r q_i x_i s_i , ~ -1 \leq x_i \leq 1\right\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
+S=\left\{\sum_{i=1}^r q_i x_i, ~ -1 \leq x_i \leq 1\right\}
 \label{surrogate_space}
 \end{equation}
 where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent of the zonotope $Z$ as shown in figure \ref{surrogate_space}.
 
+\begin{mdframed}[style=style,frametitle={Surrogate space}]
 \begin{figure}[H]
 \centering
-  \includegraphics[width=0.4\linewidth]{graphics/s}
-  \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope of figure \ref{fig:zonotope} according to equation \eqref{surrogate_space}.}
+\vspace{2.5mm}
+  \includegraphics[width=0.4\linewidth]{graphics/surrogate_space}
+\delimit
+
+  \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope $Z_p$ of \cref{fig:zonotope} according to \cref{surrogate_space}. The projected zonotope $Z_p$ is drawn in {\color{light_cornflower_blue} light blue}, the encasing surrogate space $S$ in dotted {\color{charcoal} dark blue}, and the origin in {\color{persian_red} red}.}
   \label{fig:surrogate_space}
 \end{figure}
+\end{mdframed}
 
 As we only need $r$ generators for the surrogate space but have $d$ generators of $Z_p$ available, not all $p_i$ are used in the surrogate space construction.
 In theory, the generators $p_i$ that are used to calculate the $q_i$ are not ordered by default and also don't have to be ordered.
@@ -989,23 +1020,40 @@ t_{W_r}(x)= c_r + \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right) Q^T p(
 \label{linear_trans}
 \end{equation}
 
+\begin{mdframed}[style=style,frametitle={Notation}]
 \begin{figure}[H]
+
+\vspace{4.5mm}
 \centering
-  \includegraphics[width=0.4\linewidth]{graphics/s_unit}
+  \includegraphics[width=0.25\linewidth]{graphics/surrogate_space_unit}
+\vspace{1.5mm}
+
+\delimit
+
   \captionof{figure}{Transformation of $S$ into a unit hypercube according to equation \eqref{alignment}.}
   \label{fig:aligned}
 \end{figure}
+\end{mdframed}
 
 
 \subsection{Visualizing transformations}
 
 The described transformation process can be visualized by illustrating where grid points in the lower dimensional space $\Omega_r$ would reside in the original input space $\Omega$. 
 While it is normally not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, we require it for the visualization and it is therefore only shown in a more informal way.
+
 Equation \ref{linear_trans} can be rearranged to solve for $p(x)$ with
 \begin{equation}
-p(x)=\left(\text{diag}\left(2, \dots, 2\right) (y - c_r)\right)
+p(x)=(Q^T)^{-1} \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right)^{-1} (t_{W_r}(x) - c_r)
 \label{proj}
 \end{equation}
+Since the column vectors of $Q$ are orthogonal per equation \ref{q} and $Q$ can be expressed as $Q=\text{diag}\left(s_1, \dots, s_r\right) \mathcal{Q}$ where the column vector of $\mathcal{Q}$ is just the normalized column vector of $Q$ with $\mathcal{Q}_i=\frac{q_i}{\| q_i \|}$ and the $s_i$ are the scaling factors per equation \ref{q_scaled} to obtain
+\begin{equation}
+\begin{split}
+p(x)=&(\text{diag}\left(s_1, \dots, s_r\right)^{-1} \mathcal{Q}) ~ \text{diag}\left(2, \dots, 2\right) (t_{W_r}(x) - c_r)\\
+=&\text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right) \mathcal{Q} (t_{W_r}(x) - c_r)
+\end{split}
+\end{equation}
+
 To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases the inverse $p^{\text{inv}}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, i.e. $|p^{\text{inv}}(x_p)| > 1$.
 If we only consider the set of points that, corrected for the centering, project onto themselves with
 \begin{equation}
@@ -1014,7 +1062,7 @@ x_p=p(x) + c_r
 \end{equation}
 and reverse the projection $p(x)$ only onto the representative elements $x_p$, we are able to map one element $y \in \Omega_r$ onto one element $x_p \in \Omega_r$.
 
-In figure \ref{trans_vis} we assume a transformation with $r=2$ and $d=3$, and reverse the grid points of a regular sparse grid of level $4$? lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \ref{proj} and \ref{proj_rep}.
+In \cref{fig:trans_vis} we assume a transformation with $r=2$ and $d=3$, and reverse the grid points of a regular sparse grid of level $4$? lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \cref{proj} and \cref{proj_rep}.
 \begin{figure}[H]
 \centering
   \includegraphics[width=.7\linewidth]{graphics/surrogate_vis}
@@ -1795,7 +1843,7 @@ To make the shown results as transparent as possible, this chapter will focus on
 \item[Elements] {~ \begin{enumerate}[\indent{}]
 \item \textbf{Object}: An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
 \item \textbf{Function}: A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
-\item \textbf{Component}: A component is a function declaration, where the actual implementation can be exchanged for many different function implementations.
+\item \textbf{Component}: A component is a also function, where the actual implementation can be exchanged for many different function implementations of the same interface.
 \item \textbf{Control flow + data flow}: Arrows signal control flow and also data flow if an object is shown.
 \item \textbf{Gateway}: A gateway evaluates an attached condition and decides which outgoing control flow to follow.
 \end{enumerate}}
@@ -1986,53 +2034,83 @@ The role of a transformation evaluator is to take a newly constructed transforma
 This is used for iterative and stream-based transformation generators and by the pipeline.
 While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
 
+\begin{mdframed}[style=style,frametitle={Surrogate evaluator}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/SurrogateEval.pdf}
 \vspace{-4.5mm}
-\begin{mdframed}[linewidth=0.7px]
+
+\delimit
+
 \begin{description}
-\item[\texttt{\textbf{errorMetric}}:] Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
-Additionally, penalty terms for various features can be introduced, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
+\item[Parameters] {~ \begin{enumerate}[\indent{}]
+\item \texttt{\textbf{errorMetric}}: The amount of iterations that should be executed.
+\end{enumerate}}
 \end{description}
-\end{mdframed}
+
+\delimit
+
+\captionof{figure}{Component structure of a surrogate evaluator and the associated possible configuration parameters.}
+\label{fig:se}
 \end{figure}
+\end{mdframed}
+
+Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
+If we want to steer the transformation generation process into a certain direction, like preferring lower-dimensional transformations, we can introduce a few modifications, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
 
 \subsection {Transformation evaluator}
 
-The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
-This is used for iterative and stream-based transformation generators and by the pipeline.
-While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
-
-\begin{figure}[H]
-\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
-\vspace{-1.5mm}
-\end{figure}
+The role of a transformation evaluator is to take a newly constructed transformation and evaluate its quality by assigning it a certain value to make it comparable to other transformations.
+As mentioned in section \ref{}, evaluating the true quality of a transformation is only really possible by creating a surrogate from it.
+We therefore first generate a surrogate with a surrogate generator \ref{} and then make use of a surrogate evaluator \ref{} to return the evaluation result.
+While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules, for example by using a lofi \ref{} surrogate generator to speed up the evaluation.
 
 \newpage
+\begin{mdframed}[style=style,frametitle={Transformation evaluator (forward looking)}]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
+\delimit
+
+\captionof{figure}{Component structure of a forward looking transformation evaluator.}
+\label{fig:te}
+\end{figure}
+\end{mdframed}
+
 \section {Surrogate generator}
 
-The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
-This is used for iterative and stream-based transformation generators and by the pipeline.
-While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
+The last component needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
+\begin{equation}
+\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
+\end{equation}
+Their implementation is straightforward, as the construction of sparse grid surrogates and also RBF surrogates was covered in detail and the surrogate generators closely match that.
 
 
 \subsection {Sparse Grid surrogate generator}
 
-In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all required inputs like grid type, basis functions, level, adaptivity properties, and more.
-As runtime performance is important, especially when using evaluators with the iterative transformation generator, finding the right Sparse Grid level ...
+In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
+Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimension, as a surrogate generator should be decoupled from the used dimension $r$. 
+This means that instead of passing a fixed level $l$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
 
-\begin{mdframed}[linewidth=0.7px]
+\newpage
+
+\begin{mdframed}[style=style,frametitle={Surrogate generator (sparse grid)}]
+\begin{figure}[H]
 \begin{description}
 \item[Parameters] {~ \begin{enumerate}[\indent{}]
 \item \texttt{\textbf{gridType}}: Type of basis functions according to \ref{}
 \item \texttt{\textbf{basisType}}: Type of basis functions according to \ref{}
-\item \texttt{\textbf{approxGridPoints}}: Type of basis functions according to \ref{}
-\item \texttt{\textbf{maxTrainSamples}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{numApproxGridPoints}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{numMaxTrainSamples}}: Type of basis functions according to \ref{}
 \item \texttt{\textbf{trainData}}: Type of basis functions according to \ref{}
 \item \texttt{\textbf{lambdas}}: Type of basis functions according to \ref{}
-\item \texttt{\textbf{refinements}}: Type of basis functions according to \ref{}
+\item \texttt{\textbf{numRefinements}}: Type of basis functions according to \ref{}
 \end{enumerate}}
 \end{description}
+
+\delimit
+
+\captionof{figure}{Possible configuration parameters ofa sparse grid surrogate generator.}
+\label{fig:sgsg}
+\end{figure}
 \end{mdframed}
 
 \subsection {RBF surrogate generator}
