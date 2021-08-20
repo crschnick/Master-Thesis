@@ -70,12 +70,40 @@ frametitlebelowskip=3.5pt,
 frametitlefont=\small\normalfont\bfseries
 }
 
+\mdfdefinestyle{algstyle}{%
+linecolor=charcoal,
+linewidth=1.3px,
+innermargin=0,
+innertopmargin=0,
+frametitlebackgroundcolor=eggshell,
+frametitlerulewidth=1.3px,
+frametitlerule=true,
+frametitlerulecolor=silver,
+frametitleaboveskip=6.5pt,
+frametitlebelowskip=3.5pt,
+frametitlefont=\small\normalfont\bfseries
+}
+
+
+ \captionsetup[subfigure]{width=0.9\linewidth}
+
+
+\newcommand{\Hsquare}{%
+  \text{\fboxsep=-.2pt\fbox{\rule{0pt}{1.4ex}\rule{1.4ex}{0pt}}}%
+}
+\newcommand\red{red\,{\setlength\fboxsep{0pt}\colorbox{persian_red}{\Hsquare}} }
+\newcommand\green{green\,{\setlength\fboxsep{0pt}\colorbox{persian_green}{\Hsquare}} }
+\newcommand\grey{grey\,{\setlength\fboxsep{0pt}\colorbox{silver}{\Hsquare}} }
+\newcommand\beige{beige\,{\setlength\fboxsep{0pt}\colorbox{eggshell}{\Hsquare}} }
+\newcommand\lightblue{light blue\,{\setlength\fboxsep{0pt}\colorbox{light_cornflower_blue}{\Hsquare}} }
+\newcommand\darkblue{dark blue\,{\setlength\fboxsep{0pt}\colorbox{charcoal}{\Hsquare}} }
+
 \usepackage[normalem]{ulem}
-
 \newcommand\coloruline{\bgroup\markoverwith{\textcolor{light_cornflower_blue}{\rule[-0.6ex]{2pt}{0.3pt}}}\ULon}
-
 \crefformat{figure}{\coloruline{#2fig.$~$#1#3}}
 \crefformat{equation}{\coloruline{#2(#1#3)}}
+\crefformat{section}{\coloruline{#2sec.$~$#1#3}}
+
 
 \newcommand{\delimit}{{\color{charcoal}\noindent\rule{\textwidth}{1pt}}}
 
@@ -885,28 +913,32 @@ Furthermore, the quality and properties of transformed low discrepancy sequences
 
 \section{Linear hypercube transformations}
 
-As the concept of intrinsic dimension makes it possible in theory to use arbitrary transformations, there are many possible types of transformations to choose from.
-The previous chapter showed how a simple change of basis of the function inputs, can have a huge impact on the sparse grid surrogate construction.
-Therefore the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function in the best possible way.
-We then go one step further and now also try to eliminate the most inactive directions, i.e. performing a dimension reduction, which are also now the most inactive dimensions after aligning the active directions along the axes, we have to possibility of drastically reducing the amount of grid points while only suffering a small increase in error in theory.
-In theory it is possible to use arbitrary transformations and input spaces, however the feasability of this would have to be evaluated.
+As the concept of intrinsic dimension makes it possible to, at least in theory, use arbitrary transformation functions, there are many possible general types of transformation functions to choose from.
+The previous chapter showed how a simple change of basis of the function inputs, i.e. a linear transformation, can have a huge impact on the sparse grid surrogate construction.
+Motivated by this insight, the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function in the best possible way.
+We then go one step further and also try to eliminate the most inactive directions, which are also now the most inactive dimensions after aligning the active directions along the axes, effectively performing a dimension reduction.
+This results in the possibility of drastically reducing the amount of grid points while only suffering a small increase in error in theory, as only the most unimportant dimensions, which should not contribute a lot to the approximation error, are eliminated.
 
 \begin{definition}[Transformation matrix]
-Let $W \in \mathds{R}^{d \times d}$ be an orthonormal matrix with $W^T W=I$.
-Given a reduced dimension $r \leq d$, we define
+Let $W \in \mathds{R}^{d \times d}$ be an orthonormal matrix with $W^T W=I$, and let $r \leq d$ be the reduced dimension.
+We then define
 \begin{equation}
 W_r \in \mathds{R}^{d \times r}
 \end{equation}
 as the transformation matrix.
 \end{definition}
 
+\todo{Name $W$}
+
+As we can see, the transformation matrix is simply obtained from a given active direction matrix $W$ and a reduced dimension $r$ by cutting off the last $d - r$ directions from $W$.
+For now, we assume that the $W$ and $r$ are given, but we will cover the process of determining those essential inputs later on in detail.
+
 \subsection{Unit hypercube projections}
 
-To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ for a given transformation matrix $W$, several adjustments have to be made to obtain a usable transformation function.
-When applying a linear projection defined by $W_r$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes.
+To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ for a given transformation matrix $W_r$, several adjustments have to be made in order to obtain a usable transformation function.
+When applying a linear projection defined by $W_r$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
 
 \begin{definition}[Zonotope]
-
 A $l$-dimensional zonotope $Z$ with $k \geq l$ generators $g_1, \dots g_k \in \mathds{R}^l$ corresponds to a $l$-dimensional minkowski sum with 
 \begin{equation}
 Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
@@ -915,7 +947,7 @@ Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
 \end{definition}
 
 
-\begin{mdframed}[style=style,frametitle={Zonotope}]
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
   \includegraphics[width=0.5\linewidth]{graphics/zonotope}
@@ -926,20 +958,22 @@ Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
 \end{mdframed}
 
 
-When applying the projection $W_r^T$ to the inputs $x \in \Omega$, it holds that
+When applying the projection $W_r^T$ to the inputs $x \in \Omega$, we can observe that
 \begin{equation}
 \begin{split}
-W_r^T x=~W_r^T \sum_{i=1}^d x_i e_i=~\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i
+W_r^T x=~W_r^T \sum_{i=1}^d x_i e_i=~\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i,
+\nonumber
 \end{split}
 \end{equation}
 where the $p_i$ are just the projected unit vectors.
 Therefore, since for all components are in the unit interval with $x_i \in [0,1]$, we can express the transformed inputs with
 \begin{equation}
-\{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}
+\{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}.
+\label{wtx}
 \end{equation}
-To get closer to the zonotope definition in equation \ref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2.
+To get \cref{wtx} closer to the zonotope definition in \cref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2.
 For this, let $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$ be the center of the $i$-dimensional unit hypercube.
-We can then rearrange 
+We can express this with
 \begin{equation}
 \begin{alignedat}{2}
 &\left\{W_r^T (x - c_d) \mid x \in \Omega\right\}&&=\left\{W_r^T \sum_{i=1}^d \left(x_i - \frac{1}{2}\right) e_i \mid x \in \Omega \right\}\\
@@ -953,55 +987,62 @@ We can then rearrange
 Therefore, defining the projection function with
 \begin{equation}
 p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
+\nonumber
 \end{equation}
-results in a projected input space that has the zonotope form of equation \ref{zonotope} where the $p_i$ are the generators with
+results in a projected input space that has the zonotope form of \cref{zonotope} with the $p_i$ are generators.
+The projected zonotope is then
 \begin{equation}
-Z_{p}=\{\sum_{i=1}^d p_i x_i , ~ -1 \leq x_i \leq 1\}, ~~ p_i=\frac{1}{2} W_r^T e_i
+Z_{p}=\left\{\sum_{i=1}^r p_i x_i , ~ -1 \leq x_i \leq 1\right\}, ~~ p_i=\frac{1}{2} W_r^T e_i,
+\nonumber
 \end{equation}
-and according to equation \ref{zonotope_form}, it holds that the projected input space is exactly the zonotope $Z_p$ with $Z_{p}=p(\Omega)$.
+where according to \cref{zonotope_form}, the projected input space is exactly the zonotope with $Z_{p}=p(\Omega)$.
 
 \subsection{Surrogate space}
 
-However since the surrogate creation process expects inputs from a $r$-dimensional unit hypercube $\Omega_r$, during the normalization step, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$ which is later scaled and aligned to obtain the unit hypercube $\Omega_r$.
-The generators $q_1, \dots, q_r$ of the encasing hypercube are calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ with
+However, since the surrogate creation process expects inputs from a hypercube and not a zonotope, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$.
+The surrogate space is then later scaled and aligned to obtain the unit hypercube $\Omega_r$.
+Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to first obtain the orthogonal vectors
 \begin{equation}
 q_i'=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
 \label{q}
 \end{equation}
-and
+and then the appropriately scaled vectors
 \begin{equation}
-q_i=s_i \frac{q_i'}{\| q_i' \|},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle
+q_i=s_i \frac{q_i'}{\| q_i' \|},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle.
 \label{q_scaled}
 \end{equation}
-
 The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
 \begin{equation}
 S=\left\{\sum_{i=1}^r q_i x_i, ~ -1 \leq x_i \leq 1\right\}
 \label{surrogate_space}
 \end{equation}
-where the scaling factors $s_i$ make the hypercube $S$ exactly match the extent of the zonotope $Z$ as shown in figure \ref{surrogate_space}.
+where the scaling factors $s_i$ are chosen in such a way that the hypercube $S$ exactly matches the extent of the zonotope $Z_p$, as shown in \cref{surrogate_space}.
 
-\begin{mdframed}[style=style,frametitle={Surrogate space}]
-\begin{figure}[H]
-\centering
-\vspace{2.5mm}
-  \includegraphics[width=0.4\linewidth]{graphics/surrogate_space}
-\delimit
-
-  \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope $Z_p$ of \cref{fig:zonotope} according to \cref{surrogate_space}. The projected zonotope $Z_p$ is drawn in {\color{light_cornflower_blue} light blue}, the encasing surrogate space $S$ in dotted {\color{charcoal} dark blue}, and the origin in {\color{persian_red} red}.}
+\begin{mdframed}[style=style]
+        \centering
+\begin{minipage}{.49\textwidth}
+        \centering
+  \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope $Z_p$ of \cref{fig:zonotope} according to \cref{surrogate_space}.\\
+  The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$ in dotted \darkblue, and the origin in \red.}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \vspace{3.5mm}
+  \includegraphics[width=0.8\linewidth]{graphics/surrogate_space}
+  \hspace{-5.5mm}
   \label{fig:surrogate_space}
-\end{figure}
+    \end{minipage}
 \end{mdframed}
 
-As we only need $r$ generators for the surrogate space but have $d$ generators of $Z_p$ available, not all $p_i$ are used in the surrogate space construction.
+As we only need $r$ generators for the surrogate space, but have $d$ generators of $Z_p$ available, not all $p_i$ are used in the surrogate space construction.
 In theory, the generators $p_i$ that are used to calculate the $q_i$ are not ordered by default and also don't have to be ordered.
 However, to emphasize the most important generators $p_i$, the generators $p_i$ are ordered by their magnitude w.l.og. $|p_1|\geq \dots \geq |p_d|$.
 This should result in the best possible encasement of $Z_p$.
 
 \subsection{Reduced unit hypercube}
 
-The surrogate space $S$ can then be easiliy transformed into a unit hypercube $\Omega_R$ as shown in figure \ref{fig:aligned}.
-First, we observe that the vectors $q_i$ form an orthogonal basis of $S$ and define
+The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$, as shown in \cref{fig:aligned}.
+First, we observe that the generators $q_i$ of $S$ with
 \begin{equation}
 Q=\begin{bmatrix}
   \\
@@ -1011,64 +1052,87 @@ Q=\begin{bmatrix}
   , ~~
 \label{alignment}
 \end{equation}
-as the basis.
-We can perform a change of basis on every element $z \in S$ that has been projected into $Z_p$ and therefore also $S$ with $z=p(x), x \in \Omega$ to obtain $v=Q^T z$.
-Per surrogate space definition \ref{surrogate_space}, we know that $v_i \in [-1,1]$ holds as $v \in S$.
-Once the projected inputs are represented by the new basis, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
+are orthogonal.
+We can perform a change of basis on every element that has been projected into $Z_p$, and therefore also $S$, to obtain $v=Q^T p(x)$.
+Per surrogate space definition \cref{surrogate_space}, we know that $v_i \in [-1,1]$ holds as $v \in S$.
+Once the projected inputs are represented by the new basis $Q$, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
 \begin{equation}
-t_{W_r}(x)= c_r + \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right) Q^T p(x)
+t_{W_r}(x)= c_r + \frac{1}{2} Q^T p(x).
 \label{linear_trans}
 \end{equation}
 
-\begin{mdframed}[style=style,frametitle={Notation}]
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 
-\vspace{4.5mm}
-\centering
-  \includegraphics[width=0.25\linewidth]{graphics/surrogate_space_unit}
-\vspace{1.5mm}
-
-\delimit
-
-  \captionof{figure}{Transformation of $S$ into a unit hypercube according to equation \eqref{alignment}.}
+        \centering
+\begin{minipage}{.49\textwidth}
+        \centering
+  \captionof{figure}{Transformation of the surrogate space $S$ from \cref{fig:surrogate_space} into the unit hypercube $\Omega_r$ according to \cref{alignment}.\\
+  The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$, which is now equal to $\Omega_r$ in dotted \darkblue, and the origin in \red.}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
+   \includegraphics[width=0.8\linewidth]{graphics/surrogate_space_unit}
   \label{fig:aligned}
+    \end{minipage}
+
 \end{figure}
 \end{mdframed}
 
 
 \subsection{Visualizing transformations}
+\label{sec:vis_trans}
 
-The described transformation process can be visualized by illustrating where grid points in the lower dimensional space $\Omega_r$ would reside in the original input space $\Omega$. 
-While it is normally not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ to $\Omega$, we require it for the visualization and it is therefore only shown in a more informal way.
+The described transformation process can be visualized by illustrating where grid points from the lower dimensional space $\Omega_r$ would reside in the original input space $\Omega$. 
+While it is normally not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ back to $\Omega$, we require it for the visualization of transformed surrogates.
 
-Equation \ref{linear_trans} can be rearranged to solve for $p(x)$ with
+We observe that \cref{linear_trans} can be rearranged to solve for $p(x)$ to get
 \begin{equation}
-p(x)=(Q^T)^{-1} \text{diag}\left(\frac{1}{2}, \dots, \frac{1}{2}\right)^{-1} (t_{W_r}(x) - c_r)
+p(x)=2 (Q^T)^{-1} (t_{W_r}(x) - c_r)
 \label{proj}
 \end{equation}
-Since the column vectors of $Q$ are orthogonal per equation \ref{q} and $Q$ can be expressed as $Q=\text{diag}\left(s_1, \dots, s_r\right) \mathcal{Q}$ where the column vector of $\mathcal{Q}$ is just the normalized column vector of $Q$ with $\mathcal{Q}_i=\frac{q_i}{\| q_i \|}$ and the $s_i$ are the scaling factors per equation \ref{q_scaled} to obtain
+Since the column vectors of $Q$ are defined as orthogonal in \cref{q}, $Q$ can be expressed as $Q=Q_n \text{diag}\left(s_1, \dots, s_r\right)$ where the column vectors of $Q_n$ are just the normalized column vectors of $Q$ with $(Q_n)_i=\frac{q_i}{\| q_i \|}$ and the $s_i=\| q_i \|$ are the scaling factors from \cref{q_scaled}.
+Therefore, it holds that $Q^T=\text{diag}\left(s_1, \dots, s_r\right) Q_n^T$ and
 \begin{equation}
 \begin{split}
-p(x)=&(\text{diag}\left(s_1, \dots, s_r\right)^{-1} \mathcal{Q}) ~ \text{diag}\left(2, \dots, 2\right) (t_{W_r}(x) - c_r)\\
-=&\text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right) \mathcal{Q} (t_{W_r}(x) - c_r)
+\left(Q^T\right)^{-1}=~&\left(Q_n^T\right)^{-1}  \text{diag}\left(s_1, \dots, s_r\right)^{-1}  \\
+=~&Q_n \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) .
+\label{qtinv}
+\end{split}
+\end{equation}
+We can then insert \cref{qtinv} into \cref{proj} to obtain
+\begin{equation}
+\begin{split}
+p(x)=&~2 ~ Q_n \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) (t_{W_r}(x) - c_r)\\
+=&~Q_n \text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right)  (t_{W_r}(x) - c_r).
 \end{split}
 \end{equation}
 
-To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases the inverse $p^{\text{inv}}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, i.e. $|p^{\text{inv}}(x_p)| > 1$.
-If we only consider the set of points that, corrected for the centering, project onto themselves with
+To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases, the inverse $p^{-1}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, because $|p^{-1}(x_p)| > 1$.
+Our goal is to reverse the transformation only onto certain representative elements of the equivalence classes $[x]_p=\{x \in \Omega \mid p(x)=x_{p}\}$.
+We then only consider the points
 \begin{equation}
-x_p=p(x) + c_r
+C=\{x - c_d  \in \text{span} ~ W_r \mid x \in \Omega\},
 \label{proj_rep}
 \end{equation}
-and reverse the projection $p(x)$ only onto the representative elements $x_p$, we are able to map one element $y \in \Omega_r$ onto one element $x_p \in \Omega_r$.
+i.e. who lie in the vector subspace that is spanned by the active directions in $W_r$ and crosses the center $c_d$.
+Next, we reverse the projection $p(x)$ only onto the representative elements $x \in C$, so that we are able to map one element $x_r\in \Omega_r$ onto one element $x \in C$ to obtain $t_{W_r}^{\text{reverse}}\colon \Omega_r \mapsto C$ with
+\begin{equation}
+t_{W_r}^{\text{reverse}}(x_r)=~W_r Q_n \text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right) (x_r - c_r) + c_d
+\end{equation}
 
 In \cref{fig:trans_vis} we assume a transformation with $r=2$ and $d=3$, and reverse the grid points of a regular sparse grid of level $4$? lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \cref{proj} and \cref{proj_rep}.
+
+
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
   \includegraphics[width=.7\linewidth]{graphics/surrogate_vis}
+  \delimit
   \captionof{figure}{Visualization of a transformation with $r=2$ and $d=3$. The grey background represents the outline of $\Omega$, the arrows on the sparse grid the first two column vectors of $W_r$ that span the plane on which the sparse grid lies.}
   \label{fig:trans_vis}
 \end{figure}
+\end{mdframed}
 
 \section{Active Subspaces}
 
@@ -1236,22 +1300,27 @@ However, this property comes at the cost of having to sort the available $n'$ ne
 The parameters $n'$ and $m$ also have to be chosen carefully, as a too low ... and a too large $m$ would increase the average distance to the neighbours again so that the effect of chosing the nearest neighbours would diminish.
 
 
-\begin{figure}
+\begin{mdframed}[style=style]
+\begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_rn}
-  \caption{Random neighbour method with $m=4$}
+  \captionof{figure}{Random neighbour method with $m=4$}
   \label{fig:as_rn}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_nn}
-  \caption{Nearest neighbour method with $n'=7$ and $m=4$}
+  \captionof{figure}{Nearest neighbour method with $n'=7$ and $m=4$}
   \label{fig:as_nn}
 \end{subfigure}
-\caption{Differences in sample selection between the two neighbour approximation methods. The red circle represents the sample point $x$, the black dots are the other available samples $S \setminus \{x\}$. In this example $|S|=10$. A filled black dot signals that it is considered when looking for neighbours. If the circle is circled blue, it is chosen as a neighbour.}
+\delimit
+\captionof{figure}{Differences in sample selection between the two neighbour approximation methods for examples with $|S|=10$.
+The \darkblue dots are the available samples $S \setminus \{x\}$. A filled dot signals that it is considered when looking for neighbours.
+The completely \red circle represents the sample point $x$ and other sample points circled in \red indicate that they were chosen as a neighbour of $x$.}
 \label{fig:as_approx}
 \end{figure}
+\end{mdframed}
 
 \subsection{Approximation quality}
 
@@ -1449,12 +1518,22 @@ If it holds that $r=d$, i.e. we do not perform a dimension reduction, the transf
 In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective and it maps from $\Omega$ into $T \subseteq \Omega$.
 Figure \ref{fig:aligned_grid} illustrates this case.
 
+
+\begin{mdframed}[style=style]
 \begin{figure}[H]
-\centering
-  \includegraphics[width=.5\linewidth]{graphics/aligned_grid}
-\caption{Illustration of a possible case with $r=d=2$. The orange square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$. The orange part not included in the green square is $U$ with $U=\Omega \setminus T$. The brown square represents the support of the grid point in its center.}
+        \centering
+\begin{minipage}{.49\textwidth}
+        \centering
+  \captionof{figure}{Illustration of a possible case with $r=d=2$. The \beige square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$. The \grey square in top right corner represents the support of the grid point in its center.}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
+   \includegraphics[width=0.8\linewidth]{graphics/aligned_grid}
 \label{fig:aligned_grid}
+    \end{minipage}
 \end{figure}
+\end{mdframed}
+
 
 It is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we define how to treat function evaluations for grid points outside of $\Omega$.
 For that we can either define a rule on how to treat these function evaluations, or ensure that grid points outside of $T$ never are created.
@@ -1481,12 +1560,22 @@ t(x_i)=t(x_j), f(x_i) \neq f(x_j), ~ x_i \neq x_j
 \end{equation}
 As a result, the transformed surrogate construction is usually an ill-posed problem for $r < d$, and we have to employ sparse grid based regression methods to successfully create a surrogate for the transformed data.
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
-\centering
-  \includegraphics[width=.5\linewidth]{graphics/reduced_grid}
-\caption{Illustration of a possible case with $r=1$ and $d=2$, where the process in broken down into two steps. The surrounding white square represents $\Omega$, the orange line represents $\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated green square is $T$.}
-\label{fig:pipeline_2}
+        \centering
+\begin{minipage}{.49\textwidth}
+        \centering
+  \captionof{figure}{Illustration of a possible case with $r=1$ and $d=2$, where the process in broken down into two steps. The surrounding \beige square represents $\Omega$, the \red line represents $\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$.
+The \green points are sample points that are being mapped from $\Omega$ onto $\Omega_r$.
+Note that as $\Omega$ and $\Omega_r$ are distinct vector spaces, this figure visualizes the $\Omega_r$ as the elements crossing the center with $\Omega_r \times \{\frac{1}{2}\}$ in the same way as \cref{sec:vis_trans}.}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
+   \includegraphics[width=0.8\linewidth]{graphics/reduced_grid}
+\label{fig:reduced_grid}
+    \end{minipage}
 \end{figure}
+\end{mdframed}
 
 The interpolation based approach will however not be used or investigated in this thesis, as the focus lies on cases with $r < d$ and the regression approach also being able to handle the case with $r=d$.
 It is however a certainly interesting approach worthy of being investigated further mainly with the goal of improving the approximation errors for sparse grid interpolants even further.
@@ -1629,23 +1718,31 @@ The functions $f_k$ and projection matrices $\beta_k$ of this additive model can
 e_k(x)=f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
 This sum can be computed using an iterative approach, as seen in algorithm \ref{alg:ppr}.
-\begin{algorithm}[H]
+
+\newpage
+
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{projectionPursuitRegression}{$(f, k_{\text{max}})$}}]
 \normalsize
-\begin{algorithmic}
-\Function{projectionPursuitRegression}{$f, k_{\text{max}}$}
+\vspace{5.5mm}
+\begin{algorithmic}[1]
+
     \State $e_0 = f$
     \For{$k = 1, \dots, k_{\text{max}}$}
-    	\State $\beta_k \gets$ determineBestProjection($e_k$)
-    	\State $f_k \gets$ determineBestSurrogate($e_k, \beta_k$)
+    	\State $\beta_k \gets$ \texttt{determineBestProjection}($e_k$)
+    	\State $f_k \gets$ \texttt{determineBestSurrogate}($e_k, \beta_k$)
     	\State $e_k \gets e_{k - 1} - f_k$
     \EndFor
     \State $\hat{f}(x) \gets \sum_{f_k}^m f_k(\beta_k^T x)$
     \State \Return{$\hat{f}$}
-\EndFunction
 \end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm.}
+
+\vspace{-1.5mm}
+\delimit
+
+	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Parameters are the function $f$ and the maximum amount of iterations $k_{\text{max}}$.}
 	\label{alg:ppr}
-\end{algorithm}
+\end{mdframed}
+
 Alternatively, one could also introduce an error exit condition that exits the loop if the regression error is small enough with $\epsilon(e_i) < \epsilon_{max}$.
 
 \section{An iterative approach}
@@ -1663,10 +1760,11 @@ e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x))
 In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
 However, this algorithm is more generalized to allow for any type of transformation.
 
-\begin{algorithm}[H]
+\newpage
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{transformedSurrogateSum}{$(f, i_{\text{max}})$}}]
 \normalsize
-\begin{algorithmic}
-\Function{transformedSurrogateSum}{$f, i_{\text{max}}$}
+\vspace{5.5mm}
+\begin{algorithmic}[1]
     \State $e_0 = f$
     \For{$i = 1, \dots,  i_{\text{max}}$}
     	\State $t_i \gets$ generateBestTransformation($f$)
@@ -1675,10 +1773,12 @@ However, this algorithm is more generalized to allow for any type of transformat
     \EndFor
     \State $\hat{f} \gets \sum_{\hat{f}_{t_i}} \hat{f}_{t_i} \circ t_i$
     \State \Return{$\hat{f}$}
-\EndFunction
 \end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the iterative transformed surrogate generation algorithm.}
-\end{algorithm}
+\vspace{-1.5mm}
+\delimit
+	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Parameters are the function $f$ and the maximum amount of iterations $i_{\text{max}}$.}
+	\label{alg:itappr}
+\end{mdframed}
 
 \section{Generating the best surrogate}
 
@@ -1691,10 +1791,11 @@ More formally assuming that we have $m$ configuration parameters where each one 
 The general structure and properties of the current regression problem at hand can change with each new iteration.
 Thus, configuration options have to examined in every iteration again, as their might not exist a set of optimal configuration 
 parameters for all iterations.
-\begin{algorithm}[H]
+
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestSurroate}{$(S_t, C, \epsilon)$}}]
 \normalsize
-\begin{algorithmic}
-\Function{generateBestSurroate}{$S_t, C, \epsilon$}
+\vspace{5.5mm}
+\begin{algorithmic}[1]
     \State $c^\ast \gets \emptyset$
     \State $\epsilon_{min} \gets \infty$
     \For{$c \in C$}
@@ -1706,10 +1807,13 @@ parameters for all iterations.
     	\EndIf
     \EndFor
     \State \Return{generateHifiSurroate(S, c*)}
-\EndFunction
 \end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$}
-\end{algorithm}
+\vspace{-1.5mm}
+\delimit
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$.}
+	\label{alg:bestsur}
+\end{mdframed}
+
 
 It determines the optimal configuration $c*$ with
 \begin{equation}
@@ -1722,7 +1826,6 @@ It is satisfactory as long as
 \end{equation}
 
 \todo{pre convergence}
-
 
 \section{Finding the optimal reduced dimension}
 
@@ -1777,23 +1880,26 @@ This also illustrates how the transformed input distribution changes from the or
 The amount of samples is set to $n=1000$.
 For every iteration, we investigate the error function $e_i$ on the left and look at the regression problem to be solved on the right.
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
-\begin{subfigure}{.45\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
-  \caption{Error function $e_0$ and first active subspace direction $v_1$ (blue).}
+  \captionof{figure}{Error function $e_0$ and first active subspace direction $v_1$ (blue).}
   \label{fig:as_rn}
 \end{subfigure}%
-\hspace{0.07\textwidth}
-\begin{subfigure}{.45\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_local_1}
-  \caption{Transformed surrogate input samples (blue) and constructed surrogate (red).}
+  \captionof{figure}{Transformed input samples (blue) and constructed surrogate in \red.}
   \label{fig:as_nn}
 \end{subfigure}
-\caption{First iteration of the iterative transformation algorithm.}
+\delimit
+\captionof{figure}{First iteration of the iterative transformation algorithm.}
 \label{fig:pipeline_1}
 \end{figure}
+\end{mdframed}
+
 
 \begin{figure}[H]
 \begin{subfigure}{.45\textwidth}
@@ -2115,41 +2221,13 @@ This means that instead of passing a fixed level $l$ as a parameter, we instead 
 
 \subsection {RBF surrogate generator}
 
-\chapter{Implementation and evaluation}
 
-\begin{enumerate}
-\item How much do different AS transofmrations influence the result?
-\end{enumerate}
-
-The goal is to answer the following questions:
-
-\begin{enumerate}
-\item What is a good amount of samples? How do different sampling techniques influence the results?
-
-\item How good is the quality of the computed $A_k$ for a certain amount of samples? We compare the errors that occur when using the optimal $A_k$ and the computed $A_k$.
-
-\item How much does a certain deviation of the $A_k$ effect the interpolation error?
-
-\item How much do more iterations influence the resultung errors?
-
-\item Is there a local or global convergence for the iterative algorithm? What happens to the convergence error value if we introduce a wrong $A_k$ during a step?
-
-\item How well does the method handle unused dimensions and noise? We inspect the errors for a different amount of unused inputs and varying noise intensity.
-
-\item How high can the input dimension be? In theory, the input dimension can rise arbitrarily high as long as the effective dimensionality does not change. However, at some point the amount of samples used to construct the Active Subspace must be too low for accurate results.
-
-\item What is the best way of determining the amount of reduced dimensions $r$ during each step that leads to the best result? How well suited are the eigenvalues of the Active Subspace for this task?
-\end{enumerate}
-
-Every question will be answered by looking at one or more example functions or datasets.
+\section{Function sample budgeting}
 
 \chapter{Automatic configurations}
 
 As shown in the previous chapters, there are a lot of configuration options for the complete reduction pipeline.
 The goal in this chapter is to provide good default configurations and also an algorithm for automatic configuration generation based on a given model function, using the insights from the previous chapter.
-
-\chapter{Conclusion and outlook}
-
 
 
 \appendix
