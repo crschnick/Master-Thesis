@@ -148,13 +148,11 @@ frametitlefont=\small\normalfont\bfseries
 \fi
 
 Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
-However, many simulation results mainly depend on a subset of the inputs and it is therefore possible to construct a lower-dimensional surrogate to be used instead.
-Dimension reduction techniques aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
-There already exist various approaches to dimension reduction in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
-Active subspaces are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
-The active subspace method is then applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimension reduction method that exploits the best of both worlds.
-This presented approach views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional models.
-It is then applied to several real world problems with the goal to evaluate their general quality of the produced surrogates show their advantages and disadvantages in different contexts.
+However, many simulation results mainly depend only on a subset of the inputs and are therefore possible targets for dimension reduction techniques, which aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.\\
+Various approaches to dimension reduction already exist in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
+Active subspaces are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.\\
+In this thesis, the active subspace method is applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimension reduction technique that exploits the best of both worlds.
+This combined approach views the model from a black-box perspective and therefore can and will be employed on a wide variety of high-dimensional real world models, with the goal to evaluate their general quality of the produced surrogates show their advantages and disadvantages in different contexts.
 
 \cleardoublepage
 
@@ -268,6 +266,33 @@ Lastly, inspired from the concept of intrinsic dimension in signal processing an
 Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still achieving an acceptable additional approximation error.
 Overall, this enables us to apply sparse grids to much higher-dimensional problems as before.
 
+\begin{mdframed}[style=style]
+
+\vspace{2.5mm}
+\begin{figure}[H]
+
+\centering
+\begin{tikzpicture}
+\node[] at (9.2,0) {$d$};
+\draw[->,ultra thick,charcoal] (0,0)--(9,0);
+\foreach \x/\xtext in {0/$1$,1/$2$,2/$3$,3/$4$,4/$5$,5/$6$,6/$7$,7/$8$,8/$9$}
+    \draw(\x,5pt)--(\x,-5pt) node[below] {\xtext};
+    
+\draw[decorate, decoration={brace}, thick, yshift=6.8ex]  (0,0) -- node[above=0.4ex] {full grids}  (3,0);
+\draw[decorate, decoration={brace, mirror}, thick, yshift=2.5ex]  (7,0) -- node[above=0.4ex] {sparse grids}  (0,0);
+\draw[decorate, decoration={brace, mirror}, thick, yshift=-5ex]  (0,0) -- node[below=0.6ex] {transformed sparse grids}
+ (10,0);
+\filldraw[white,thick] (9.9,-0.7) rectangle (11,-1.1);
+ \draw[->,thick] (9.8,-0.91)--(11,-0.91);
+\end{tikzpicture}
+
+\vspace{2.5mm}
+\delimit
+\captionof{figure}{Suitable input dimensions for different grid based technique for model approximations.}
+\label{fig:dim_ranges}
+\end{figure}
+\end{mdframed}
+
 \section{Structure}
 
 The next chapter covers all the basics needed to understand and use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
@@ -288,10 +313,10 @@ Finally, the evaluation results are used to draw conclusions about the technique
 \chapter{Surrogate construction}
 \label{chap:c2}
 
-Mathematical models represented by a model function $f$ are ...
-More formally, we denote the model function by $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
+Computer simulations almost always work with and on mathematical models and on the lowest level rely on evaluations of the underlying mathematical model.
+More formally, we assume that this mathematical model is represented with a model function and denote the model function by $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
 While the domain of many models may not be the unit hypercube, the domain can easily be translated and scaled to obtain the unit hypercube, as long as it is bounded.
-Furthermore, many models are subject to uncertanties in their inputs and outputs.
+Furthermore, many models are subject to uncertanties in their inputs.
 To incorporate these uncertanties, we model the inputs stochastically with a probability distribution defined by a probability density function $\rho \colon \Omega \to \mathds{R_+}$.
 
 Model function surrogates come into play in cases where it is expensive to directly evaluate $f$ as many operations on model functions, such as optimization, quadrature, and others, require many evaluations.
@@ -306,13 +331,13 @@ The primary focus of this thesis lies on the already established sparse grid sur
 \section{Full grids}
 
 Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
-More formally, we construct a one-dimensional mesh with mesh size $h=2^{-n}$ and apply the tensor product approach to obtain a $d$-dimensional grid mesh.
+More formally, we construct a one-dimensional mesh with mesh size $h=2^{-n}$ and use the basic tensor product approach to obtain a $d$-dimensional grid mesh.
 By then using nodal basis functions at each grid point, we can interpolate functions very accurately.
-The asymptotic interpolation error for this full grid approach is $\mathcal{O}(h^2)$, however this comes at the cost of requiring an exponential amount of grid points.
-Full grids suffer heavily from the curse of dimensionality as having a mesh size $h$ requires $\frac{1}{h}=2^n$ intervals per dimension leads to $\frac{1}{h^d}$ grid points in $d$-dimensions.
+The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{nd})$ grid points.
+Full grids suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for $n$ and $d$.
 
 \begin{definition}[Levels and indices]
-Let $L$ be the set of possible level indices, and let
+Let $L=\mathds{N}_0$ be the set of possible level indices, and let
 \begin{equation}
 \underline{l} = (l_1, \dots, l_d) \in L^d
 \end{equation}
@@ -328,7 +353,7 @@ H_{\underline{l}} \coloneqq \left\{ \underline{i} \in \mathbb{N}^D_0 \mid
 denotes the corresponding hierarchical index set for $\underline{l}$.
 \end{definition}
 
-In the context of the grid types used in thesis we assume $L=\mathds{N}_0$.
+The set of possible levels $L$ is set to $\mathds{N}_0$ to allow for grid points on the boundary.
 We make use of hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given multi level index $\underline{l}$ and its associated index set $H_{\underline{l}}$.
 To start with the hierarchical decomposition of the set of grid points, every point in the grid mesh is first assigned to one level and hierarchical index.
 
