@@ -670,7 +670,7 @@ f(x) \approx \sum_{c \in \mathcal{P}(D), |c| \leq u} f_c(x)
 Such an approximation is useful for certain problems with a low effective dimensionality as presented in \cite{H08}.
 This method also has its limitations however, specifically the need to first construct a $d$-dimensional sparse grid to accurately compute the variances $\sigma^2(f_c)$, the need for boundaries and the analysis of $2^d$ terms.
 
-Alternatively, the variances of the function terms can also be calculated with a Monte-Carlo approach \cite{} beforehand and the grid can be generated accordingly, removing the need to first generate all functions term in \ref{anovaComp} and then cutting some of them off again in \ref{effectiveAnova}.
+Alternatively, the variances of the function terms can also be calculated with a Monte-Carlo approach \cite{} beforehand and the grid can be generated accordingly, removing the need to first generate all functions term in \cref{anovaComp} and then cutting some of them off again in \cref{effectiveAnova}.
 However, one way or the other, one has to deal with the negative effects of the curse of dimensionality, since all calculations to determine variances are done only on the original high-dimensional model.
 
 
@@ -945,7 +945,7 @@ The ANOVA method decomposes the functions into four terms.
 A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2\}}$, and a two dimensional term $f_{\{1,2\}}$.
 As we can see in \cref{fig:anova}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
 Therefore the other terms can be dropped and the function can be completely represented using only a one-dimensional function.
-However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \ref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$ and the ANOVA method would report that no dimension reduction can be applied.
+However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \cref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$ and the ANOVA method would report that no dimension reduction can be applied.
 
 \subsection{Summary}
 
@@ -1267,7 +1267,7 @@ C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(x_i)) (\nabla f(x_i))^T
 One superficial downside of the active subspace method is that gradients are required to approximate the matrix $C$ in \cref{eq:as_c_approx}.
 In cases where the gradient function is not known and can not be easily computed, this would seem like a limiting factor is the feasability of active subspaces.
 However, as this section will show, the gradients can be approximated in various ways from the available input data in ways that allows for a acceptable active subspace approximation.
-The approximated gradients are then used as inputs for equation c\ref{eq:as_c_approx} to obtain the approximated active subspace matrix.
+The approximated gradients are then used as inputs for equation c\cref{eq:as_c_approx} to obtain the approximated active subspace matrix.
 There are various different methods of achieving that, where each method has its advantages and disadvantages.
 
 \begin{definition}[$L^2$ norm]
@@ -1426,13 +1426,13 @@ f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 	\label{fig:as_errors_f1}
 \end{figure}
 
-As seen on the left in figure \ref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
+As seen on the left in figure \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
 The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
 Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$.
 It can be seen that the average gradient error for all random neighbour methods is a little bit worse than finite differences with $h=0.5$, which is consistent with the average distance differences between the two methods.
 
-As a result of the approximation qualities shown on the right in figure \ref{fig:as_errors_f1}, the gradient approximation qualities behave similar.
+As a result of the approximation qualities shown on the right in figure \cref{fig:as_errors_f1}, the gradient approximation qualities behave similar.
 The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
 The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
 Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be better.
@@ -1463,7 +1463,7 @@ It consists out of several terms of varying dimensionality and type, where no te
 	\label{fig:as_grad_errors_f2}
 \end{figure}
 
-As seen in figure \ref{fig:as_grad_errors_f2}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+As seen in figure \cref{fig:as_grad_errors_f2}, the finite differences approximation error converges towards zero as the step size goes down as expected.
 
 \subsection{Limitations}
 
@@ -1789,7 +1789,7 @@ The functions $f_k$ and projection matrices $\beta_k$ of this additive model can
 \begin{equation}
 e_k(x)=f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
-This sum can be computed using an iterative approach, as seen in algorithm \ref{alg:ppr}.
+This sum can be computed using an iterative approach, as seen in algorithm \cref{alg:ppr}.
 
 \newpage
 
@@ -1819,7 +1819,7 @@ Alternatively, one could also introduce an error exit condition that exits the l
 
 \section{An iterative approach}
 
-Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by dropping the constant term $\beta_0$ and residuals $\epsilon_i$ from equation \ref{ppr} to get
+Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by dropping the constant term $\beta_0$ and residuals $\epsilon_i$ from equation \cref{ppr} to get
 \begin{equation}
 \hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i))
 \end{equation}
@@ -1987,10 +1987,10 @@ For every iteration, we investigate the error function $e_i$ on the left and loo
 \label{fig:pipeline_2}
 \end{figure}
 
-As we can see in figures (\ref{fig:pipeline_1}, \ref{fig:pipeline_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
+As we can see in figures (\cref{fig:pipeline_1}, \cref{fig:pipeline_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
 The plotted function values go down in range.
 
-However, as evident in figures (\ref{fig:pipeline_1}, \ref{fig:pipeline_2}), the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly noise that can't be regressed.
+However, as evident in figures (\cref{fig:pipeline_1}, \cref{fig:pipeline_2}), the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly noise that can't be regressed.
 Figures ... and ... show that the error function is mainly a two dimensional term.
 
 
@@ -2039,7 +2039,7 @@ To make the shown results as transparent as possible, this chapter will focus on
 The complete transformation process is modeled and implemented as an iterative pipeline that is made up of different components to allow for maximum flexibility.
 Every pipeline iteration has the goal of adding another transformed surrogate to the current sum of surrogates to further improve the approximation.
 Many pipeline components can be exchanged for many different implementation types, where instances of these types can also be customized by passing configuration parameters.
-The pipeline structure is visualized in figure \ref{fig:tp}.
+The pipeline structure is visualized in figure \cref{fig:tp}.
 
 \begin{mdframed}[style=style,frametitle={Transformation Pipeline}]
 \begin{figure}[H]
@@ -2075,7 +2075,7 @@ At the end of each iteration, we decide whether to exit the pipeline or continue
 \label{sec:tg}
 
 The transformation generator component has the responsibility of finding a good transformation function to use for a pipeline iteration.
-We covered the creation of input transformation extensively in chapter \ref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods, with the goal to provide a uniform interface.
+We covered the creation of input transformation extensively in chapter \cref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods, with the goal to provide a uniform interface.
 
 \subsection {Transformation stream generator}
 
@@ -2099,7 +2099,7 @@ Every transformation that is generated from the stream is evaluated using a tran
 \subsection{Active Subpsace stream generator}
 
 Transformation generation with the active subspace method as covered in \cref{sec:as} is implemented as a transformation stream generator component, since there are multiple different cutoff possibilities with $r$.
-The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \ref{fig:astsg}.
+The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \cref{fig:astsg}.
 
 \begin{mdframed}[style=style,frametitle={Transformation stream generator (active subspaces)}]
 \begin{figure}[H]
