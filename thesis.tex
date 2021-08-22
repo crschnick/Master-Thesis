@@ -107,6 +107,8 @@ frametitlefont=\small\normalfont\bfseries
 \crefformat{chapter}{\coloruline{#2chap.$~$#1#3}}
 \Crefformat{chapter}{\coloruline{#2Chap.$~$#1#3}}
 \crefformat{definition}{\coloruline{#2def.$~$#1#3}}
+\crefformat{algorithm}{\coloruline{#2alg.$~$#1#3}}
+\Crefformat{algorithm}{\coloruline{#2Alg.$~$#1#3}}
 
 
 \newcommand{\delimit}{{\color{charcoal}\noindent\rule{\textwidth}{1pt}}}
@@ -1761,18 +1763,28 @@ Afterwards, at least in the dimensionality preserving transformation, we can obt
 One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
 Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
 
-\chapter{Algorithm}
+\chapter{Iterative transformations}
 \label{chap:c5}
 
-We now covered all the required steps to approximate the model function with a transformed surrogate.
+We now covered all the required steps to approximate a model function with a transformed surrogate, which in this thesis mainly happens to be a transformed sparse grid.
 However, we can easily see that using just one transformed surrogate for approximation is not as powerful as it needs to be for many models.
-In many cases, a multistep approach that generates a sum of transformed surrogates suits a model function better than a single one, especially if the model function is a sum of function terms itself.
-For example, having multiple surrogates allows us to approximate model functions that consist out of multiple terms with a low intrinsic dimension, such as $f(x_1, x_2)=\sin(2 \pi x_1) + x_2$, which has two terms with an intrinsic dimension of one.
+In many cases, an iterative approach that generates a sum of multiple different transformed surrogates suits a model function better than a single one, especially if the model function is a sum of function terms itself.
+We can adapt \cref{def:intrinsic} for the intrinsic dimension, to obtain a dimension for effective intrinsic dimension:
+
+\begin{definition}[Effective intrinsic dimension]
+A $d$-dimensional function $f(x_1, \dots, x_d)$ has an effective intrinsic dimension of $r \leq d$, if there exist transformation functions $t_i \colon \Omega \mapsto \Omega_{r_i}$ and functions $f_i \colon \Omega_{r_i} \mapsto \mathds{R}$, such that
+\begin{equation}
+\forall x \in \Omega \colon f(x)=\sum_{i=1}^p f_{t_i}(t_i(x))
+\end{equation}
+and $r=\max r_i$.
+\label{def:intrinsic_sum}
+\end{definition}
+
+For example, having multiple surrogates allows us to approximate model functions that consist out of multiple terms with a low effective intrinsic dimension, such as $f(x_1, x_2)=\sin(2 \pi x_1) + x_2$, which has two terms with an intrinsic dimension of $1$ and therefore also an effective intrinsic dimension of $1$.
 
 \section{Projection pursuit regression}
 
-We take a look at similar methods and take some inspirations from them.
-One of these related methods is projection pursuit regression \cite{}.
+If we take a look at similar dimension reduction methods and take some inspirations from them, we can see that one of these insightful related methods is projection pursuit regression \cite{huber1985projection}.
 The projection pursuit regression method comes from the area of statistics and is in its core idea related to our approach with linear transformations.
 It tries to represent a dataset
 \begin{equation}
@@ -1780,8 +1792,8 @@ P=\{(x_i, y_i)\}=\{(x_i, f(x_i))\}
 \end{equation}
 using the form
 \begin{equation}
-y_i=\beta_0 + \sum_{k=1}^m f_k(\beta_k^T x_i) + \epsilon_i
-\label{ppr}
+y_i=\beta_0 + \sum_{k=1}^m f_k(\beta_k^T x_i) + \varepsilon_i
+\label{eq:ppr}
 \end{equation}
 where $\beta_0$ is a constant, $\beta_k$ are projection matrices, the $f_k$ are lower dimensional function surrogates, and the $\epsilon_i$ are the residiuals.
 Using the $\beta_k$ to project inputs onto a lower-dimensional space is very similar to our concept of creating linear transformations.
@@ -1789,9 +1801,8 @@ The functions $f_k$ and projection matrices $\beta_k$ of this additive model can
 \begin{equation}
 e_k(x)=f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
-This sum can be computed using an iterative approach, as seen in algorithm \cref{alg:ppr}.
 
-\newpage
+This term can be computed using an iterative approach, as seen in \cref{alg:ppr}.
 
 \begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{projectionPursuitRegression}{$(f, k_{\text{max}})$}}]
 \normalsize
@@ -1815,32 +1826,37 @@ This sum can be computed using an iterative approach, as seen in algorithm \cref
 	\label{alg:ppr}
 \end{mdframed}
 
-Alternatively, one could also introduce an error exit condition that exits the loop if the regression error is small enough with $\epsilon(e_i) < \epsilon_{max}$.
+Alternatively, we could also introduce an error exit condition to \cref{alg:ppr} that exits the loop if the regression error is small enough with $\varepsilon(e_i) < \varepsilon_{max}$.
+We can already spot that the function \texttt{determineBestProjection} relates to \cref{chap:c3}, where we extensively covered finding a linear transformation, and \texttt{determineBestSurrogate} relates to \cref{chap:c4}, which covered the creation of sparse grid surrogates for a given transformation.
 
 \section{An iterative approach}
 
-Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by dropping the constant term $\beta_0$ and residuals $\epsilon_i$ from equation \cref{ppr} to get
+Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by dropping the constant term $\beta_0$ and residuals $\varepsilon_i$ from \cref{eq:ppr} to get
+
 \begin{equation}
-\hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i))
-\end{equation}
-where the $t_i$ are linear transformations similar to the projection with $\beta_k^T$ and the $\hat{f_{t_i}}$ are the surrogate equivalents of the $f_k$.
-The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the adapted error function
-\begin{equation}
-e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x))
+\hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i)),
+\nonumber
 \end{equation}
 
-In the case that we use a linear transformation function, the algorithm is pretty much identical to the previous one.
-However, this algorithm is more generalized to allow for any type of transformation.
+where the $t_i$ are linear transformations similar to the projection with $\beta_k^T$, and the $\hat{f_{t_i}}$ are the surrogate equivalents of the $f_k$.
+The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be constructed iteratively by repeatedly executing a stepwise algorithm of first finding a transformation and then constructing a surrogate for the current error function
 
-\newpage
+\begin{equation}
+e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x)).
+\nonumber
+\end{equation}
+
+\Cref{alg:itappr} illustrates this iterative approach, which is similar to \cref{alg:ppr}, but has been adapted to fit our used notation.
+In the case that we use a linear transformation function, \cref{alg:itappr} is pretty much identical to \cref{alg:ppr}.
+
 \begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{transformedSurrogateSum}{$(f, i_{\text{max}})$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
     \State $e_0 = f$
     \For{$i = 1, \dots,  i_{\text{max}}$}
-    	\State $t_i \gets$ generateBestTransformation($f$)
-    	\State $\hat{f}_{t_i} \gets$ generateBestSurroate($f, t_i$)
+    	\State $t_i \gets$ \texttt{generateBestTransformation}($f$)
+    	\State $\hat{f}_{t_i} \gets$ \texttt{generateBestSurroate}($f, t_i$)
     	\State $e_i \gets e_{i - 1} - \hat{f}_{t_i}$
     \EndFor
     \State $\hat{f} \gets \sum_{\hat{f}_{t_i}} \hat{f}_{t_i} \circ t_i$
@@ -1848,89 +1864,99 @@ However, this algorithm is more generalized to allow for any type of transformat
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Parameters are the function $f$ and the maximum amount of iterations $i_{\text{max}}$.}
+	\captionof{algorithm}{Pseudocode of the iterative transformed surrogate sum algorithm. Parameters are the model function $f$ and the maximum amount of iterations $i_{\text{max}}$.}
 	\label{alg:itappr}
 \end{mdframed}
 
 \section{Generating the best surrogate}
 
-Surrogates can, depending on their type, have possibly many independent configuration parameters, which influence their end result and therefore the approximation error.
-The amount of possible configuration parameter combinations makes finding the best combination difficult as it would require the examination of a lot of combinations.
-The main driver of the runtime is therefore the amount of configurations options to test.
-Configuration parameters usually include regression parameters like the smoothing factor $\lambda$, ..., and more.
-More formally assuming that we have $m$ configuration parameters where each one has a set of possible values $C_k$, the configuration set would be $C=C_1 \times \dots \times C_m$ and the amount of examinations would be $|C|=|C_1| \dots |C_m|$.
+Surrogates can, depending on their type, have possibly many independent configuration parameters, which can heavily influence the end result and therefore the approximation error.
+The amount of possible configuration parameter combinations makes finding the best combination difficult, as it would require the examination of a lot of combinations and in most cases the actual surrogate has to be constructed with a given set of parameters to evaluate the suitability of the parameters.
+The main driver of the runtime of the function \texttt{generateBestSurroate} is therefore the amount of configurations parameters available.
+Common configuration parameters usually include regression parameters like the smoothing factor $\lambda$.
+More formally assuming that we have $m$ configuration parameters where each one has a set of possible values $C_i$, the configuration set would be $C=C_1 \times \dots \times C_m$ and the amount of examinations would be $|C|=|C_1| \dots |C_m|$.
 
 The general structure and properties of the current regression problem at hand can change with each new iteration.
-Thus, configuration options have to examined in every iteration again, as their might not exist a set of optimal configuration 
-parameters for all iterations.
+Thus, configuration parameters have to examined in every iteration again, as their might not exist a set of optimal configuration parameters for all iterations.
+\Cref{alg:bestsur} shows a simple implementation that uses lofi surrogates for parameter evaluation to reduce runtime.
 
-\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestSurroate}{$(S_t, C, \epsilon)$}}]
+\newpage
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestSurroate}{$(C, t)$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
     \State $c^\ast \gets \emptyset$
-    \State $\epsilon_{min} \gets \infty$
+    \State $\varepsilon_{min} \gets \infty$
     \For{$c \in C$}
-      \State $\hat{f}_c^l$ = generateLofiSurroate(S, c)
-    	\State $\epsilon \gets \epsilon(\hat{f}_c^l)$
-    	\If{$\epsilon < \epsilon_{min}$}
-    	  \State $\epsilon_{min}\gets e$
+      \State $\hat{f}_c^l$ $\gets$ \texttt{generateLofiSurroate}($t, c$)
+    	\State $\varepsilon \gets \varepsilon(\hat{f}_c^l)$
+    	\If{$\varepsilon < \varepsilon_{min}$}
+    	  \State $\varepsilon_{min}\gets \varepsilon$
     	\State $c^\ast \gets c$
     	\EndIf
     \EndFor
-    \State \Return{generateHifiSurroate(S, c*)}
+    \State \Return{\texttt{generateHifiSurroate}($S, c^\ast$)}
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$.}
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. The parameters the set of possible surrogate configurations $C$ and the transformation function $t$.}
 	\label{alg:bestsur}
 \end{mdframed}
 
+This algorithm determines the optimal configuration $c*$ with
 
-It determines the optimal configuration $c*$ with
 \begin{equation}
-c*=\argmin_{c \in C} \epsilon(\hat{f}_c^l)
-\end{equation}
-This algorithm works fine presuming that the low fidelity surrogates $\hat{f}_c^l$ are representative of the high fidelity one, as already discussed in \cref{sec:lofi}.
-It is satisfactory as long as 
-\begin{equation}
-\epsilon(\hat{f}_{c*}^h)=\argmin_{c \in C} \epsilon(\hat{f}_c^h)
+c^\ast=\argmin_{c \in C} \varepsilon(\hat{f}_c^l)
+\nonumber
 \end{equation}
 
-TODO: pre convergence
+and works fine presuming that the low fidelity surrogates $\hat{f}_c^l$ are representative of the high fidelity ones, as already discussed in \cref{sec:lofi}.
+It is satisfactory as long as the actual approximation quality of the generated hifi surrogate is close to the optimal configuration over all parameter combinations, i.e. it should hold that
 
-\section{Finding the optimal reduced dimension}
+\begin{equation}
+\varepsilon(\hat{f}_{c^\ast}^h) \approx \argmin_{c \in C} \varepsilon(\hat{f}_c^h).
+\nonumber
+\end{equation}
 
-Until now, we assumed that the reduced dimension $r$ was given and did not cover ways on how to determine the optimal reduced dimension $r*$.
-It was mentioned in the active subspace sections in the previous chapter that even though the active subspace method provides a suggested criterion to determine the optimal cutoff dimension $r*$, i.e. looking for the largest gap in the sequence of eigenvalues, this criterion was not always optimal and could be influenced by various factors.
-Furthermore, alternative transformation creation methods, like the random transformations, can not make use of such a cutoff criterion.
+\section{Generating the best transformation}
 
-A solution would be to use the exploratory look ahead approach from the previous section to determine the optimal $r*$.
-
-\begin{algorithm}[H]
-\normalsize
-\begin{algorithmic}
-\Function{generateBestTransformation}{S, $\epsilon$}
-    \State c*=$\emptyset$
-    \State $e_{min}=\infty$
-    \For{r = 1,\dots,d}
-      \State $\hat{f}_c^l$ = generateLofiSurroate(S, c)
-    	\State $e \gets \epsilon(\hat{f}_c^l)$
-    	\If{$e < e_{min}$}
-    	  \State $e_{min}\gets e$
-    	\State c* $\gets$ c
-    	\EndIf
-    \EndFor
-    \State \Return{generateHifiSurroate(S, c*)}
-\EndFunction
-\end{algorithmic}
-	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. Parameters are the sample set $S$, the set of possible surrogate configurations $C$, and an error metric $\epsilon$}
-\end{algorithm}
+Until now, we assumed that the reduced dimension $r$ was given and did not cover ways on how to determine the optimal reduced dimension $r^\ast$, or the optimal $r^\ast_i$ for an iteration step.
+It was mentioned that, when covering active subspaces in \cref{sec:as}, even though the active subspace method provides a suggested criterion to determine the optimal cutoff dimension $r^\ast$ by looking for the largest gap in the sequence of eigenvalues, this criterion was not always optimal and could be influenced by various factors.
+Furthermore, alternative transformation generation methods, like random transformations in \cref{sec:rtg}, can not make use of such a cutoff criterion.
+We are therefore looking a for a generalized approach to determine the best value for $r^\ast_i$ in each iteration.
+One solution would be to use the exploratory look ahead approach to find the best configuration parameters from the previous section to determine the best $r^\ast_i$ in a similar fashion.
 
 \newpage
+
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformation}{$(r_{\text{min}} ,r_{\text{max}})$}}]
+\normalsize
+\vspace{5.5mm}
+\begin{algorithmic}[1]
+    \State $t^\ast \gets \mathds{1}$
+    \State $\varepsilon_{min} \gets \infty$
+    \For{$r = r_{\text{min}},\dots,r_{\text{max}}$}
+      \State $t_r$ $\gets$ \texttt{generateTransformation}(r)
+      \State $\hat{f}_{c^\ast}^h$ $\gets$ \texttt{generateBestSurroate}($C, t_r$)
+    	\State $\varepsilon \gets \epsilon(\hat{f}_c^h)$
+    	\If{$\varepsilon < \varepsilon_{min}$}
+    	  \State $\varepsilon_{min}\gets \varepsilon$
+    	\State $t^\ast \gets t_r$
+    	\EndIf
+    \EndFor
+    \State \Return{$t^\ast$}
+\end{algorithmic}
+\vspace{-1.5mm}
+\delimit
+	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the minimum reduced dimension $r_{\text{min}}$ and maximum reduced dimension $r_{\text{max}}$.}
+	\label{alg:besttrans}
+\end{mdframed}
+
+The function implementation of \texttt{generateTransformation} in \cref{alg:besttrans} is usually fixed, and can use one of the transformation generation methods presented in \cref{chap:c3}, for example active subspaces or random transformations.
+
 \section{Visualizing the algorithm}
 
-The iterative algorithm can be visualized with a simple two-dimensional function, where the first component contributes the most to the total function value while the second one does not.
+The iterative algorithm can be visualized using a simple two-dimensional function, where the first component contributes the most to the total function value while the second one does not.
+The example function
 \begin{equation}
 f(x_1, x_2)=e^{x_1' + 1} + \sin(2 \pi x_2') + 1, ~~ \begin{pmatrix}
     x_1' \\ x_2'
@@ -1944,25 +1970,28 @@ f(x_1, x_2)=e^{x_1' + 1} + \sin(2 \pi x_2') + 1, ~~ \begin{pmatrix}
     \\
   \end{pmatrix}
 \end{equation}
-Also, it is not axis-aligned to further visualize how the algorithm handles non axis-aligned function terms.
+has an effective intrinsic dimension of $1$ and is not axis-aligned to further visualize how the algorithm handles multiple non axis-aligned function terms.
 
-To better illustrate the surrogate construction, $r$ is always set to one, regardless of whether an $r=2$ would make sense or not.
+For every iteration, we investigate the error function $e_i$ on the left and look at the regression problem to be solved by the surrpgate generator on the right.
+To better illustrate the surrogate construction, $r$ is always set to $1$, regardless of whether an $r=2$ would make sense or not.
 Furthermore, the regression surrogate on the right is only plotted as far as it needs to be, i.e. the plot might not cover $[0,1]$ as the amount of transformed samples in the boundary regions is very low.
 This also illustrates how the transformed input distribution changes from the original input distribution, which in this example is uniform.
 The amount of samples is set to $n=1000$.
-For every iteration, we investigate the error function $e_i$ on the left and look at the regression problem to be solved on the right.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{.49\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
-  \captionof{figure}{Error function $e_0$ and first active subspace direction $v_1$ (blue).}
+  \caption{Plot of the error function $e_0=f$ and first active subspace direction $v_1$ \darkblue.}
+\label{fig:pipeline_current_1}
 \end{subfigure}%
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{.49\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/pipeline_local_1}
-  \captionof{figure}{Transformed input samples (blue) and constructed surrogate in \red.}
+  \includegraphics[width=.7\linewidth]{graphics/pipeline_local_1}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_1$ in \red.}
+\label{fig:pipeline_local_1}
 \end{subfigure}
 \delimit
 \captionof{figure}{First iteration of the iterative transformation algorithm.}
@@ -1971,41 +2000,45 @@ For every iteration, we investigate the error function $e_i$ on the left and loo
 \end{mdframed}
 
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_2}
-  \caption{Error function $e_1$ and first active subspace direction $v_1$.}
+  \caption{Plot of the error function $e_1$ and first active subspace direction $v_1$ \darkblue.}
+\label{fig:pipeline_current_2}
 \end{subfigure}%
 \hspace{0.07\textwidth}
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_local_2}
-  \caption{Transformed surrogate input samples and constructed surrogate.}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_2$ in \red.}
+\label{fig:pipeline_local_2}
 \end{subfigure}
-\caption{Second iteration of the iterative transformation algorithm.}
+\delimit
+\captionof{figure}{Second iteration of the iterative transformation algorithm.}
 \label{fig:pipeline_2}
 \end{figure}
+\end{mdframed}
 
-As we can see in figures (\cref{fig:pipeline_1}, \cref{fig:pipeline_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
+As we can see in figures (\cref{fig:pipeline_current_1}, \cref{fig:pipeline_current_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
 The plotted function values go down in range.
+However, as evident in figures (\cref{fig:pipeline_local_1}, \cref{fig:pipeline_local_2}), the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly noise that can't be regressed.
 
-However, as evident in figures (\cref{fig:pipeline_1}, \cref{fig:pipeline_2}), the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly noise that can't be regressed.
 Figures ... and ... show that the error function is mainly a two dimensional term.
-
-
-A two dimensional surrogate would be able to 
-In theory, an optimal method should be able to approximate $f$ without a resultung in a leftover two dimensional error function.
+In theory, an optimal method should be able to approximate $f$ without a resultung in a leftover two dimensional error function, as its effective intrinsic dimension is $1$.
+However, as the method is not perfect and encounters small errors from various sources throughout the algorithm, it can not approximate functions in an optimal way.
 
 \chapter{Implementation}
 \label{chap:c6}
 
-To make the shown results as transparent as possible, this chapter will focus on how the previsouly described process of transforming Sparse Grids is actually implemented.
-
+This chapter will cover the practical implementation of the iterative algorithm of \cref{chap:c5}.
+We model the general structure of various parts of the implementation as components and use component diagrams to described their general internal structure and possible configuration parameters.
+The notation of these component diagrams is shown in \cref{fig:defs}.
+This surface level description of the whole implementation will make the evaluation results presented later as transparent as possible, as it will list and explain possible algorithm configuration parameters that will impact the end result.
 
 \begin{mdframed}[style=style,frametitle={Notation}]
 \begin{figure}[H]
-
 
 \includegraphics[width=\textwidth]{graphics/definitions.pdf}
 \vspace{-7.5mm}
@@ -2287,7 +2320,7 @@ This means that instead of passing a fixed level $l$ as a parameter, we instead 
 
 \delimit
 
-\captionof{figure}{Possible configuration parameters ofa sparse grid surrogate generator.}
+\captionof{figure}{Possible configuration parameters of a sparse grid surrogate generator.}
 \label{fig:sgsg}
 \end{figure}
 \end{mdframed}
@@ -2307,6 +2340,10 @@ This means that instead of passing a fixed level $l$ as a parameter, we instead 
 As shown in the previous chapters, there are a lot of configuration options for the complete reduction pipeline.
 The goal in this chapter is to provide good default configurations and also an algorithm for automatic configuration generation based on a given model function, using the insights from the previous chapter.
 
+\chapter{Outlook}
+\label{chap:c9}
+
+- Parallelize pipeline
 
 \appendix
 \chapter{Appendix}
