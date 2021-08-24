@@ -1028,13 +1028,19 @@ Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}.
 
 
 \begin{mdframed}[style=style]
-\begin{figure}[H]
-\centering
-  \includegraphics[width=0.5\linewidth]{graphics/zonotope}
-  \delimit
-  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$ and the three generators $g_1,g_2,g_3$.}
+        \centering
+\begin{minipage}{.4\textwidth}
+        \centering
+  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$, and three generators $g_1,g_2,g_3$.\\
+  The three generator vectors are drawn to the left and the zonotope $Z$ is drawn in \darkblue to the right with the origin being in \red.}
+    \end{minipage}%
+    \begin{minipage}{0.6\textwidth}
+        \centering
+        \vspace{3.5mm}
+  \includegraphics[width=0.8\linewidth]{graphics/zonotope}
+  \hspace{-5.5mm}
   \label{fig:zonotope}
-\end{figure}
+    \end{minipage}
 \end{mdframed}
 
 
@@ -1288,7 +1294,7 @@ To judge the quality of approximated gradients, we first have to define an error
 Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
 \begin{equation}
 \varepsilon_{\text{grad}}(S)=\frac{1}{n} \sum_{i=1}^n \frac{\| \widetilde{\nabla} f(x_i) - \nabla f(x_i) \|_2}{\| \nabla f(x_i) \|_2}
-\nonumber
+\label{eq:e_grad}
 \end{equation}
 as the average gradient approximation error of the sample.
 \end{definition}
@@ -1311,7 +1317,7 @@ Given an estimated active subspace matrix $W_r$ and the reference matrix $W_r^*$
 active subspace error is defined by
 \begin{equation}
 \varepsilon_{\text{AS}}(W_r)=\frac{\| W_r - W_r^* \|_2}{\| W_r^* \|_2}.
-\nonumber
+\label{eq:e_as}
 \end{equation}
 \end{definition}
 
@@ -1383,8 +1389,9 @@ Compared to the random neighbour approximation, for $n,n',m \to \infty$, the app
 However, this property comes at the cost of having to sort the available $n'$ neighbours by distance to pick the $m$ closest ones.
 The parameters $n'$ and $m$ also have to be chosen carefully, as a unsuitable comination of $n'$ and $m$ would increase the average distance to the neighbours again so that the effect of chosing the nearest neighbours would diminish.
 
-
+\newpage
 \begin{mdframed}[style=style]
+\vspace{2mm}
 \begin{figure}[H]
   \centering
 \begin{subfigure}{.45\textwidth}
@@ -1409,8 +1416,8 @@ The completely \red circle represents the sample point $x$ and other sample poin
 
 \subsection{Approximation quality}
 
-To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus purely on the gradient approximation methods as a to gauge whether the methods can be used to generate input transformations.
-Two example functions are investigated for this purpose, wrt. the gradient approximation quality $\varepsilon_{\text{grad}}$ and the subsequent active subspace approximation quality $\varepsilon_{\text{AS}}$.
+To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus purely on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
+Two example functions are investigated for this purpose, wrt. the average gradient approximation error $\varepsilon_{\text{grad}}$ \cref{eq:e_grad} and the subsequent average active subspace approximation error $\varepsilon_{\text{AS}}$ \cref{eq:e_as}.
 
 \vspace{2mm}
 \textbf{Simple function~}
@@ -1420,8 +1427,14 @@ f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 \nonumber
 \end{equation}
 
+As seen on the left in figure \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
+The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$.
+It can be seen that the average gradient error for all random neighbour methods is a little bit worse than finite differences with $h=0.5$, which is consistent with the average distance differences between the two methods.
 
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
@@ -1431,12 +1444,6 @@ f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 	\label{fig:as_errors_f1}
 \end{figure}
 \end{mdframed}
-
-As seen on the left in figure \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
-The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$.
-It can be seen that the average gradient error for all random neighbour methods is a little bit worse than finite differences with $h=0.5$, which is consistent with the average distance differences between the two methods.
 
 As a result of the approximation qualities shown on the right in figure \cref{fig:as_errors_f1}, the gradient approximation qualities behave similar.
 The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
@@ -1531,25 +1538,29 @@ Of course this can concept can be expanded upon with handling multiple periodic 
 A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
 This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown in \cref{eq:per} by using the transformation
 \begin{equation}
-t(x_1,x_2)=\left[8 \left(x_1 \text{ mod } \frac{1}{8}\right), 8 \left(x_2 \text{ mod } \frac{1}{8}\right)\right]^T.
+t_p(x_1,x_2)=\left[8 \left(x_1 \text{ mod } p\right), 8 \left(x_2 \text{ mod } p\right)\right]^T.
 \nonumber
 \end{equation}
-To illustrate the improvement in multiple smaller steps, we also investigate periodic transformations with several configurations $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ in \cref{fig:periodic}.
 
 \begin{mdframed}[style=style]
+\vspace{2mm}
 \begin{figure}[H]
         \centering
-\begin{minipage}{.49\textwidth}
+\begin{minipage}{.50\textwidth}
         \centering
-  \captionof{figure}{Approximation errors of various periodic transformations and sparse grid surrogates of level $l$, linear hat basis, and .. for the function $f_p$.}
+  \captionof{figure}{Approximation errors of various periodic transformations $t_p$ and sparse grid surrogates of level $\ell \in \{1, \dots, 11\}$, modified linear hat basis, and periods $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ for the example function $f$.\\
+  The sparse grid surrogates were constructed using the normal interpolation approach.}
     \end{minipage}%
-    \begin{minipage}{0.49\textwidth}
+    \begin{minipage}{0.50\textwidth}
         \centering
-\includegraphics[width=0.8\textwidth]{graphics/periodic}
+\includegraphics[width=0.95\textwidth]{graphics/periodic}
     \end{minipage}
 \label{fig:periodic}
 \end{figure}
 \end{mdframed}
+
+To illustrate the improvement in multiple smaller steps, we investigate periodic transformations with several configurations in \cref{fig:periodic}.
+As we can see, a smaller value for $p$ results in a notable improvement, and going from $p=1$ (no transformation) to $p=0.125$ (best periodic transformation) improves the approximation error by around $10^2$, which is a huge improvement after all.
 
 \subsection{Active Manifolds}
 
@@ -2353,10 +2364,14 @@ This means that instead of passing a fixed level $l$ as a parameter, we instead 
 
 \subsection {RBF surrogate generator}
 
+TODO
+
 
 \section{Example}
 
-\begin{mdframed}[style=style,frametitle={Transformation pipeline example}]
+TODO
+
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/PipelineExample.pdf}
 \delimit
