@@ -256,23 +256,24 @@ This combined approach views the model from a black-box perspective and therefor
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-Sparse grids, a discretimzation scheme for functions on hypercubes, were introduced as an alternative to the more simple full grid discretisization scheme, which suffers heavily from the curse of dimensionality as the dimension of the functions grow, the amount of grid points required to generate a full grid grows exponentially.
-As a result, the required model function evaluations also grow exponentially.
-While all grid-based methods all share the common problem of being affected by the curse of dimensionality, sparse grids manage to reduce the impact of it and therefore delay the point where they become infeasible to use.
-In this thesis the focus lies on high dimensional functions with $d > 8$ that cause even normal sparse grids to run into problems, since they are affected by the curse of dimensionality when dimensions reach that size.
-These problems are caused by the high amount of grid points and result in too many required model function evaluations to first construct a sparse grid and also too high runtime and memory requirements for many algorithms that work on sparse grids.
+Sparse grids, a discretimzation scheme for functions on hypercubes, were introduced as an alternative to the more simple full grid discretisization scheme, which suffers heavily from the curse of dimensionality, as the amount of grid points required to generate a full grid grows exponentially with the dimension of the model.
+As a result, the model function evaluations for a full grid construction also grow exponentially, heavily limiting the feasible model dimensionality for full grids.
+While all grid-based methods all share the common problem of being affected by the curse of dimensionality to some degree, sparse grids manage to reduce the impact of it and therefore delay the point where they become infeasible to use compared to full grids.
+To decouple the model dimension from the actual sparse grid dimension, at least to some degree, various sparse grid based techniques that can be used for dimension reduction, like adaptive sparse grids, were introduced with the goal to eliminate or neglect certain  dimensions of the model inputs.
+These techniques, and grid based techniques in general, are however limited in their effectiveness, as all grid points and tensor product basis functions used are effectively axis-aligned.
+As we will see, this axis-aligned construction becomes rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
 
-Furthermore, since all grid points and tensor product basis functions used for sparse grids, are effectively axis-aligned, sparse grids, and therefore all techniques based on them, become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
-This limitation is used as a motivation to look into ways into aligning the model function inputs, by first conducting a parameter study to identify potential starting points for a dimension reduction.
-A parameter study is the process of exploring the influence of different function parameters on the function output.
-This gained knowlegde about the parameters can be used for dimension reduction, which refers to the elimination and replacement of certain function parameters.
-The insights gained from studying the inputs can then be used to transform and reduce the dimension of the model inputs prior to feeding them into sparse grids, s.t. the resulting sparse grid surrogates perform better wrt. the amount of grid points allocated and also the approximation error. 
+This limitation is used as a motivation to look into ways of adapting the model function inputs in a better way, by first conducting a parameter study to identify potential starting points.
+This parameter study is then conducted with the goal of exploring the influence of different function parameters on the function output and exploiting the gained knowlegde for dimension reduction.
+The insights gained can then be used to transform the model inputs prior to feeding them into sparse grids, such that the resulting sparse grid surrogates have a lower dimension, require less grid points, and also have a comparable approximation error compared to regular sparse grids.
+The concrete process of reducing the input dimensions takes inspiration from the concepts of intrinsic dimension in signal processing and already established dimension reduction techniques in data science such as PCA, and tries to combine the process of determining the optimal model input alignment along active directions with dimension reduction.
+Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still preserving input structures suitable for sparse grids and therefore achieving an acceptable additional approximation error.
+Overall, this enables us to work with high dimensional models that normally would cause sparse grids to run into problems.
 
-Lastly, inspired from the concept of intrinsic dimension in signal processing and common dimension reduction methods in data science such as PCA, we try to combine the process of determining the optimal model input alignment along active directions with dimension reduction.
-Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still achieving an acceptable additional approximation error.
-Overall, this enables us to apply sparse grids to much higher-dimensional problems as before.
+To put the grid limitations into more concrete range, we can say that full grids already become infeasible for models with dimensionality of $d=4$, while sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
+The presented technique of transformed sparse grids is not limited by the original model dimension, as we will see in this thesis.
+\Cref{fig:dim_ranges} visualizes the suitable dimension ranges of all three techniques.
 
-\newpage
 \begin{mdframed}[style=style]
 
 \vspace{2.5mm}
@@ -295,7 +296,7 @@ Overall, this enables us to apply sparse grids to much higher-dimensional proble
 
 \vspace{2.5mm}
 \delimit
-\captionof{figure}{Approximate suitable input dimensions for different grid based techniques for model approximations.}
+\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations.}
 \label{fig:dim_ranges}
 \end{figure}
 \end{mdframed}
@@ -1421,12 +1422,15 @@ f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 
 
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
 	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
+\delimit
 	\captionof{figure}{Mean Active Subspace error calculated with the previously introduced methods compared to the actual Active Subspace for $f_1$ over 10 iterations .}
 	\label{fig:as_errors_f1}
 \end{figure}
+\end{mdframed}
 
 As seen on the left in figure \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
@@ -1458,12 +1462,16 @@ f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
 
 It consists out of several terms of varying dimensionality and type, where no term obviously dominates the others.
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
 	\includegraphics[width=\textwidth]{graphics/as_grad_errors_f2}
+	
+\delimit
 	\captionof{figure}{Average $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_2$.}
 	\label{fig:as_grad_errors_f2}
 \end{figure}
+\end{mdframed}
 
 As seen in figure \cref{fig:as_grad_errors_f2}, the finite differences approximation error converges towards zero as the step size goes down as expected.
 
@@ -1509,21 +1517,39 @@ The matrix $W=Q \Lambda Q$ is then uniformly distributed with Haar measure, i.e.
 
 \subsection{Periodic transformations}
 
-Another use case for transformations are periodic functions.
-If the model function $f$ is for example periodic along one dimension $i$, i.e. $f(x_1,\dots,x_i,\dots,x_d)=f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation with $t(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots,(x_i\text{ mod } p_i) /p_i, \dots,x_d)^T$ and create a surrogate with $f(x) \approx \hat{f}(t(x))$.
-This way, the function can be interpolated better because there are effectively $1 / h_i$ times more grid points spent along the $i$-th dimension.
-Of course this can concept can be expanded upon with multiple periodic dimensions, antiperiodic functions, offsets and combination with linear transformations.
+Another possible use case for transformations are periodic functions.
+If the model function $f$ is for example approximately periodic along one dimension $i$ with the period $p_i$, i.e. it holds that $f(x_1,\dots,x_i,\dots,x_d) \approx f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation function
+\begin{equation}
+t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots, \frac{x_i\text{ mod } p_i}{p_i}, \dots,x_d)^T
+\label{eq:per}
+\end{equation}
+and create a normal surrogate $\hat{f}$ on $\Omega$ with $f(x) \approx \hat{f}(t(x))$.
+This way, the function can be interpolated better by sparse grids because there are effectively $1 / p_i$ times more grid points spent along the $i$-th dimension.
+However, no dimension reduction is taking place.
+Of course this can concept can be expanded upon with handling multiple periodic dimensions at once, antiperiodic functions, offsets and combination with linear transformations.
 
-A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both directions.
-This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown above with $t(x_1,x_2)=(\frac{1}{8} (x_1 \text{ mod } \frac{1}{8}), \frac{1}{8} (x_2 \text{ mod } \frac{1}{8}))^T$.
-To illustrate the improvement in multiple smaller steps, we also investigate periodic transformations with several configurations $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$.
+A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
+This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown in \cref{eq:per} by using the transformation
+\begin{equation}
+t(x_1,x_2)=\left[8 \left(x_1 \text{ mod } \frac{1}{8}\right), 8 \left(x_2 \text{ mod } \frac{1}{8}\right)\right]^T.
+\nonumber
+\end{equation}
+To illustrate the improvement in multiple smaller steps, we also investigate periodic transformations with several configurations $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ in \cref{fig:periodic}.
 
+\begin{mdframed}[style=style]
 \begin{figure}[H]
-\centering
+        \centering
+\begin{minipage}{.49\textwidth}
+        \centering
+  \captionof{figure}{Approximation errors of various periodic transformations and sparse grid surrogates of level $l$, linear hat basis, and .. for the function $f_p$.}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
 \includegraphics[width=0.8\textwidth]{graphics/periodic}
-\captionof{figure}{}
+    \end{minipage}
 \label{fig:periodic}
 \end{figure}
+\end{mdframed}
 
 \subsection{Active Manifolds}
 
@@ -2328,8 +2354,37 @@ This means that instead of passing a fixed level $l$ as a parameter, we instead 
 \subsection {RBF surrogate generator}
 
 
-\section{Function sample budgeting}
+\section{Example}
 
+\begin{mdframed}[style=style,frametitle={Transformation pipeline example}]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/PipelineExample.pdf}
+\delimit
+
+\captionof{figure}{Component structure of a forward looking transformation evaluator.}
+\label{fig:tpex}
+\end{figure}
+\end{mdframed}
+
+
+\section{Sample budgeting}
+
+A central aspect of the transformation is pipeline is the handling of input samples
+\begin{equation}
+S=\left\{(x_i, f(x_i))\right\}_{i=1}^n,
+\nonumber
+\end{equation}
+as they are used in almost every pipeline component.
+With the heavy use of the same samples across various stages, special care has to be taken to prevent overfitting.
+For example, the transformation generator, surrogate generator, and surrogate evaluator should all work with different samples such that no overtting can possibly take place.
+
+Also, components that only work together, such as the surrogate generator and surrogate evaluator, are designed to coordinate their sample use with each other.
+For example, a cross validated surrogate evaluator partitions the input samples multiple times and each time passes the train partition to the surrogate generator to generate a surrogate and then evaluates the quality using the associated validate partition.
+Therefore, the actual implementation control flow is not as simple as shown in \cref{fig:tpex}.
+The sample subset, that is passed down by each component to the next ones is also shuffled, such that partioning them into train and validation samples is not deterministic when performing multiple pipeline iterations with the sample input samples.
+
+The pipeline works for any amount of input samples, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work efficiently, which makes it very flexible.
+This is an advantage compared to any interpolation based approaches.
 
 \chapter{Evaluation}
 \label{chap:c7}
@@ -2344,6 +2399,8 @@ The goal in this chapter is to provide good default configurations and also an a
 \label{chap:c9}
 
 - Parallelize pipeline
+
+- Formalize relationship between AS and surrogate quality
 
 \appendix
 \chapter{Appendix}
