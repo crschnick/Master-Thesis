@@ -318,20 +318,20 @@ The goal of \cref{chap:c8} is to deduce a decision process to determine optimal 
 \chapter{Surrogate construction}
 \label{chap:c2}
 
-Computer simulations almost always work with and on mathematical models and on the lowest level rely on evaluations of the underlying mathematical model.
-More formally, we assume that this mathematical model is represented with a model function and denote the model function by $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
+Computer simulations almost always work with mathematical models and rely on evaluations of the underlying mathematical model on the lowest level.
+More formally, we assume that this mathematical model is represented by a model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
 While the domain of many models may not be the unit hypercube, the domain can easily be translated and scaled to obtain the unit hypercube, as long as it is bounded.
 Furthermore, many models are subject to uncertanties in their inputs.
 To incorporate these uncertanties, we model the inputs stochastically with a probability distribution defined by a probability density function $\rho \colon \Omega \to \mathds{R_+}$.
 
 Model function surrogates come into play in cases where it is expensive to directly evaluate $f$ as many operations on model functions, such as optimization, quadrature, and others, require many evaluations.
 This is usually the case when a differential equation has to be solved by the model function.
-The usual course of action is then to construct a surrogate $\hat{f}$ that has the advantage of being much faster to evaluate while preserving an acceptable amount of accuracy such that $\forall x \in \Omega \colon f(x)=\hat{f}(x)$ holds.
-Moreover, the surrogate can come with other desirable properties, such as the gradients or moments being easily to calculate, and therefore providing additional useful features.
+The usual course of action is then to construct a surrogate $\hat{f}$ that has the advantage of being much faster to evaluate while preserving an required amount of accuracy such that $\forall x \in \Omega \colon f(x) \approx \hat{f}(x)$ holds.
+Moreover, the surrogate can come with other desirable properties, such as the gradients or moments being easily to calculate, and therefore providing additional useful features for free.
 
 Plenty of different surrogate types and construction methods exist where each one comes with its own idiosyncrasies.
 These surrogate type and construction method specific properties can range from their sensitivity to the input dimension of the model to their approximation quality in general or with regards to a specific type of model. 
-The primary focus of this thesis lies on the already established sparse grid surrogates \cite{} and their various subtypes and construction methods, with the goal of enhancing the standard construction approach by finding and exploiting lower-dimensional important subsets of the model inputs.
+The primary focus of this thesis lies on the already established sparse grid surrogates and their various subtypes and construction methods, with the goal of enhancing the standard construction approach by finding and exploiting lower-dimensional important subsets of the model inputs.
 
 \section{Full grids}
 
@@ -340,16 +340,14 @@ More formally, we construct a one-dimensional mesh of level $\ell$ with mesh siz
 By then using nodal basis functions at each grid point, we can interpolate functions very accurately.
 The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{\ell d})$ grid points.
 Full grids suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for $\ell$ and $d$.
-
 \begin{definition}[Levels and indices]
 Let
 \begin{equation}
 \underline{\ell} = (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d
 \end{equation}
-be a $d$-dimensional multi level index.\\
-For every multi level index $\underline{l}$, we define the hierarchical index set
+be a $d$-dimensional multi level index. For every multi level index $\underline{l}$, we define the hierarchical index set
 \begin{equation}
-H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathbb{N}^d_0 \mid
+H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathds{N}^d_0 \mid
 \begin{cases}
     i_t=1,3\dots,2^{\ell_t} - 3, 2^{\ell_t} - 1, & \ell_t \geq 1 \\
     i_t=0,1, & \ell_t = 0
@@ -357,26 +355,27 @@ H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathbb{N}^d_0 \mid
 \end{equation}
 \end{definition}
 
-We use hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given multi level index $\underline{\ell}$ and its associated index set $H_{\underline{l}}$, such that every point in the grid mesh is assigned to one level and hierarchical index.
-
+We use these hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given multi level index $\underline{\ell}$ and its associated index set $H_{\underline{l}}$, such that every point in the grid mesh is assigned to one level and hierarchical index.
+This incremental construction will make it easier to transition from full grids to sparse grids later on.
 \begin{definition}[Grid points]
 Let $x_{l,i}=i2^{-\ell}$ be a one-dimensional grid point coordinate, and let
 \begin{equation}
-x_{\underline{\ell},\underline{i}}=(x_{\ell_1,i_1}, \dots, x_{\ell_d,i_d})
+x_{\underline{\ell},\underline{i}} \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_d,i_d})
 \end{equation}
-be a $d$-dimensional grid point.\\
-The set of grid points of a regular full grid for a given level $\ell$ is then given by
+be a $d$-dimensional grid point. The set of grid points of a regular full grid with boundary is then given by
 \begin{equation}
-X^{\text{f}}_{\ell}=\{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\}.
+X^{\text{fb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\}
+\end{equation}
+and the set of grid points of regular full grid without boundary by
+\begin{equation}
+X^{\text{f}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{1} \leq \ell',  \underline{i} \in H_{\underline{\ell}}\}.
 \end{equation}
 \end{definition}
 
-This incremental construction will make it easier to transition from full grids to sparse grids later on.
-Next, we assign each grid point a supporting basis function, where the basis functions usually stem from one family of basis function, like a family of linear or polynomial basis functions.
-
+Next, we assign each grid point a supporting basis function, where the basis functions usually stem from one family of basis functions, like a family of linear or polynomial basis functions.
 \begin{definition}[Basis functions]
 Let $\phi_{\ell,i}(x)$ be univariate basis functions for the one-dimensional grid points $x_{\ell,i}$.\\
-The multivariate $d-$dimensional basis function at a grid point $x_{\underline{\ell},\underline{i}}$ is then obtained by applying the tensor-product approach to get
+By applying the tensor-product approach at a grid point $x_{\underline{\ell}}$, we obtain the multivariate $d-$dimensional basis function
 \begin{equation}
 \phi_{\underline{\ell},\underline{i}} \coloneqq \prod_{k=1}^{d} \phi_{\ell_k,i_k}.
 \label{eq:basis_functions}
@@ -385,176 +384,184 @@ The multivariate $d-$dimensional basis function at a grid point $x_{\underline{\
 
 \begin{definition}[Full grid]
 Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.\\
-The grid is the span of the basis functions over all grid points
+The span of the basis functions over all boundary grid points
 \begin{equation}
-V_{X}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X\}.
+V^{\text{fb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{fb}}_{\ell}\}
 \end{equation}
-For a set of full grid points $X^{\text{f}}_{\ell}$, the approximation space
+is referred to as a regular full boundary grid of level $\ell$ and span over all non-boundary grid points
 \begin{equation}
-V^{\text{f}}_{\ell}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{f}}_{\ell}\}
-\label{eq:full_grid}
+V^{\text{f}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{f}}_{\ell}\}
 \end{equation}
-is referred to as a full grid of level $\ell$.
+is referred to as a regular full grid.
 
+\label{def:full_grid}
 \end{definition}
 
 
 \section{Sparse grids}
 
-The span $V^{\text{f}}_{\ell}$ of a full grid can be decomposed into a direct sum of subspaces in a hierarchical way, to allow for a more granular selection of which subspaces to keep.
-Keeping only a subset of subspaces results in a worse interpolation error compared to full grids with asymptotic error including a logarithmic factor with $\mathcal{O}(h^2 (\log h^{-1})^{d-1})$.
+Full grids, as defined in \cref{def:full_grid}, can be decomposed into a direct sum of subspaces in a hierarchical way, to allow for a more granular selection of which subspaces to keep.
+Keeping only a subset of subspaces results in a worse interpolation error compared to full grids with the asymptotic error $\mathcal{O}(h^2 (\log h^{-1})^{d-1})$ including an additional logarithmic factor.
 The amount of grid points however only grows with $\mathcal{O}(h^{-1} (\log h^{-1})^{d-1})$, which is a significant improvement over full grids and makes it possible to apply the sparse grid technique to higher dimensional problems than full grids.
-
 \begin{definition}[Sparse grid points]
-Let $\ell \in $ be a level.\\
-Using the hierarchical index sets $H_{\underline{\ell}}$, we define the set of grid points for a regular sparse grid of level by
+Let $\ell$ be a level. Using the hierarchical index sets $H_{\underline{\ell}}$, we define the grid points for a regular sparse boundary grid as
 \begin{equation}
-X^{\text{s}}_{\ell}=\{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{i} \in H_{\underline{\ell}}\}.
+X^{\text{sb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{i} \in H_{\underline{\ell}}\}
+\end{equation}
+and the grid points for a regular sparse grid as
+\begin{equation}
+X^{\text{s}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell', \underline{i} \in H_{\underline{\ell}}\}.
 \end{equation}
 \end{definition}
 
 \begin{definition}[Sparse grid]
 Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X^{\text{s}}_{\ell}$ a set of sparse grid points.\\
-The span of the basis functions
+The span of the basis functions over all boundary grid points
 \begin{equation}
-V^{\text{s}}_{\ell}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{s}}_{\ell}\},
-\label{eq:sparse_grid}
+V^{\text{sb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\},
 \end{equation}
-also called the approximation space, is referred to as a sparse grid of level $\ell$.
+is referred to as a regular sparse boundary grid, and the span span over all non-boundary grid points
+\begin{equation}
+V^{\text{s}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{s}}_{\ell}\},
+\end{equation}
+is referred to as a regular sparse grid.
+\label{def:sparse_grid}
 \end{definition}
-
-A visualization of the hierarchical splitting of the grid point set and the construction of sparse grids and full grids can be seen in \cref{fig:grid_construction}.
 
 \newpage
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
 \begin{figure}[H]
         \centering
-\begin{minipage}{.73\textwidth}
+\begin{minipage}{.71\textwidth}
         \centering
   \includegraphics[width=.8\linewidth]{graphics/grid_subspaces}
-  \subcaption{Hierarchical grid point splitting}
+  \subcaption{Hierarchical grid point set splitting}
     \end{minipage}%
-    \begin{minipage}{0.26\textwidth}
+    \begin{minipage}{0.28\textwidth}
         \centering
   \includegraphics[width=.8\linewidth]{graphics/full_grid}
-  \subcaption{Grid points of $V^{\text{f}}_{\ell}$}
+  \subcaption{Grid points of $V^{\text{fb}}_{3}$}
 \vspace{4.5mm}
   \includegraphics[width=.8\linewidth]{graphics/sparse_grid}
-  \subcaption{Grid points of $V^{\text{s}}_{\ell}$}
+  \subcaption{Grid points of $V^{\text{sb}}_{3}$}
     \end{minipage}
     
 \vspace{2.5mm}
 \delimit
 
-\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $l=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
+\captionof{figure}{Construction of different grids from hierarchical grid point set increments. The full boundary grid $V^{\text{fb}}_{3}$ is a sum of all grid increments outlined in \green, the sparse boundary grid $V^{\text{sb}}_{3}$ is a sum of all grid increments outlined in \red. Boundary grid point increments are shaded in \grey.}
 \label{fig:grid_construction}
 \end{figure}
 \end{mdframed}
 
-In related sparse grid literature, the hierarchical decomposition of sparse grids of \cref{eq:sparse_grid}, which can be seen in \cref{fig:grid_construction}, is realized through the decomposition of subspaces instead of decomposition of the grid point set.
-This allows for easier proofs of the approximation qualities for sparse grids, but is not required here.
-
+In related sparse grid literature, the hierarchical decomposition of sparse grids, which can be seen in \cref{fig:grid_construction}, is realized through the decomposition of subspaces instead of decomposition of the grid point set.
+This allows for easier proofs of various approximation qualities, but is not required here.
+It is sufficient to see that a grid construction through hierarchical subspaces is equivalent:
 \begin{definition}[Hierarchical subspaces]
 The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ for of a grid increment indentified by a multi level index $\underline{\ell}$,
 \begin{equation}
-W_{\underline{\ell}}=\text{span}~ \{\phi_{\underline{\ell'},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
+W_{\underline{\ell}} \coloneqq \text{span}~ \{\phi_{\underline{\ell'},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
-is defined as the hierarchical subspace of $\underline{\ell}$.\\
+is the hierarchical subspace of $\underline{\ell}$.\\
 A sparse grid can then also be represented as a direct sum of hierarchical subspaces:
 \begin{equation}
-V^{\text{s}}_{\ell}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{s}}_{\ell}\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell} W_{\underline{\ell'}}
+V^{\text{sb}}_{\ell}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}
 \label{eq:direct_sum}
 \end{equation}
 \end{definition}
-
-The sparse grid construction with \cref{eq:sparse_grid} is equal to \cref{eq:direct_sum}, as the only difference between both is that the same hierarchical decomposition is realized in different stages of the sparse grid construction.
-
+The sparse grid construction of \cref{def:sparse_grid} is equal to \cref{eq:direct_sum}, as the only difference between both is that the same hierarchical decomposition is realized in different stages of the sparse grid construction.
 
 \section{Basis functions}
 
 The multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$, as defined in \cref{eq:basis_functions}, are a central aspect of sparse grids.
-Many different basis function families exist, each with various levels of complexity, capabilities, and properties
-In this section we will take a look at all the different basis functions used in this thesis and the reasons for using them.
+Many different basis function families exist, each with various levels of complexity, capabilities, and properties.
+In this section we will take a look at all the different basis functions used in this thesis and some reasons for using them.
 
-\begin{description}
-\item[Hat functions] A one-dimensional hat function is defined by $h(x)=\max(1 - |x|,0)$. They can be transformed into basis functions for a level $l$ and index $i$ with $\phi^h_{l,i}(x) \coloneqq h(2^lx-i)$. It has the value of $1$ at their grid support point $\phi^h_{l,i}(x_{l,i})=1$ and $0$ at their neighbouring grid points $\phi^h_{l,i}(x_{l,i-1})=\phi^h_{l,i}(x_{l,i-1})=0$. They are not differentiable at their grid point.
+\vspace{0.3em}
+\textbf{Hat basis }
+A one-dimensional hat function is defined by $h(x) \coloneqq \max(1 - |x|,0)$.
+They can be transformed into basis functions for a level $l$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^lx-i)$.
+It holds that $\phi^h_{\ell,i}(x_{\ell,i})=1$ and $\phi^h_{\ell,i}(x_{\ell,i-1})=\phi^h_{\ell,i}(x_{\ell,i-1})=0$.
+They are also not differentiable at their supporting grid point $x_{\ell,i}$.
 
-\item[Prewavelets] A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
+\vspace{0.3em}
+\textbf{Modified basis }
+One method of removing the need of using boundary grid points, at least to some degree, are modified basis functions.
+These basis functions do not require grid points at the boundary and instead extrapolate the values at the boundaries from the grid points closest to the boundaries using a modified version of normal basis functions.
+It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by defining the modified basis as follows:
+\begin{equation}
+\phi^{\text{mod}}_{\ell,i}(x) \coloneqq
+\begin{cases}
+1 &, \ell=1\\
+\phi^{\text{left}}_{\ell}(x)&, \ell>1, i=1\\
+\phi^{\text{right}}_{\ell}(x)&, \ell>1, i=2^l - 1\\
+\phi_{\ell,i}(x)&, \text{else}
+\end{cases},
+\nonumber
+\end{equation}
+where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special boundary extrapolation functions.
+Usually $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are similar with regards to their structure of the normal basis functions $\phi_{\ell,i}$, e.g. a hat basis is usually modified with special hat functions.
+
+\vspace{0.3em}
+\textbf{Splines }
+One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
+They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
+
+\vspace{0.3em}
+\textbf{Prewavelets }
+A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
 Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
-One of these properties is the orthogonality property with $\langle \phi_{i},\phi_{j} \rangle = 0$ for all wavelets with $i \neq j$.
-Furthermore,  the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
+One of these properties is the orthogonality property with $\langle \phi_{\ell, i},\phi_{\ell, j} \rangle = 0$ for all wavelets with $i \neq j$.
+Furthermore, the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
 One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
 In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
 However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
-
-\item[Modified basis] One method of removing the need of using boundary grid points at least to some degree are modified basis functions.
-These basis functions do not require grid points at the boundary.
-Instead at every grid level, they extrapolate the values at the boundaries from the grid points closest to the boundaries using a special kind of basis function.
-Therefore, it is possible to modify any non-boundary basis $\phi_{l,i}$ by defining the modified basis as follows:
-\begin{equation}
-\phi^{\text{mod}}_{l,i}(x) \coloneqq
-\begin{cases}
-1 &, l=1\\
-\phi^{\text{left}}_{l}(x)&, l>1, i=1\\
-\phi^{\text{right}}_{l}(x)&, l>1, i=2^l - 1\\
-\phi_{l,i}(x)&, \text{else}
-\end{cases}
-\nonumber
-\end{equation}
-where $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are the special boundary extrapolation functions.
-Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with regards to their structure of the normal basis functions $\phi_{l,i}$, e.g. a hat basis is usually modified with special hat functions.
-
-\item[Splines] One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
-They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
-\end{description}
 
 \section{Grid surrogate construction}
 \label{sec:gsc}
 
 The are multiple different approaches of constructing a sparse grid surrogate to approximate a model function.
-A sparse grid surrogate $\hat{f}$ is a linear combination of all basis functions as $\hat{f} \in V^{\text{s}}_{\ell}$.
-Therefore, to represent $\hat{f}$, each basis function is assigned a weight, also called hierarchical surplus, $\alpha_{\underline{\ell},\underline{i}}$.
-
+A sparse grid surrogate $\hat{f} \in V^{\text{s}}_{\ell}$ is a linear combination of all basis functions.
+Therefore, to represent $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight, also called hierarchical surplus, $\alpha_{\underline{\ell},\underline{i}}$.
 \begin{definition}[Sparse grid surrogates]
 Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
 Furthermore, let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
-A sparse grid surrogate is then
+A grid surrogate is then a linear combination
 \begin{equation}
 \hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
-\underline{\ell},\underline{i}}(x)
+\underline{\ell},\underline{i}}(x).
 \end{equation}
-In the case of a regular sparse grid, i.e. $X=X^{\text{s}}_{\ell}$, the surrogate simply is
+In the case of a regular sparse grid with $X=X^{\text{sb}}_{\ell}$, the surrogate simply is
 \begin{equation}
-\hat{f}(x) \coloneqq \sum_{|\underline{\ell}|_1 \leq \ell} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
+\hat{f}(x) \coloneqq \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
 \underline{\ell},\underline{i}}(x).
 \end{equation}
 \end{definition}
 
 The interpolation method is the most simple and common sparse grid surrogate construction scheme.
-It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses, $\alpha_{\underline{l},\underline{i}}$.
-The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{l},\underline{i}} \in X \colon f(x)=\hat{f}_{\text{hier}}(x)$.
+It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses, $\alpha_{\underline{\ell},\underline{i}}$.
+The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}_{\text{hier}}(x)$.
 Furthermore, the method requires the model function to be evaluated at every grid point, which means that it requires exactly $|X|$ function evaluations and it can not be used to approximate a function from a given function sample.
 
-Another method of constructing the surrogate is by using a regression approach \cite{}.
+Another method of constructing the surrogate is by using a regression based approach \cite{}.
 In contrast to interpolation, we no longer require the function values at the grid points to interpolate between them.
-Instead, the regression method uses established regression approaches to iteratively improve the $\alpha_{\underline{l},\underline{i}}$. wrt. to the approximation error with the help of train and validation samples taken from the model function and input distribution.
-As a result, the size of the function sample and therefore function evaluations, does no longer have to be equal to the amount of grid points.
-Therefore there is a greater level of flexibility as the amount of model function evaluations and the amount of grid points can vary.
-The basic approach is to solve the least squares problem for $n$ input samples $x_1, \dots, x_n$ with the standard square loss function
+Instead, the regression method uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$. wrt. to the approximation error by using train and validation samples drawn from the model function and input distribution.
+As a result, the size of the function sample and therefore function evaluations, does no longer have to be equal to the amount of grid points, which results in a greater level of flexibility as the amount of model function evaluations and the amount of grid points can vary.
+The basic approach is to solve the least squares problem for $n$ function samples $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
 \begin{equation}
-\epsilon(\hat{f})=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2 
+\varepsilon_{\text{MSE}}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2 
 \end{equation}
 and a regularization parameter $\lambda > 0$ to prevent overfitting.
-I.e. sparse grid based regression tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\Lambda$ and sparse grid level $\ell$ with
+Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\Lambda$ and sparse grid level $\ell$ with
 \begin{equation}
-\hat{f} = \argmin_{\hat{f} \in V^{\text{s}}_{\ell}, ~ \lambda \in \Lambda} \epsilon(\hat{f}) + \lambda R(\hat{f}).
+\hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
 \end{equation}
 
 \section{Spatially adaptive sparse grids}
 
 In many cases, generating a regular sparse grid can be improved upon by introducing adaptivity into the process.
-This allows us to spent more grid points, and therefore be more accurate, in regions that are more important and conversely reduce the amount of grid points is less important regions.
+This allows us to spend more grid points, and therefore be more accurate, in regions that are more important and conversely reduce the amount of grid points is less important regions.
 One method of realizing adaptivity in sparse grids are spatially adaptive sparse grids \cite{}.
 By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
 This creation of new grid points of a parent is called refinement of a grid point.
@@ -608,13 +615,13 @@ Since in this thesis we also assume that the input is distributed according to t
 \end{equation}
 \end{definition}
 We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
-A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X_{\underline{\ell}}$.
+A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X^{\text{s}}_{\ell}$.
 Then during the $m$-th iteration, we first order all leaf grid points $x_i$ with $x_1, \dots, x_p \in X_a^{(k-1)}, ~~ \xi(x_1) \geq \dots \geq \xi(x_p)$ and then refine with $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_r)$.
 Usually, if a leaf grid point is refined, all children are created because selective grid point creation would create additional overhead.
 After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
 The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
 
-The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededing dimensionally adaptive sparse grids \cite{} or the more recent spatially dimension adaptive Sparse Grids \cite{}.
+The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededing  dimensionally adaptive sparse grids \cite{} or dimensionally adaptive sparse grids \cite{}.
 One downside of the classical version of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
 In a dimension reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
 Spatially dimension adaptive Sparse Grids do exactly that, and are therefore better suited for dimension reduction.
@@ -684,59 +691,56 @@ They can also be used to for function approximation with
 \begin{equation}
 f(x) \approx \sum_{i=1}^n \omega_i \varphi(\|x - c_i\|)
 \end{equation}
-In the context of this thesis, only the euclidean distance is used as a distance measure and Gaussian functions \cite{} are used as basis functions.
-They take the following form:
+In the context of this thesis, only Gaussian functions \cite{} with the euclidean distance as a distance measure are used as basis functions:
 \begin{equation}
 \varphi(x)=e^{-(\epsilon \|x - c_i\|)^2}
 \end{equation}
 The only parameter that can be tuned is $\epsilon$, which is referred to as the shape parameter and is used to scale the effects of the input radius.
 
-Given a set of center points, type of basis functions, and shape parameter $\epsilon$, we can calculate the weight coefficients $\omega_i$.
-There are several ways of achieving this.
-It is usually done using linear least squares technique and involves solving an $m \times m$-dimensional system of linear equations.
-This, combined with the fact that exponentially more center points are needed to maintain the same level accuracy when model dimensions increase, also causes this method to suffer from the curse of dimensionality.
+Given a set of center points, type of basis functions, and shape parameter $\epsilon$, we can calculate the weight coefficients $\omega_i$, usually using a linear least squares technique that involves solving an $m \times m$-dimensional system of linear equations.
+This, combined with the fact that exponentially more center points are needed to maintain the same level coverage when model dimensions increase, also causes this method to suffer from the curse of dimensionality.
 
-The reason radial basis functions are mentioned here is because they are almost a polar opposite to the grid based approximation methods.
-Radial basis function surrogates allow arbitrary center points, while Sparse Grid surrogates require a strict, hierarchical, and axis-aligned grid points.
-Furthermore, radial basis functions are fundamentally different to tensor-product based basis functions wrt. to alignment.
-They are not alignment-based, i.e. given a transformation $t(x)$, the approximation quality stays the same when transformation the center points and function inputs, while it changes for tensor-product basis function.
-
-
+The basics of radial basis functions are covered in this thesis, because they are almost a polar opposite to the grid based approximation methods.
+Radial basis function surrogates allow arbitrary center points, while Sparse Grid surrogates require a strict, hierarchical, and axis-aligned grid.
+Furthermore, radial basis functions are fundamentally different to tensor-product based basis functions wrt. to their orientation.
+While tensor product basis functions are strictly axis-aligned, radial basis functions are unaware of the concept of axis-alignment or orientation.
+This property will allow us to use radial basis functions as good comparision references when investigating the effects of basis function alignment.
 
 \section{Sampling}
 
-We assume that the inputs of the model functions are distributed according to multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$, which consists out of $d$ independent distributions $\rho_i$.
-In the coming chapters we will use some Monte-Carlo based methods as a comparision to the presented sparse grid methods.
-For this purpose, even the relatively simple process of sampling a probality distribution can improved in different ways to create better results.
+We assume that the inputs of model functions are distributed according to a multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$, which consists out of $d$ independent distributions $\rho_i$.
+In the coming chapters we will make use of some Monte-Carlo based methods and for this purpose, even the relatively simple process of drawing samples from a probality distribution can improved in different ways to create better results.
 
 \subsection{Quasirandom sequences}
 
 A problem that arises when generating a sequence of random samples using a pseudorandom number generator to draw samples from the input distribution $\rho$ is that the sequence does not cover the function domain as even and quick as it theoretically can.
 One solution are low-discrepancy sequences, also called quasirandom sequences to distinguish them from pseudorandom sequencens.
 These sequences are more evenly distributed than pseudorandom samples and therefore have a lower discrepancy.
-As a result they cause the result of a Monte-Carlo quadrature to converge faster than one using the same amount of pseudorandom samples.
+As a result, they cause the result of various Monte-Carlo methods to converge faster than one using the same amount of pseudorandom samples.
 A commonly used sequence is the Sobol sequence, which is also used in this thesis.
 It is generated using the Antonov and Saleev variant, which uses the Gray code of $i$ to construct the $i$-th sample.
 
 \subsection{Inverse transform sampling}
+
 To extend the generation pseudorandom samples to non-uniform distributions, one commonly used approach are inverse transformations.
 \begin{definition}[Inverse transformation]
-Given a cumulative distribution function $F_X$ that describes the distribution of the random variable $X$, we define the transformation $T_X$ for the random variable $X$ with
+Given a cumulative distribution function $F_X$ that describes the distribution of the random variable $X$, we define the transformation for the random variable
 \begin{equation}
-T_X \colon [0,1] \mapsto \mathds{R}, ~ T_X(U)=X
+T_X \colon [0,1] \mapsto \mathds{R}, ~ T_X(U)=X,
 \end{equation}
 where $U \sim \mathcal{U}[0,1]$ is a uniformly distributed random variable.
 \end{definition}
-This transformation is then exactly the inverse of $F_X$ with $T_X=F_X^{-1}$, hence the name inverse transform sampling.
+
+This transformation is exactly the inverse of $F_X$ with $T_X=F_X^{-1}$, hence the name inverse transform sampling.
 Unfortunately, the inverse $F_X^{-1}$, also called the quantile function, does not always have a closed-form solution.
 There exist many different algorithms to approximate the quantile function for commonly used distributions.
 The variant that is used in this thesis is presented in \cite{} and is basically a combination of different algorithms that excel for specific ranges of values for $U$.
 The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
 
-\section{Error mesaures}
+\section{Error metrics}
 
-To evaluate the quality of a surrogate $\hat{f}$, we define a couple of error metrics.
-An established and commonly used error metric for function approximation is the $L_2$ error:
+To evaluate the quality of a constructed surrogate $\hat{f}$, we define a couple of error metrics to measure the approximation error and also make it comparable to other surrogates.
+An established and commonly used error metric for function approximation is the $L_2$ error.
 \begin{definition}[$L_2$ error]
 Let
 \begin{equation}
@@ -752,33 +756,27 @@ as the $L^2$ surrogate approximation error.
 \end{definition}
 
 In statistics, to evaluate the accuracy of an estimator, the mean squared error and the root mean squared error are commonly used.
-They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors:
+They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors.
 \begin{definition}[Mean squared error]
-Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
+Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
 \varepsilon_{\text{MSE}}(\hat{f}) = \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2
 \end{equation}
 as the mean squared error for the surrogate based on the given sample.
-\end{definition}
-
-\begin{definition}[Root mean squared error]
-Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
-We then define
+Similarly, we also define
 \begin{equation}
 \varepsilon_{\text{RMSE}}(\hat{f}) = \sqrt{\varepsilon_{\text{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2}
 \end{equation}
 as the root mean squared error for the surrogate based on the given sample.
 \end{definition}
+The RMSE is closely related to the definition of the continous $L_2$ error from \cref{def:l2}, as it is just a discrete version of it.
+It holds that $\lim_{n \to \infty} \varepsilon_{\text{RMSE}}(\hat{f}) = \varepsilon_{\text{$L^2$}}(\hat{f})$.
 
-The RMSE is closely related to the definition of the continous $L_2$ error \cref{def:l2}, as it is just a discrete version of it.
-It holds that $\lim_{n \to \infty} \varepsilon_{\text{RMSE}}(\hat{f}) = \varepsilon_{\text{$L_2$}}(\hat{f})$.
-
-
-Absolute error metrics have the problem of being sensitive to the size of the function values.
-To allow for a comparision of the results between different model functions that have a different range of function values, we also define normalized errors:
+One problem of the introduced error metrics is that they are all sensitive to the size of the function values.
+To improve upon absolute error metrics and allow for comparisions across model functions with different ranges of function values, we define normalized errors.
 \begin{definition}[Normalized root mean squared error]
-Let $\hat{f}$ be the surrogate for the model function $f$ and $S \subseteq \Omega$ a sample with $|S|=n$.
+Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
 \varepsilon_{\text{NRMSE}}(\hat{f}) = \frac{\varepsilon_{\text{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
@@ -828,7 +826,27 @@ Similar to the optimal intrinsic dimension $r^\ast$, we are not concerned about 
 With the introduction of approximations into the intrinsic dimension definition, there is also room for a tradeoff between  intrinsic dimension and approximation error.
 The main goal to effectively make use of lower dimensional function approximations is therefore finding functions $t$ and $f_t$ that provide a good tradeoff between dimension and approximation error.
 
-\section{Motivation}
+To achieve a good convergence rate and general representativeness of a drawn set of samples, e.g. for quadrature, it is vital to achieve low-discrepancy and cover the input space $\Omega$ more evenly.
+Under normal circumstances, to achieve the same discrepancy in a high-dimensional space as in a low-dimensional space,
+exponentially more samples are required.
+However, combining this requirement with the concept of intrinsic dimension \cref{def:intrinsic}, we observe that we effectively only need to cover $\Omega_r$ and adapt any operation that normally works on $\hat{f}$ to instead work on the lower dimensional function $\hat{f_t}$.
+The main advantage therefore is that the lower amount of samples required to achieve a good coverage of the definition space of $f_t$ mainly depends on $r$ and not on $d$.
+\begin{definition}[Transformed distribution]
+Let $t^{-1}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}$ be the inverse transformation function.
+We then define the transformed distribution as
+\begin{equation}
+\rho_t \colon \Omega_r \to \mathds{R_+}, ~~ \rho_t(x_r)=\int_{t^{-1}(x_r)} \rho(x) \; \text{d}x 
+\end{equation}
+This is also a distribution since it holds that
+\begin{equation}
+\int_{\Omega_t} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{-1}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
+\end{equation}
+\end{definition}
+This means that the effective distribution type will change and for example a uniform distribution $\rho$ will often be transformed into a non-uniform distribution $\rho_t$.
+Furthermore, the quality and properties of transformed low discrepancy sequences changes compared to its original sequence \cite{}.
+To effectively sample from $\rho_t$, it is still easier to just draw the samples $x_1, \dots, x_n$ from $\rho$ directly and feed them into the transformation function to obtain $(t_1, \dots, t_n)=(t(x_1), \dots, t(x_n))$.
+
+\section{Limitations of sparse grids}
 
 All grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality to some degree.
 This means that as the dimension of the models grow, the amount of grid points and the model function evaluations required to generate a sparse grid grow too fast and therefore put a limit on how many dimensions are feasible.
@@ -956,30 +974,6 @@ A fundamental property of any axis-aligned mesh-based method that uses basis fun
 In contrast, other basis functions like radial basis functions do not depend on the alignment of the function terms they are trying to approximate, i.e. they can be seen as orientation agnostic.
 In turn this means that an effective dimension reduction with conventional sparse grids based methods is highly dependent on the alignment of the model function.
 Without adding another layer of flexibility with an input transformation function, sparse grids can not use their full potential in many cases, as we have seen with function $f_2$.
-
-\section{Transformed sampling}
-
-To achieve a good convergence rate and general representativeness of a drawn set of samples, e.g. for quadrature, it is vital to achieve low-discrepancy and cover the input space $\Omega$ more evenly.
-Under normal circumstances, to achieve the same discrepancy in a high-dimensional space as in a low-dimensional space,
-exponentially more samples are required.
-However, combining this requirement with the concept of intrinsic dimension \cref{def:intrinsic}, we observe that we effectively only need to cover $\Omega_r$ and adapt any operation that normally works on $\hat{f}$ to instead work on the lower dimensional function $\hat{f_t}$.
-The main advantage therefore is that the lower amount of samples required to achieve a good coverage of the definition space of $f_t$ mainly depends on $r$ and not on $d$.
-
-\begin{definition}[Transformed distribution]
-Let $t^{-1}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}$ be the inverse transformation function.
-We then define the transformed distribution as
-\begin{equation}
-\rho_t \colon \Omega_r \to \mathds{R_+}, ~~ \rho_t(x_r)=\int_{t^{-1}(x_r)} \rho(x) \; \text{d}x 
-\end{equation}
-This is also a distribution since it holds that
-\begin{equation}
-\int_{\Omega_t} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{-1}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
-\end{equation}
-\end{definition}
-
-This means that the effective distribution type will change and for example a uniform distribution $\rho$ will often be transformed into a non-uniform distribution $\rho_t$.
-Furthermore, the quality and properties of transformed low discrepancy sequences changes compared to its original sequence \cite{}.
-To effectively sample from $\rho_t$, it is still easier to just draw the samples $x_1, \dots, x_n$ from $\rho$ directly and feed them into the transformation function to obtain $(t_1, \dots, t_n)=(t(x_1), \dots, t(x_n))$.
 
 \section{Linear hypercube transformations}
 
@@ -1416,7 +1410,7 @@ The completely \red circle represents the sample point $x$ and other sample poin
 
 \subsection{Approximation quality}
 
-To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus purely on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
+To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
 Two example functions are investigated for this purpose, wrt. the average gradient approximation error $\varepsilon_{\text{grad}}$ \cref{eq:e_grad} and the subsequent average active subspace approximation error $\varepsilon_{\text{AS}}$ \cref{eq:e_as}.
 
 \vspace{2mm}
@@ -1427,11 +1421,10 @@ f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
 \nonumber
 \end{equation}
 
-As seen on the left in figure \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down as expected.
+As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
-The random neighbour methods do not converge but are instead in a range that is even worse compared to the finite differences approximation with a very big step size.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$.
-It can be seen that the average gradient error for all random neighbour methods is a little bit worse than finite differences with $h=0.5$, which is consistent with the average distance differences between the two methods.
+The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
 
 
 \newpage
@@ -1440,22 +1433,20 @@ It can be seen that the average gradient error for all random neighbour methods 
 \centering
 	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
 \delimit
-	\captionof{figure}{Mean Active Subspace error calculated with the previously introduced methods compared to the actual Active Subspace for $f_1$ over 10 iterations .}
+	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
 	\label{fig:as_errors_f1}
 \end{figure}
 \end{mdframed}
 
-As a result of the approximation qualities shown on the right in figure \cref{fig:as_errors_f1}, the gradient approximation qualities behave similar.
-The random neighbour methods are still in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
+The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
 The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
-Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be better.
-It can also be observed that the gradient approximation quality does not completely correlate with the active subspace approximation quality.
-While for example the nearest neighbour methods have a similar gradient approximation quality as finite differences with $h=0.1$, the active subspace computed by the nearest neighbour method has a far better quality than the finite differences method with $h=0.1$.
+Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be a little bit better.
+It can also be observed that the gradient approximation quality does not exactly correlate with the active subspace approximation quality.
+While the nearest neighbour methods have a similar gradient errors compared to finite differences with $h=0.1$, the active subspace computed by the nearest neighbour method has a far better quality than the finite differences method with $h=0.1$.
 
 \vspace{2mm}
 \textbf{More complex function~}
-The second case study is a 20-dimensional function:
-
+The second case study is a 20-dimensional function, which consists out of several terms of varying dimensionality and type, where no term obviously dominates the others:
 \begin{align}
 \begin{split}
 f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
@@ -1467,41 +1458,45 @@ f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
 \end{split}
 \end{align}
 
-It consists out of several terms of varying dimensionality and type, where no term obviously dominates the others.
-
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
-	\includegraphics[width=\textwidth]{graphics/as_grad_errors_f2}
+	\includegraphics[width=\textwidth]{graphics/as_errors_f2}
 	
 \delimit
-	\captionof{figure}{Average $L^2$ error of gradients calculated with the previously introduced methods compared to the actual gradients for $f_2$.}
+	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_2$ as the average over 10 iterations..}
 	\label{fig:as_grad_errors_f2}
 \end{figure}
 \end{mdframed}
 
-As seen in figure \cref{fig:as_grad_errors_f2}, the finite differences approximation error converges towards zero as the step size goes down as expected.
+TODO: Right plot wrong
 
 \subsection{Limitations}
 
-Active subspaces are
+Active subspaces are however not a perfect indicator on which active directions are suitable for a linear transformation construction, since they can be misled.
 A larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector $v_i$ with $\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]$ \cite{CG14}.
 However, a high rate of average squared change does not necessarily indicate that a direction $v_i$ is worth keeping.
-For example, we can create a simple function with
+For example, we can create the simple function
 \begin{equation}
 f(x_1, x_2)=10x_1 + \frac{1}{10} \sin(100 \pi x_2)
 \end{equation}
 that illustrates the limitations of active subspaces.
-The optimal active direction worth keeping would be the first component only, as the second term can be seen as a highly changing noise term that does not effect the approximation error if removed, as the amplitude of the sin is small.
-However, as the average squared directional derivative along the second dimension $(0,1)^T$ is way higher than along the first one, the calculated active subspace is biased heavily along the second dimension.
+The optimal active direction worth keeping would be the first component only, as the second term can be seen as a highly changing noise term that does not effect the approximation error a lot if removed, as the amplitude of the sinus is small.
+However, as the average squared directional derivative along the second dimension $(0,1)^T$ is way higher than along the first $(1,0)^T$, the calculated active subspace is biased heavily along the second dimension.
 
 A positive aspect of the active subspace approximation methods is that they introduce a regularization through discretization \cite{}, i.e. as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
-In certain cases, like the one presented in this section, this will lead to better function approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences, as we will show later on.
+In certain cases, like the example function presented in this section, this will lead to better function approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences.
 
-\section{Other types of transformations}
+\section{Summary and outlook}
+
+This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
+We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
+The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
+We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W*$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
 
 Until now, the focus was primarily on deterministic linear transformations, because they are relatively easy to construct using active subspaces.
-However, in theory we can use arbitrary transformation functions.
+However, in theory we can construct and use arbitrary transformation functions.
+This section will briefly cover a few alternative types of transformations that are not the primary focus of this thesis, but do show some potential that could be investigated further.
 
 \subsection{Random linear transformations}
 \label{sec:rt}
@@ -1538,7 +1533,7 @@ Of course this can concept can be expanded upon with handling multiple periodic 
 A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
 This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown in \cref{eq:per} by using the transformation
 \begin{equation}
-t_p(x_1,x_2)=\left[8 \left(x_1 \text{ mod } p\right), 8 \left(x_2 \text{ mod } p\right)\right]^T.
+t_p(x_1,x_2)=\left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \left(x_2 \text{ mod } p\right)\right]^T.
 \nonumber
 \end{equation}
 
@@ -1569,40 +1564,29 @@ Compared to Active Subspaces, calculating the Active Manifold is more complex an
 Furthermore, defining a transformation function that maps from $\Omega$ onto the local one-dimensional space of the curve is way more complex and can be constructed in many ways.
 Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
 
-\section{Conclusion}
-
-This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
-We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
-The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
-We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W*$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
-
-Now that we are able to create a transformation function $t(x)$
 
 \chapter{Transformed surrogates}
 \label{chap:c4}
 
 Once a transformation function $t(x)$ has been created, the next step is creating a surrogate in the reduced input space $\Omega_r$.
 As we will see in this chapter, this is not trivial to do with sparse grids and requires special care as there are several challenges that come with the usage of input transformations.
-Some of these are specific to sparse grids while others are independent of the used surrogate type.
-
+Some of these are specific to sparse grids, while others are independent of the used surrogate type.
 
 \section{Transformed input space}
 
 All transformed inputs form the transformed input space, which is a part of the reduced surrogate space $\Omega_r$.
 The transformation function was constructed in the last chapter in such a way that every transformed inputs lies in $\Omega_r$, while also applying scaling to use as much space of $\Omega_r$ as possible.
-
 \begin{definition}[Transformed input space]
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function.
 We define the transformed input space as
 \begin{equation}
-T=\{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r
+T=\{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r.
 \end{equation}
 \end{definition}
 
 The main difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ might not be one.
 As we will show later, in many cases $T$ is not a unit hypercube and it holds that $T \subset \Omega_r$.
 We should strive to have $T$ cover $\Omega_r$ as much as possible to not make a portion of $\Omega_r$ go unused when constructing the surrogate.
-
 \begin{definition}[Unusued reduced surrogate inputs]
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function, and let $U_t=T \setminus \Omega_r$ be the unused reduced surrogate space.
 Then
@@ -1612,20 +1596,18 @@ Then
 is the share of unused inputs of the reduced surrogate space.
 \end{definition}
 
-The greater $U_t$ and therefore the unused input share $\tilde{u}_t$, the more grid points can potentially be generated outside of $T$ if sparse grids are created in a regular way instead of employing adaptivity.
+The greater $U_t$ and therefore the unused input share $\tilde{u}_t$, the more grid points can potentially be generated outside of $T$, if sparse grids are created in a regular way instead of employing adaptivity.
 Note that even if a grid point lies outside of $T$, it can still contribute to some degree to the approximation error of the surrogate if the support of the basis function $\phi$ intersects with $T$.
 Thus, grid points are only completely unused if their basis function support does not intersect with $T$.
-Other surrogate types do not have the same issue, as RBFs for example can freely choose their support points and therefore automatically adapt to $T$.
-
+Other surrogate types do not have the same issue, as radial basis functions for example can freely choose their support points and therefore automatically adapt to $T$.
 
 \section{Method selection}
 
-In the standard approach, we make use of sparse grid interpolation, which is able to generate an accurate interpolant quickly as described in \cref{sec:gsc}.
+Usually, the standard sparse grid technique makes use of the sparse grid interpolation method, which is able to generate an accurate interpolant quickly as described in \cref{sec:gsc}.
 However, as we will show in this section, sparse grid interpolation is not suitable for many scenarios with transformed sparse grids and we will therefore differentiate between two cases.
 If it holds that $r=d$, i.e. we do not perform a dimension reduction, the transformation can be seen as orientation changing only.
 In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective and it maps from $\Omega$ into $T \subseteq \Omega$.
-\cref{fig:aligned_grid} illustrates this case.
-
+\Cref{fig:aligned_grid} illustrates this case.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -1633,15 +1615,14 @@ In that case, if a linear transformation is created according to the rules of th
 \begin{minipage}{.49\textwidth}
         \centering
   \captionof{figure}{Illustration of a possible case with $r=d=2$. The \beige square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$. The \grey square in top right corner represents the support of the grid point in its center.}
+\label{fig:aligned_grid}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
         \centering
    \includegraphics[width=0.8\linewidth]{graphics/aligned_grid}
     \end{minipage}
-\label{fig:aligned_grid}
 \end{figure}
 \end{mdframed}
-
 
 It is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we define how to treat function evaluations for grid points outside of $\Omega$.
 For that we can either define a rule on how to treat these function evaluations, or ensure that grid points outside of $T$ never are created.
@@ -1659,12 +1640,12 @@ f(x)&, \text{if $x \in \Omega$}\\
 \end{equation}
 or evaluate the model function outside of $\Omega$ with $f'_{\text{ext}}(x)=f(x)$.
 As the transformation function is an automorphism of $\Omega$ when $r=d$, it is invertible for elements $t \in T$ and the inverse function $t^{-1} \colon T \mapsto \Omega$ can easily be constructed as $t$ is linear.
-We can extend the inverse transformation $t^{-1}$ to accept all elements $x \in \Omega$ without a problem with $t^{-1}_{\text{ext}} \colon \Omega \mapsto \mathds{R}$ and use it to create the function $\tilde{f}(x)=f'(t^{-1}_{\text{ext}}(x))$ that can be used for sparse grid interpolant creation.
+We can extend the inverse transformation $t^{-1}$ to accept all elements $x \in \Omega$ without a problem with $t^{-1}_{\text{ext}} \colon \Omega \mapsto \mathds{R}^d$ and use it to create the function $\tilde{f}(x)=f'(t^{-1}_{\text{ext}}(x))$ that can be used for sparse grid interpolant creation.
 
-However, if we perform a dimension reduction with $r < d$, we can no longer effectively make use of sparse grid interpolation as the transformation is longer invertible, as many inputs can be projected onto one point with $t(x_1)=\dots=t(x_n)$.
+However, if we perform a dimension reduction with $r < d$, we can no longer effectively make use of sparse grid interpolation as the transformation is longer invertible because many inputs can be projected onto one point with $t(x_i)=\dots=t(x_j)$.
 We are then dealing with data that might be, depending on the model function and the transformation, very noisy and there also might be multiple different values for the same inputs, with
 \begin{equation}
-t(x_i)=t(x_j), f(x_i) \neq f(x_j), ~ x_i \neq x_j
+t(x_i)=t(x_j), ~ f(x_i) \neq f(x_j), ~ x_i \neq x_j
 \end{equation}
 As a result, the transformed surrogate construction is usually an ill-posed problem for $r < d$, and we have to employ sparse grid based regression methods to successfully create a surrogate for the transformed data.
 
@@ -1694,9 +1675,9 @@ The original function samples
 \begin{equation}
 S=\{(x_1, f(x_1), \dots, (x_n, f(x_n))\} \subseteq \Omega \times \mathds{R}
 \end{equation}
-that were generated randomly according to the given input probability distribution $\rho$, are transformed to obtain the transformed sample
+that were drawn randomly from to the given input probability distribution $\rho$, are transformed to obtain the transformed sample
 \begin{equation}
-S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
+S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}.
 \end{equation}
 We are aiming to construct the surrogate function $\hat{f}_t$ using sparse grids with the sparse grid point set $X$ and basis functions $\phi_{\underline{l},\underline{i}}$ for the transformed sample $S_t$ with
 \begin{equation}
@@ -1705,7 +1686,7 @@ We are aiming to construct the surrogate function $\hat{f}_t$ using sparse grids
 
 The basic approach would be to solve the least squares problem with the standard square loss function
 \begin{equation}
-\epsilon(\hat{f}_t)=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}_r(t(x_i)))^2 
+\varepsilon_{\text{MSE}}(\hat{f}_t)=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}_r(t(x_i)))^2 
 \end{equation}
 
 Since the surrogate construction for a transformation is usually an ill-posed problem, might contain random noise, and we are calculating a regressed function only based on the transformed samples $S_t$, the regression method used employs regularization as well to prevent overfitting.
@@ -1721,58 +1702,48 @@ The regression algorithm also provides the ability to make use of spatially adap
 \section{Multifidelity surrogates}
 \label{sec:lofi}
 
-The construction of the best possible Sparse Grid surrogate, given inputs, a transformation, and set of possible configuration parameters can become very computationally expensive, since every parameter combination has to be evaluated.
+The construction of the best possible Sparse Grid surrogate, given a function sample, a transformation, and set of possible configuration parameters can become very computationally expensive, since every parameter combination has to be evaluated to determine the best one.
 To mitigate this problem, we employ the concept of multifidelity simulations \cite{}, i.e. reducing the cost of parametrization by using low fidelity Sparse Grids and datasets to evaluate a parameter combination and only using high fidelity Sparse Grids and datasets when creating the final surrogate using the determined to be optimal parameters.
 
 A low fidelity Sparse Grid surrogate $\hat{f}^l$ has less grid points compared to an otherwise identical high fidelity Sparse Grid surrogate $\hat{f}^h$.
 This means that the level of $\hat{f}^l$ is lower and less or not refinements at all are used.
-It is vital that the used low fidelity surrogates still stay representative when comparing the errors for different parameter combinations.
+It is vital that the used low fidelity surrogates still stay comparable when evaluating the errors for different parameter combinations.
 They don't have to be representative of the high fidelity surrogate error, but should fullfil the following property:
 \begin{equation}
-\epsilon(\hat{f}_1^l) < \epsilon(\hat{f}_2^l) \Rightarrow \epsilon(\hat{f}_1^h) < \epsilon(\hat{f}_2^h)
+\varepsilon(\hat{f}_1^l) < \varepsilon(\hat{f}_2^l) \Rightarrow \varepsilon(\hat{f}_1^h) < \varepsilon(\hat{f}_2^h)
 \end{equation}
-i.e. they should be indicative of the comparative quality of their high fidelity surrogates.
+i.e. they should be indicative of the comparative quality of their high fidelity surrogates for an error metric.
 
-This multifidelity approach will also be used in later chapters in a more extended fashion to also evaluate multiple different transformations to choose the best one.
-As already mentioned, the ability to evaluate transformations is critical for the random transformation method, as it allows for the generation and evaluation of many more transformation to choose the best from.
+This multifidelity approach will also be used in later chapters in a more extensive fashion to also evaluate multiple different transformations to choose the best one.
+The ability to evaluate quickly transformations is especially critical for the random transformation method, as it allows for the generation and evaluation of many transformations to choose the best from.
 
 \section{Operations on transformed surrogates}
 
-Now that a surrogate has been created and we can approximate the model function with $f(x) \approx \hat{f}_r(t(x))$,
-we can look at the differences when using transformed surrogates compared to the standard case of directly approximating the model function with $f(x) \approx \hat{f}(x)$ and not using a transformation.
+Now that a surrogate has been created and we can approximate the model function with $f(x) \approx \hat{f}_t(t(x))$,
+we can look at the differences when working with transformed surrogates compared to the standard case of sparse grid interpolation surrogates without using a transformation function in between.
 
 \textbf{Differentiation }
 Assuming that the surrogate uses a basis that can be differentiated easily, such as B-Splines, the gradient can be approximated using the chain rule and the gradient function of the transformed surrogate with
 \begin{equation}
-\nabla f(x) \approx \nabla \hat{f}_t(t(x)) = \nabla (\hat{f}_t \circ t)(x)=(Dt(x))^T \nabla \hat{f}_t(t(x))
+\nabla f(x) \approx \nabla \hat{f}_t(t(x)) = \nabla (\hat{f}_t \circ t)(x)=(Dt(x))^T \nabla \hat{f}_t(t(x)).
 \end{equation}
+For a linear transformation, $Dt(x)$ can easily be calculated and we can therefore perform a differentation just as before.
 
 \vspace{1em}
-\textbf{Inverting the transformation  }
-For certain operations it is necessary to define the inverse of the transformation function.
-For this we define the inverse transformation as follows:
+\textbf{Optimization}
+To calculate the maximum $x^\text{max} \coloneqq \argmax_{x \in \Omega} f(x)$ or minimum $x^\text{min} \coloneqq \argmin_{x \in \Omega} f(x)$ of the model function, one can also optimize the surrogate. There exist many different algorithms, especially for B-Spline basis functions presented in \cite{}.
+However, we have to keep in mind that not every element $x_r \in \Omega_r$ is actually transformed onto, i.e. some $x_r \notin T$.
+Therefore a constrained optimization has to be performed on the surrogate first with
 \begin{equation}
-t^{\text{inv}}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}
+x_{r}^\text{max} \coloneqq \argmax_{x_r \in \Omega_r} \hat{f}(x_r), ~ x_r \in T.
 \end{equation}
-In the case of a linear dimensionality preserving transformation, it holds that $|t^{\text{inv}}(x_{t})| \in \{0,1\}$.
-Otherwise, we can't infer anything about the cardinality of the inverse, i.e. $|t^{\text{inv}}(x_{t})| \geq 0$.
-Luckily there is no need to compute $t^{\text{inv}}(x_{t})$. Instead for conducting operations on the surrogate, it suffices to determine wether a point $x_t \in \Omega_t$ is unused, i.e. $|t^{\text{inv}}(x_{t})| = 0$, which can be done quickly.
+
+Afterwards, at least in the dimensionality preserving transformation with $r=d$, we then can obtain the maximum $x^\text{max}$ with $x^\text{max}=t^{-1}(x_{r}^\text{max})$, since $x_{r}^\text{max} \in T$.
+One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
+Therefore another non sparse grid based optimization can be performed on the set $t^{-1}(x_{r}^\text{max})$, to get a good maximum estimate.
 
 \vspace{1em}
-\textbf{Transformed distribution}
-The input probability distribution $\rho \colon \Omega \to \mathds{R_+}$ with $\int_{\Omega} \rho \; \text{d}x = 1$ also changes for the transformation surrogate.
-We define the transformed distribution as
-\begin{equation}
-\rho_r \colon \Omega_r \to \mathds{R_+}, ~~ \rho_r(x_r)=\int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x 
-\end{equation}
-This is also a distribution since it holds that
-\begin{equation}
-\int_{\Omega_r} \rho_r(x_t) \; \text{d}x=\int_{x_r \in \Omega_r} \int_{t^{\text{inv}}(x_r)} \rho(x) \; \text{d}x = \int_{\Omega} \rho(x) \; \text{d}x = 1
-\end{equation}
-This means that in many cases for example a uniform distribution $\rho$ will be transformed into a non-uniform distribution $\rho_r$.
-
-\vspace{1em}
-\textbf{Density Quadrature}
+\textbf{Quadrature}
 Given an input distribution $\rho$ and transformation $t$, we can compute the integral with
 \begin{equation}
 \int_{\Omega} f(x) \rho(x) \; \text{d}x \approx \int_{\Omega} \hat{f}_t(t(x)) \rho(x) \; \text{d}x
@@ -1780,25 +1751,10 @@ Given an input distribution $\rho$ and transformation $t$, we can compute the in
 \int_{\Omega_r} \hat{f}_t(z) \left(\int_{t^{\text{inv}}(z)} \rho(x)  \; \text{d}x \right)  \; \text{d}z=
 \int_{\Omega_r} \hat{f}_t(z) \rho_t(z) \; \text{d}z
 \end{equation}
-By introducing a transformation we lose the ability to easily use Sparse Grid based quadrature algorithms.
-However, since $r$ is usually smaller than $d$, Monte-Carlo based quadrature becomes a better option for transformed surrogates.
+By introducing a transformation we lose the ability to easily use Sparse Grid based quadrature algorithms, as the distribution $\rho_t$ is not a simple distribution.
+However, since $r$ is usually a lot smaller than $d$, Monte-Carlo based quadrature becomes a better option for transformed surrogates as the curse of dimensionality is weakened that way.
+This also holds true for cases with a uniform input distribution $\rho=\mathcal{U}(0,1)^d$ as the $\rho_t$ is usually no longer a uniform distribution.
 
-\vspace{1em}
-\textbf{Quadrature}
-Given a transformation $t$, we can easily compute $\int_{\Omega} f(x) \; \text{d}x$ using the surrogate, since it is a special case of density quadrature with $\rho=\mathcal{U}(0,1)^d$.
-Even though the original input is uniformly distributed, the resulting surrogate distribution $\rho_r$ is usually not.
-
-\vspace{1em}
-\textbf{Optimization}
-To calculate the maximum $x^\text{max} \coloneqq \argmax_{x \in \Omega} f(x)$ or minimum $x^\text{min} \coloneqq \argmin_{x \in \Omega} f(x)$ of the model function, one can also optimize the surrogate. There exist many different algorithms, especially for B-Spline basis functions presented in \cite{}.
-After having applied a transformation, there might unused points $x_r \in \Omega_r$ in the surrogate space, i.e. $\nexists x \in \Omega \colon t(x)=x_r$.
-Therefore a constrained optimization has to be performed on the surrogate first with
-\begin{equation}
-x_{r}^\text{max} \coloneqq \argmax_{x_r \in \Omega_r} \hat{f}(x_r), ~ |t^{\text{inv}}(x_{r})|\geq 1
-\end{equation}
-Afterwards, at least in the dimensionality preserving transformation, we can obtain the maximum $x^\text{max}$ with $x^\text{max}=t^{\text{inv}}(x_{r}^\text{max})$, since $|t^{\text{inv}}(x_{r}^\text{max})|=1$.
-One problem is that in the case of a reducing transformation with $r<d$, a computed surrogate maximum $x_{r}^\text{max}$ may be a set of many points.
-Therefore another non sparse grid based optimization can be performed on the set $t^{\text{inv}}(x_{r}^\text{max})$, to get a good maximum estimate.
 
 \chapter{Iterative transformations}
 \label{chap:c5}
@@ -2057,6 +2013,8 @@ The amount of samples is set to $n=1000$.
 \label{fig:pipeline_2}
 \end{figure}
 \end{mdframed}
+
+TODO: More iterations
 
 As we can see in figures (\cref{fig:pipeline_current_1}, \cref{fig:pipeline_current_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
 The plotted function values go down in range.
@@ -2335,6 +2293,7 @@ Their implementation is straightforward, as the construction of sparse grid surr
 
 \subsection {Sparse Grid surrogate generator}
 
+The sparse grid generation implementation is realized with SGpp \cite{} library.
 In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
 Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimension, as a surrogate generator should be decoupled from the used dimension $r$. 
 This means that instead of passing a fixed level $l$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
