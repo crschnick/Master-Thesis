@@ -35,8 +35,8 @@
   course={Informatik},
   examiner={Prof.\ Dr.\ Dirk Pflüger},
   supervisor={Dr. Michael Rehme},
-  startdate={April 24, 2021},
-  enddate={October 24, 2021}
+  startdate={April 26, 2021},
+  enddate={October 26, 2021}
 ]{scientific-thesis-cover}
 
 \makeindex
@@ -269,38 +269,6 @@ The insights gained can then be used to transform the model inputs prior to feed
 The concrete process of reducing the input dimensions takes inspiration from the concepts of intrinsic dimension in signal processing and already established dimension reduction techniques in data science such as PCA, and tries to combine the process of determining the optimal model input alignment along active directions with dimension reduction.
 Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still preserving input structures suitable for sparse grids and therefore achieving an acceptable additional approximation error.
 Overall, this enables us to work with high dimensional models that normally would cause sparse grids to run into problems.
-
-To put the grid limitations into more concrete range, we can say that full grids already become infeasible for models with dimensionality of $d=4$, while sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
-The presented technique of transformed sparse grids is not limited by the original model dimension, as we will see in this thesis.
-\Cref{fig:dim_ranges} visualizes the suitable dimension ranges of all three techniques.
-
-\newpage
-\begin{mdframed}[style=style]
-
-\vspace{2.5mm}
-\begin{figure}[H]
-
-\centering
-\begin{tikzpicture}
-\node[] at (9.2,0) {$d$};
-\draw[->,ultra thick,charcoal] (0,0)--(9,0);
-\foreach \x/\xtext in {0/$1$,1/$2$,2/$3$,3/$4$,4/$5$,5/$6$,6/$7$,7/$8$,8/$9$}
-    \draw(\x,5pt)--(\x,-5pt) node[below] {\xtext};
-    
-\draw[decorate, decoration={brace}, thick, yshift=6.8ex]  (0,0) -- node[above=0.4ex] {full grids}  (3,0);
-\draw[decorate, decoration={brace, mirror}, thick, yshift=2.5ex]  (7,0) -- node[above=0.4ex] {sparse grids}  (0,0);
-\draw[decorate, decoration={brace, mirror}, thick, yshift=-5ex]  (0,0) -- node[below=0.6ex] {transformed sparse grids}
- (10,0);
-\filldraw[white,thick] (9.9,-0.7) rectangle (11,-1.1);
- \draw[->,thick] (9.8,-0.91)--(11,-0.91);
-\end{tikzpicture}
-
-\vspace{2.5mm}
-\delimit
-\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations.}
-\label{fig:dim_ranges}
-\end{figure}
-\end{mdframed}
 
 \section{Structure}
 
@@ -980,6 +948,40 @@ In contrast, other basis functions like radial basis functions do not depend on 
 In turn this means that an effective dimension reduction with conventional sparse grids based methods is highly dependent on the alignment of the model function.
 Without adding another layer of flexibility with an input transformation function, sparse grids can not use their full potential in many cases, as we have seen with function $f_2$.
 
+Therefore, adaptive sparse grids can not exploit model functions with non axis-aligned function terms with a low intrinsic dimension and the sparse grid dimension grows with the model dimension.
+Thus, in case a high-dimensional model function is not suitable for sparse grids, the sparse grid is subject the curse of dimensionality.
+To put the grid limitations into more concrete range, we can say that regular full grids already become infeasible for models with dimensionality of $d=4$, while regular sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
+The presented technique of transformed sparse grids is, at least in theory, not limited by the original model dimension.
+\Cref{fig:dim_ranges} visualizes the suitable dimension ranges of all three techniques.
+
+\newpage
+\begin{mdframed}[style=style]
+
+\vspace{2.5mm}
+\begin{figure}[H]
+
+\centering
+\begin{tikzpicture}
+\node[] at (9.2,0) {$d$};
+\draw[->,ultra thick,charcoal] (0,0)--(9,0);
+\foreach \x/\xtext in {0/$1$,1/$2$,2/$3$,3/$4$,4/$5$,5/$6$,6/$7$,7/$8$,8/$9$}
+    \draw(\x,5pt)--(\x,-5pt) node[below] {\xtext};
+    
+\draw[decorate, decoration={brace}, thick, yshift=6.8ex]  (0,0) -- node[above=0.4ex] {full grids}  (3,0);
+\draw[decorate, decoration={brace, mirror}, thick, yshift=2.5ex]  (7,0) -- node[above=0.4ex] {sparse grids}  (0,0);
+\draw[decorate, decoration={brace, mirror}, thick, yshift=-5ex]  (0,0) -- node[below=0.6ex] {transformed sparse grids}
+ (10,0);
+\filldraw[white,thick] (9.9,-0.7) rectangle (11,-1.1);
+ \draw[->,thick] (9.8,-0.91)--(11,-0.91);
+\end{tikzpicture}
+
+\vspace{2.5mm}
+\delimit
+\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations.}
+\label{fig:dim_ranges}
+\end{figure}
+\end{mdframed}
+
 \section{Linear hypercube transformations}
 
 As the concept of intrinsic dimension makes it possible to, at least in theory, use arbitrary transformation functions, there are many possible general types of transformation functions to choose from.
@@ -1028,13 +1030,13 @@ with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$ corresponds a the $
 
 \begin{mdframed}[style=style]
         \centering
-\begin{minipage}{.33\textwidth}
+\begin{minipage}{.45\textwidth}
         \centering
   \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$, and three generators $g_1,g_2,g_3$.\\
   The three generator vectors are drawn to the left and the zonotope $Z$ is drawn in \darkblue to the right with the origin being in \red.}
   \label{fig:zonotope}
     \end{minipage}%
-    \begin{minipage}{0.65\textwidth}
+    \begin{minipage}{0.55\textwidth}
         \centering
         \vspace{3.5mm}
   \includegraphics[width=0.8\linewidth]{graphics/zonotope}
@@ -1432,7 +1434,7 @@ Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neigh
 \centering
 	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
 \delimit
-	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
+	\captionof{figure}{Gradient approximation error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
 	\label{fig:as_errors_f1}
 \end{figure}
 \end{mdframed}
@@ -1442,33 +1444,6 @@ The nearest neighbour method does deliver far better results than the random nei
 Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be a little bit better.
 It can also be observed that the gradient approximation quality does not exactly correlate with the active subspace approximation quality.
 While the nearest neighbour methods have a similar gradient errors compared to finite differences with $h=0.1$, the active subspace computed by the nearest neighbour method has a far better quality than the finite differences method with $h=0.1$.
-
-\vspace{2mm}
-\textbf{More complex function~}
-The second case study is a 20-dimensional function, which consists out of several terms of varying dimensionality and type, where no term obviously dominates the others:
-\begin{align}
-\begin{split}
-f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
-+ &5 * sin(\pi x_5 x_6 x_7) x_8^2 x_9^5 x_{10}\\
-+ &(x_{11} + 2)^2 x_{12}\\
-+ &2 x_{13} * 3 x_{14}\\
-+ &x_{15} x_{16}\\
-+ &log(1 + (10 x_{17} / (0.1 + x_{18} + x_{19})))
-\end{split}
-\end{align}
-
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\centering
-	\includegraphics[width=\textwidth]{graphics/as_errors_f2}
-	
-\delimit
-	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_2$ as the average over 10 iterations..}
-	\label{fig:as_grad_errors_f2}
-\end{figure}
-\end{mdframed}
-
-TODO: Right plot wrong
 
 \subsection{Limitations}
 
@@ -2346,6 +2321,35 @@ This is an advantage compared to any interpolation based approaches.
 
 \chapter{Evaluation}
 \label{chap:c7}
+
+
+\vspace{2mm}
+\textbf{More complex function~}
+The second case study is a 20-dimensional function, which consists out of several terms of varying dimensionality and type, where no term obviously dominates the others:
+\begin{align}
+\begin{split}
+f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
++ &5 * sin(\pi x_5 x_6 x_7) x_8^2 x_9^5 x_{10}\\
++ &(x_{11} + 2)^2 x_{12}\\
++ &2 x_{13} * 3 x_{14}\\
++ &x_{15} x_{16}\\
++ &log(1 + (10 x_{17} / (0.1 + x_{18} + x_{19})))
+\end{split}
+\end{align}
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+	\includegraphics[width=\textwidth]{graphics/as_errors_f2}
+	
+\delimit
+	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_2$ as the average over 10 iterations..}
+	\label{fig:as_grad_errors_f2}
+\end{figure}
+\end{mdframed}
+
+TODO: Right plot wrong
+
 
 \chapter{Automatic configurations}
 \label{chap:c8}
