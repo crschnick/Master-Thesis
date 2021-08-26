@@ -274,6 +274,7 @@ To put the grid limitations into more concrete range, we can say that full grids
 The presented technique of transformed sparse grids is not limited by the original model dimension, as we will see in this thesis.
 \Cref{fig:dim_ranges} visualizes the suitable dimension ranges of all three techniques.
 
+\newpage
 \begin{mdframed}[style=style]
 
 \vspace{2.5mm}
@@ -481,7 +482,7 @@ In this section we will take a look at all the different basis functions used in
 \vspace{0.3em}
 \textbf{Hat basis }
 A one-dimensional hat function is defined by $h(x) \coloneqq \max(1 - |x|,0)$.
-They can be transformed into basis functions for a level $l$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^lx-i)$.
+They can be transformed into basis functions for a level $l$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^\ell x-i)$.
 It holds that $\phi^h_{\ell,i}(x_{\ell,i})=1$ and $\phi^h_{\ell,i}(x_{\ell,i-1})=\phi^h_{\ell,i}(x_{\ell,i-1})=0$.
 They are also not differentiable at their supporting grid point $x_{\ell,i}$.
 
@@ -495,7 +496,7 @@ It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by def
 \begin{cases}
 1 &, \ell=1\\
 \phi^{\text{left}}_{\ell}(x)&, \ell>1, i=1\\
-\phi^{\text{right}}_{\ell}(x)&, \ell>1, i=2^l - 1\\
+\phi^{\text{right}}_{\ell}(x)&, \ell>1, i=2^\ell - 1\\
 \phi_{\ell,i}(x)&, \text{else}
 \end{cases},
 \nonumber
@@ -517,6 +518,8 @@ Furthermore, the wavelets are usually discretisized, because it is not possible 
 One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
 In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
 However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
+
+TODO: Image of basis functions
 
 \section{Grid surrogate construction}
 \label{sec:gsc}
@@ -851,24 +854,23 @@ To effectively sample from $\rho_t$, it is still easier to just draw the samples
 All grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality to some degree.
 This means that as the dimension of the models grow, the amount of grid points and the model function evaluations required to generate a sparse grid grow too fast and therefore put a limit on how many dimensions are feasible.
 Sparse grids itself are already an effective strategy to reduce the consequences the curse of dimensionality compared to full grids, as they provide a good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids, but they only weaken and delay the effects of the curse of dimensionality.
-Therefore, in higher dimensions, employing some strategy for dimension reduction is necessary.
+Therefore, in higher dimensions, employing some form of dimension reduction is necessary.
 Of course, dimension reduction strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
-In this chaper we show a few already established approaches to sparse grid based dimension reduction and look at their advantages and disadvantages.
+In this section we take a look at a few already established approaches to sparse grid based dimension reduction and look at their advantages and disadvantages with the help of simple example model functions.
 
-The first example model function $f_1$ to investigate the properties of the presented methods, is very simple designed to be a good fit for grid based methods.
+The first example model function $f_1$, which is designed to investigate the properties of the presented methods, is designed to be a good fit for any grid based methods.
 It is a two-dimensional function, where only the first component and a constant term contribute to the total function value while the second component does not:
-
 \begin{equation}
 f_1(x_1, x_2)=\sin(2 \pi x_1) + 1
 \nonumber
 \end{equation}
 
 One can easily see that it is an intrinsically one-dimensional function according to \cref{def:intrinsic}, since we a transformation function could just cut off the second component.
-However, just by rotating the function by a few degrees, we obtain
+However, just by rotating the function by a few degrees, we obtain the second example model function
 \begin{equation}
 f_2(x_1,x_2)=\sin(2 \pi x_1') + 1, ~~~~~ x_1'=\cos(0.15 \pi) x_1 -\sin(0.15 \pi) x_2,
 \end{equation}
-also a two-dimensional function that is still intrinsically one-dimensional.
+which is also a two-dimensional function but still intrinsically one-dimensional.
 
 \subsection{Spatially adaptive sparse grids}
 
@@ -892,41 +894,45 @@ We can then investigate how their generated grid points and interpolation errors
 \end{subfigure}
 \vspace{2.5mm}
 \delimit
-\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $l=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
+\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $\ell=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
 \label{fig:grids}
 \end{figure}
 \end{mdframed}
 
-
 \Cref{fig:grids} shows how spatially adaptive sparse grids are affected by the different alignment of function terms.
 The spatially adaptive strategy is able to exploit the one-dimensional nature of $f_1$ by only refining along the first dimension and therefore spending the grid points where they matter.
-However, the intrinsic one dimensional term can not be exploited for $f_2$, as it is no longer axis-aligned.
+However, the intrinsically one dimensional term of $f_2$ can not be exploited, as it is no longer axis-aligned.
+This can be deduced from the fact that grid points all over the grid and along both dimensions are refined.
 Note that due to the default refinement rule that add all child grid points, the upper and lower grid point rows in \cref{fig:grid_f1} are created but are not necessary.
 A tweaked refinement rule could fix this.
+This observation is reinforced by the actual approximation errors of surrogates for both functions seen in figure \cref{fig:dim_reduction_errors} on the right.
 
 \subsection{Radial basis functions}
-Radial basis functions behave differently compared to sparse grids when being applied to the same two functions, as their basis functions are not constructed using the tensor-product approach.
-Instead they are orientation agnostic, as only the radius relative a support point determines the basis function value.
-Therefore, as seen in figure \cref{fig:grid_rbf_errors}, the approximation errors stay pretty much identical in both cases.
-However, the general approximation error is worse than the sparse grid errors, as radial basis functions are not suited for approximating functions with a constant dimension when being compared to modified basis functions, which come with a constant component well suited for that.
 
-\newpage
+Radial basis functions behave differently than sparse grids when being applied to the same two functions, as their basis functions are not constructed using the tensor-product approach.
+Instead they are orientation agnostic, as only the radius relative a support point determines the basis function value.
+Therefore, as seen in figure \cref{fig:dim_reduction_errors} on the left, the approximation errors stay pretty much identical in both cases.
+However, their approximation error for $f_1$ is worse than the sparse grid surrogate error, as radial basis functions are not suited for approximating functions with a constant dimension when being compared to modified basis functions, which come with a constant component well suited for that.
+
 \begin{mdframed}[style=style]
 \begin{figure}[H]
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/rbf_errors}
-  \caption{Spatially adaptive sparse grid points for $f_1$}
+  \includegraphics[width=\linewidth]{graphics/dim_reduction}
   \delimit
-\captionof{figure}{Results of ANOVA.}
-  \label{fig:grid_rbf_errors}
+\captionof{figure}{
+Comparision of the approximation errors for both example functions $f_1$ and $f_2$ using spatially adaptive sparse grids and radial basis functions.\\
+The RBF surrogates were created with Gaussian basis functions, euclidean distance measure, and shape parameter $\epsilon=0.5$.\\
+The sparse grid surrogates started out as a regular sparse grid with level $\ell=1$, used the surplus refinement criterion, 280 refinements steps with one grid point refinement per step, and modified linear basis functions.
+}
+  \label{fig:dim_reduction_errors}
 \end{figure}
 \end{mdframed}
 
 \subsection{ANOVA}
 
+TODO: Fill in values
 
 The same behaviour of drastically different results for both functions when using spatially adaptive sparse grids can also be observed for other sparse grid based methods, like ANOVA.
-
 
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
@@ -956,15 +962,14 @@ $1 \in C$ & ? & ?\\
   \label{fig:anova_f2}
 \end{subfigure}
 \delimit
-\captionof{figure}{Results of ANOVA.}
+\captionof{figure}{Results of an analysis of variance of $f_1$ and $f_2$.}
 \label{fig:anova}
 \end{figure}
 \end{mdframed}
 
-
 The ANOVA method decomposes the functions into four terms.
 A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2\}}$, and a two dimensional term $f_{\{1,2\}}$.
-As we can see in \cref{fig:anova}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
+As we can see in \cref{fig:anova_f1}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
 Therefore the other terms can be dropped and the function can be completely represented using only a one-dimensional function.
 However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \cref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$ and the ANOVA method would report that no dimension reduction can be applied.
 
@@ -984,7 +989,6 @@ Motivated by this insight, the main approach that will be used and investigated 
 This matrix $W$ is referred to as the active direction matrix, as the column vectors $w_i$ point into directions in which the function output has a high rate of change and are ordered by the level of change.
 It should hold that $w_1$ is the most active direction, while $w_d$ is the most inactive direction.
 Since all column vectors $w_i$ have to be orthogonal, they can not point into arbitrary directions and are limited by other active directions.
-Therefore, a good active direction matrix ...
 
 We then go one step further and also try to eliminate the most inactive directions of $W$, effectively performing a dimension reduction.
 After performing a change of basis with $W$ on the inputs to obtain $W^T x$, we effectively eliminate the most inactive dimensions, as inactive directions are now mapped to inactive dimensions.
@@ -1012,28 +1016,29 @@ To construct a transformation function $t$ that maps from the $d$-dimensional un
 When applying a linear transformation $W_r^T x$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
 
 \begin{definition}[Zonotope]
-Let $l$ be the dimension of the zonotope, and let $k \geq l$ be the amount of zonotope generators.
-A $l$-dimensional zonotope $Z$ with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^l$ corresponds to the $l$-dimensional minkowski sum
+Let $m$ be the dimension of the zonotope, and let $k \geq  m$ be the amount of zonotope generators.
+An $m$-dimensional zonotope
 \begin{equation}
-Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}.
+Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
   \label{zonotope}
 \end{equation}
+with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$ corresponds a the $m$-dimensional minkowski sum.
 \end{definition}
 
 
 \begin{mdframed}[style=style]
         \centering
-\begin{minipage}{.4\textwidth}
+\begin{minipage}{.33\textwidth}
         \centering
   \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$, and three generators $g_1,g_2,g_3$.\\
   The three generator vectors are drawn to the left and the zonotope $Z$ is drawn in \darkblue to the right with the origin being in \red.}
+  \label{fig:zonotope}
     \end{minipage}%
-    \begin{minipage}{0.6\textwidth}
+    \begin{minipage}{0.65\textwidth}
         \centering
         \vspace{3.5mm}
   \includegraphics[width=0.8\linewidth]{graphics/zonotope}
   \hspace{-5.5mm}
-  \label{fig:zonotope}
     \end{minipage}
 \end{mdframed}
 
@@ -1081,22 +1086,19 @@ where according to \cref{zonotope_form}, the projected input space is exactly th
 
 However, since the surrogate creation process expects inputs from a hypercube and not a zonotope, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$.
 The surrogate space is then later scaled and aligned to obtain the unit hypercube $\Omega_r$.
-Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to first obtain the orthogonal vectors
+Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to obtain the orthogonal vectors
 \begin{equation}
-q_i'=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}
+q_i=\frac{q_i'}{\| q_i' \|},~~ q_i'=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}.
 \label{q}
-\end{equation}
-and then the appropriately scaled vectors
-\begin{equation}
-q_i=s_i \frac{q_i'}{\| q_i' \|},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle.
-\label{q_scaled}
 \end{equation}
 The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
 \begin{equation}
-S=\left\{\sum_{i=1}^r q_i x_i, ~ -1 \leq x_i \leq 1\right\}
+S=\left\{\sum_{i=1}^r s_i q_i x_i, ~ -1 \leq x_i \leq 1\right\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle.
 \label{surrogate_space}
 \end{equation}
-where the scaling factors $s_i$ are chosen in such a way that the hypercube $S$ exactly matches the extent of the zonotope $Z_p$, as shown in \cref{surrogate_space}.
+where the scaling factors $s_i$ are chosen in such a way that the hypercube $S$ exactly matches the extent of the zonotope $Z_p$, as seen in \cref{fig:surrogate_space}.
+The scaling 
+
 
 \begin{mdframed}[style=style]
         \centering
@@ -1104,13 +1106,13 @@ where the scaling factors $s_i$ are chosen in such a way that the hypercube $S$ 
         \centering
   \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope $Z_p$ of \cref{fig:zonotope} according to \cref{surrogate_space}.\\
   The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$ in dotted \darkblue, and the origin in \red.}
+  \label{fig:surrogate_space}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
         \centering
         \vspace{3.5mm}
   \includegraphics[width=0.8\linewidth]{graphics/surrogate_space}
   \hspace{-5.5mm}
-  \label{fig:surrogate_space}
     \end{minipage}
 \end{mdframed}
 
@@ -1122,22 +1124,30 @@ This should result in the best possible encasement of $Z_p$.
 \subsection{Reduced unit hypercube}
 
 The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$, as shown in \cref{fig:aligned}.
-First, we observe that the generators $q_i$ of $S$ with
+First, we observe that the generators $g_i$ of $S$ are created using the orthogonal vectors $q_i$ and the scaling factors $s_i$ to obtain
 \begin{equation}
+G=\begin{bmatrix}
+  \\
+    g_1 ~ \dots  ~ g_r\\
+    \\
+  \end{bmatrix}=Q ~ \text{diag}(s_1, \dots, s_r) ~, ~~~
 Q=\begin{bmatrix}
   \\
-    q_1 ~ q_2 ~ \dots ~q_{r-1} ~ q_r\\
+    q_1 ~ \dots  ~ q_r\\
     \\
-  \end{bmatrix}
-  , ~~
+  \end{bmatrix}.
+\end{equation}
+
+We can perform a change of basis on every element that has been projected into $Z_p$, and therefore also $S$.
+The change of basis formula to go from projected $r$-dimensional elements $x_p=p(x)$ in the unit basis $I$ to a representation $y$ in the new basis $G$ is $x_p=Gy \Leftrightarrow G^{-1} x_p=y$ and we therefore obtain
+\begin{equation}
+y=G^{-1} p(x)=\text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
 \label{alignment}
 \end{equation}
-are orthogonal.
-We can perform a change of basis on every element that has been projected into $Z_p$, and therefore also $S$, to obtain $v=Q^T p(x)$.
-Per surrogate space definition \cref{surrogate_space}, we know that $v_i \in [-1,1]$ holds as $v \in S$.
-Once the projected inputs are represented by the new basis $Q$, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
+Per surrogate space definition \cref{surrogate_space}, we know that $y_i \in [-1,1]$ holds.
+Once the projected inputs are represented by the new basis, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
 \begin{equation}
-t_{W_r}(x)= c_r + \frac{1}{2} Q^T p(x).
+t_{W_r}(x)= c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
 \label{linear_trans}
 \end{equation}
 
@@ -1149,11 +1159,11 @@ t_{W_r}(x)= c_r + \frac{1}{2} Q^T p(x).
         \centering
   \captionof{figure}{Transformation of the surrogate space $S$ from \cref{fig:surrogate_space} into the unit hypercube $\Omega_r$ according to \cref{alignment}.\\
   The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$, which is now equal to $\Omega_r$ in dotted \darkblue, and the origin in \red.}
+  \label{fig:aligned}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
         \centering
    \includegraphics[width=0.8\linewidth]{graphics/surrogate_space_unit}
-  \label{fig:aligned}
     \end{minipage}
 
 \end{figure}
@@ -1168,26 +1178,9 @@ While it is normally not required to revert the previously shown transformation 
 
 We observe that \cref{linear_trans} can be rearranged to solve for $p(x)$ to get
 \begin{equation}
-p(x)=2 (Q^T)^{-1} (t_{W_r}(x) - c_r)
+p(x)=2 G (t_{W_r}(x) - c_r)=2 Q ~ \text{diag}(s_1, \dots, s_r) ~ (t_{W_r}(x) - c_r).
 \label{proj}
 \end{equation}
-Since the column vectors of $Q$ are defined as orthogonal in \cref{q}, $Q$ can be expressed as $Q=Q_n \text{diag}\left(s_1, \dots, s_r\right)$ where the column vectors of $Q_n$ are just the normalized column vectors of $Q$ with $(Q_n)_i=\frac{q_i}{\| q_i \|}$ and the $s_i=\| q_i \|$ are the scaling factors from \cref{q_scaled}.
-Therefore, it holds that $Q^T=\text{diag}\left(s_1, \dots, s_r\right) Q_n^T$ and
-\begin{equation}
-\begin{split}
-\left(Q^T\right)^{-1}=~&\left(Q_n^T\right)^{-1}  \text{diag}\left(s_1, \dots, s_r\right)^{-1}  \\
-=~&Q_n \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) .
-\label{qtinv}
-\end{split}
-\end{equation}
-We can then insert \cref{qtinv} into \cref{proj} to obtain
-\begin{equation}
-\begin{split}
-p(x)=&~2 ~ Q_n \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) (t_{W_r}(x) - c_r)\\
-=&~Q_n \text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right)  (t_{W_r}(x) - c_r).
-\end{split}
-\end{equation}
-
 To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases, the inverse $p^{-1}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, because $|p^{-1}(x_p)| > 1$.
 Our goal is to reverse the transformation only onto certain representative elements of the equivalence classes $[x]_p=\{x \in \Omega \mid p(x)=x_{p}\}$.
 We then only consider the points
@@ -1198,19 +1191,28 @@ C=\{x - c_d  \in \text{span} ~ W_r \mid x \in \Omega\},
 i.e. who lie in the vector subspace that is spanned by the active directions in $W_r$ and crosses the center $c_d$.
 Next, we reverse the projection $p(x)$ only onto the representative elements $x \in C$, so that we are able to map one element $x_r\in \Omega_r$ onto one element $x \in C$ to obtain $t_{W_r}^{\text{reverse}}\colon \Omega_r \mapsto C$ with
 \begin{equation}
-t_{W_r}^{\text{reverse}}(x_r)=~W_r Q_n \text{diag}\left(\frac{2}{s_1}, \dots, \frac{2}{s_r}\right) (x_r - c_r) + c_d
+t_{W_r}^{\text{reverse}}(x_r)=~W_r Q ~ \text{diag}\left(2s_1, \dots, 2s_r\right) (x_r - c_r) + c_d.
 \end{equation}
 
-In \cref{fig:trans_vis} we assume a transformation with $r=2$ and $d=3$, and reverse the grid points of a regular sparse grid of level $4$? lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \cref{proj} and \cref{proj_rep}.
+This function is called a reverse function, as it is not a true inverse of $t_{W_r}$.
+In \cref{fig:trans_vis} we reverse the grid points of a regular two-dimensional sparse grid lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \cref{proj} and \cref{proj_rep}.
 
-\newpage
 \begin{mdframed}[style=style]
+\vspace{2.5mm}
 \begin{figure}[H]
-\centering
-  \includegraphics[width=.7\linewidth]{graphics/surrogate_vis}
-  \delimit
-  \captionof{figure}{Visualization of a transformation with $r=2$ and $d=3$. The grey background represents the outline of $\Omega$, the arrows on the sparse grid the first two column vectors of $W_r$ that span the plane on which the sparse grid lies.}
-  \label{fig:trans_vis}
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{graphics/surrogate_vis_1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{graphics/surrogate_vis_2}
+\end{subfigure}
+\vspace{2.5mm}
+\delimit
+\captionof{figure}{Two views of the same visualization of a transformed regular sparse grid of level $5$ that was constructed by a linear transformation with $r=2$ and $d=3$.\\
+The grey cube outline represents the edges of $\Omega$, the arrows on the sparse grid the first two column vectors of $W_r$ that span the plane on which the sparse grid lies.}
+\label{fig:trans_vis}
 \end{figure}
 \end{mdframed}
 
@@ -1227,7 +1229,6 @@ C = \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
 
 be the average outer product of the gradient, a $(d \times d)$ matrix.
 Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
-
 \begin{equation}
 C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
   \begin{bmatrix}
@@ -1240,7 +1241,6 @@ C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
 
 We furthermore assume that the eigenvectors in this decomposition are ordered, i.e. $\lambda_1 \geq ... \geq \lambda_d$.
 A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
-
 \begin{equation}
 \lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
 \label{eigenvalues}
@@ -1248,7 +1248,6 @@ A larger eigenvalue indicates a higher rate of change along the direction, more 
 
 Therefore, the column vectors of the matrix $V$ are ordered from most the active direction $v_1$ to least the active direction $v_d$.
 By keeping only a specific amount of the most active directions $r \leq d$ we obtain the transformation matrix
-
 \begin{equation}
 W_r=\begin{bmatrix}
   \\
@@ -1492,7 +1491,7 @@ In certain cases, like the example function presented in this section, this will
 This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
 We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
 The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
-We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W*$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
+We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W^\ast$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
 
 Until now, the focus was primarily on deterministic linear transformations, because they are relatively easy to construct using active subspaces.
 However, in theory we can construct and use arbitrary transformation functions.
@@ -1541,12 +1540,12 @@ t_p(x_1,x_2)=\left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \lef
 \vspace{2mm}
 \begin{figure}[H]
         \centering
-\begin{minipage}{.50\textwidth}
+\begin{minipage}{.40\textwidth}
         \centering
   \captionof{figure}{Approximation errors of various periodic transformations $t_p$ and sparse grid surrogates of level $\ell \in \{1, \dots, 11\}$, modified linear hat basis, and periods $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ for the example function $f$.\\
   The sparse grid surrogates were constructed using the normal interpolation approach.}
     \end{minipage}%
-    \begin{minipage}{0.50\textwidth}
+    \begin{minipage}{0.60\textwidth}
         \centering
 \includegraphics[width=0.95\textwidth]{graphics/periodic}
     \end{minipage}
@@ -1974,13 +1973,13 @@ The amount of samples is set to $n=1000$.
 \newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-\begin{subfigure}{.49\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
   \caption{Plot of the error function $e_0=f$ and first active subspace direction $v_1$ \darkblue.}
 \label{fig:pipeline_current_1}
 \end{subfigure}%
-\begin{subfigure}{.49\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.7\linewidth]{graphics/pipeline_local_1}
   \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_1$ in \red.}
@@ -1995,14 +1994,13 @@ The amount of samples is set to $n=1000$.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-\begin{subfigure}{.45\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_2}
   \caption{Plot of the error function $e_1$ and first active subspace direction $v_1$ \darkblue.}
 \label{fig:pipeline_current_2}
 \end{subfigure}%
-\hspace{0.07\textwidth}
-\begin{subfigure}{.45\textwidth}
+\begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_local_2}
   \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_2$ in \red.}
@@ -2286,7 +2284,7 @@ While this is a pretty straightforward process, it can still be customized by ch
 
 The last component needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
 \begin{equation}
-\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
+S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
 \end{equation}
 Their implementation is straightforward, as the construction of sparse grid surrogates and also RBF surrogates was covered in detail and the surrogate generators closely match that.
 
@@ -2296,46 +2294,32 @@ Their implementation is straightforward, as the construction of sparse grid surr
 The sparse grid generation implementation is realized with SGpp \cite{} library.
 In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
 Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimension, as a surrogate generator should be decoupled from the used dimension $r$. 
-This means that instead of passing a fixed level $l$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
-
-\newpage
-
-\begin{mdframed}[style=style,frametitle={Surrogate generator (sparse grid)}]
-\begin{figure}[H]
-\begin{description}
-\item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{gridType}}: 
-\item \texttt{\textbf{basisType}}: Type of basis functions
-\item \texttt{\textbf{numApproxGridPoints}}:
-\item \texttt{\textbf{numMaxTrainSamples}}: 
-\item \texttt{\textbf{trainData}}:
-\item \texttt{\textbf{lambdas}}: 
-\item \texttt{\textbf{numRefinements}}: 
-\end{itemize}}
-\end{description}
-
-\delimit
-
-\captionof{figure}{Possible configuration parameters of a sparse grid surrogate generator.}
-\label{fig:sgsg}
-\end{figure}
-\end{mdframed}
+This means that instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
+Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint}, to automatically link the amount of grid points and used training samples together.
 
 \subsection {RBF surrogate generator}
 
-TODO
+Radial basis function surrogates are implemented with the help of ALGLIB \cite{}, a numerical analysis and data processing library which supports fitting RBFs on arbitrary input data.
+Compared to sparse grids, RBFs do not have a lot of configuration parameters.
+The main parameters are the shape parameter $\epsilon$ and also a regularization factor $\lambda$.
+RBF surrogates can be created with the interpolation approach, as they can interpolate from arbitrary function samples $S_t$.
 
+\section{Example pipeline}
 
-\section{Example}
-
-TODO
+To give an example on how an actual transformation pipeline instance could look like, we will construct a simple one here.
+As many components are designed in a way to be forward looking, we can think of the transformation pipeline as a collection of different subpipelines.
+The high fidelity subpipeline is responsible for finding the the best and most expensive possible hi-fi surrogate for each iteration.
+It does so by usually evaluating the quality of multiple transformations from one family of possible transformations, such as the computed active subspaces $W$, using a look-ahead approach, i.e. executing a low fidedily subpipeline that evaluates the transformation quality by effectively performing a whole iteration with lower fidelity surrogates.
+This lo-fi subpipeline has to be quick to execute, as it is runs multiple times for all possible values of $r$.
+The structure of an example pipeline can be seen in \cref{fig:tpex}.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/PipelineExample.pdf}
 \delimit
 
-\captionof{figure}{Component structure of a forward looking transformation evaluator.}
+\captionof{figure}{Structure and control flow of an examplary transformation pipeline.\\
+The \red box identifies the hi-fi subpipeline components, and the \green box identifies the lo-fi subpipeline components.}
 \label{fig:tpex}
 \end{figure}
 \end{mdframed}
@@ -2345,7 +2329,7 @@ TODO
 
 A central aspect of the transformation is pipeline is the handling of input samples
 \begin{equation}
-S=\left\{(x_i, f(x_i))\right\}_{i=1}^n,
+S_t=\left\{(t(x_i), f(x_i))\right\}_{i=1}^n,
 \nonumber
 \end{equation}
 as they are used in almost every pipeline component.
