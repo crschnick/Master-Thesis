@@ -273,7 +273,7 @@ Overall, this enables us to work with high dimensional models that normally woul
 \section{Structure}
 
 \Cref{chap:c2} covers all the basics needed to understand and use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
-It will also give an overview over the currently most commonly used methods for dimension reduction with sparse grids..
+It will also give an overview over the currently most commonly used methods for dimension reduction with sparse grids.
 The concept of input transformations, which are the central focus of this thesis, are introduced in \cref{chap:c3}.
 Various types of transformations are discussed, but the main focus lies on linear transformations generated with the help of active subspaces.
 In \cref{chap:c4} we look at the process of generating reduced sparse grid surrogates for a given input transformation to obtain transformed sparse grids.
@@ -312,7 +312,7 @@ Full grids suffer heavily from the curse of dimensionality as the required amoun
 \begin{definition}[Levels and indices]
 Let
 \begin{equation}
-\underline{\ell} = (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d
+\underline{\ell} \coloneqq (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d
 \end{equation}
 be a $d$-dimensional multi level index. For every multi level index $\underline{l}$, we define the hierarchical index set
 \begin{equation}
@@ -435,7 +435,7 @@ W_{\underline{\ell}} \coloneqq \text{span}~ \{\phi_{\underline{\ell'},\underline
 is the hierarchical subspace of $\underline{\ell}$.\\
 A sparse grid can then also be represented as a direct sum of hierarchical subspaces:
 \begin{equation}
-V^{\text{sb}}_{\ell}=\text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}
+V^{\text{sb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}
 \label{eq:direct_sum}
 \end{equation}
 \end{definition}
@@ -521,7 +521,7 @@ Instead, the regression method uses established regression approaches to iterati
 As a result, the size of the function sample and therefore function evaluations, does no longer have to be equal to the amount of grid points, which results in a greater level of flexibility as the amount of model function evaluations and the amount of grid points can vary.
 The basic approach is to solve the least squares problem for $n$ function samples $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
 \begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f})=\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2 
+\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2 
 \end{equation}
 and a regularization parameter $\lambda > 0$ to prevent overfitting.
 Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\Lambda$ and sparse grid level $\ell$ with
@@ -541,16 +541,16 @@ This creation of new grid points of a parent is called refinement of a grid poin
 Let $x_{\underline{\ell},\underline{i}} \in X$ be a grid point.
 We then define
 \begin{equation}
-c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}})=(x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k - 1}, \dots, x_{\ell_d,i_d}), ~~ 
+c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k - 1}, \dots, x_{\ell_d,i_d}), ~~ 
 \end{equation}
 as its left child if $i_k > 0$ and
 \begin{equation}
-c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}})=(x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k + 1}, \dots, x_{\ell_d,i_d}), ~~ 
+c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k + 1}, \dots, x_{\ell_d,i_d}), ~~ 
 \end{equation}
 as its right child if $i_k < 2^{\ell_k}$.
 Then
 \begin{equation}
-c_{k}(x_{\underline{\ell},\underline{i}})=
+c_{k}(x_{\underline{\ell},\underline{i}}) \coloneqq
 \begin{cases}
 \{c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}})\}&, i_k=0\\
 \{c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}})\}&,i_k= 2^{l_k}\\
@@ -559,7 +559,7 @@ c_{k}(x_{\underline{\ell},\underline{i}})=
 \end{equation}
 is the set of possible children of a grid point in dimension $k$ and 
 \begin{equation}
-c(x_{\underline{\ell},\underline{i}})= \bigcup_{k=1}^d \{c_{k}(x_{\underline{\ell},\underline{i}})\}
+c(x_{\underline{\ell},\underline{i}}) \coloneqq \bigcup_{k=1}^d \{c_{k}(x_{\underline{\ell},\underline{i}})\}
 \end{equation}
 is the set of children of a grid point. It holds that $|c(x_{\underline{\ell},\underline{i}})| \leq 2d$ and $|c(x_{\underline{\ell},\underline{i}})| =2d$ if there is no boundary involved.
 We define a grid point $x_{\underline{\ell},\underline{i}} \in X$ as a leaf if
@@ -578,11 +578,11 @@ Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function
 Let $\hat{f} \in V^X$.
 The commonly used surplus criterion is defined as
 \begin{equation}
-\xi_s(x_{\underline{\ell},\underline{i}}) = |\alpha_{\underline{\ell},\underline{i}}|
+\xi_s(x_{\underline{\ell},\underline{i}}) \coloneqq |\alpha_{\underline{\ell},\underline{i}}|
 \end{equation}
 Since in this thesis we also assume that the input is distributed according to the probability density $\rho$, we also introduce the distribution surplus criterion with
 \begin{equation}
-\xi_{ds}(x_{\underline{\ell},\underline{i}}) =\rho(x_{\underline{\ell},\underline{i}}) |\alpha_{\underline{\ell},\underline{i}}|
+\xi_{ds}(x_{\underline{\ell},\underline{i}}) \coloneqq \rho(x_{\underline{\ell},\underline{i}}) |\alpha_{\underline{\ell},\underline{i}}|
 \end{equation}
 \end{definition}
 We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
@@ -638,7 +638,7 @@ Since the terms $f_i$ fullfil the orthogonality property \eqref{eq:ortho}, we ca
 \end{equation}
 For every ANOVA component $c \in C$, we can then calculate the variance share, also called Sobol index, for each term:
 \begin{equation}
-S_{c}=\frac{\sigma^2(f_{\underline{c}} )}{\sigma^2(f)}, ~~ \sum_{c \in \mathcal{P}(D)} S_{c} = 1
+S_{c} \coloneqq \frac{\sigma^2(f_{\underline{c}} )}{\sigma^2(f)}, ~~ \sum_{c \in \mathcal{P}(D)} S_{c} = 1
 \nonumber
 \end{equation}
 
@@ -664,7 +664,7 @@ f(x) \approx \sum_{i=1}^n \omega_i \varphi(\|x - c_i\|)
 \end{equation}
 In the context of this thesis, only Gaussian functions \cite{} with the euclidean distance as a distance measure are used as basis functions:
 \begin{equation}
-\varphi(x)=e^{-(\epsilon \|x - c_i\|)^2}
+\varphi(x) \coloneqq e^{-(\epsilon \|x - c_i\|)^2}
 \end{equation}
 The only parameter that can be tuned is $\epsilon$, which is referred to as the shape parameter and is used to scale the effects of the input radius.
 
@@ -720,7 +720,7 @@ Let
 be the $L^p$ norm for real functions $g \colon \Omega \mapsto \mathds{R}$.
 We then define
 \begin{equation}
-\varepsilon_{\text{$L^2$}}(\hat{f})=\|f - \hat{f}\|_{L_2}=\sqrt{\int_{\Omega} |f(x) - \hat{f}(x)|^2 \text{d}x}
+\varepsilon_{\text{$L^2$}}(\hat{f}) \coloneqq \|f - \hat{f}\|_{L_2}=\sqrt{\int_{\Omega} |f(x) - \hat{f}(x)|^2 \text{d}x}
 \end{equation}
 as the $L^2$ surrogate approximation error.
 \label{def:l2}
@@ -732,12 +732,12 @@ They can be described as the expected value of the squared errors and the square
 Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f}) = \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2
+\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2
 \end{equation}
 as the mean squared error for the surrogate based on the given sample.
 Similarly, we also define
 \begin{equation}
-\varepsilon_{\text{RMSE}}(\hat{f}) = \sqrt{\varepsilon_{\text{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2}
+\varepsilon_{\text{RMSE}}(\hat{f}) \coloneqq \sqrt{\varepsilon_{\text{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2}
 \end{equation}
 as the root mean squared error for the surrogate based on the given sample.
 \end{definition}
@@ -750,7 +750,7 @@ To improve upon absolute error metrics and allow for comparisions across model f
 Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
-\varepsilon_{\text{NRMSE}}(\hat{f}) = \frac{\varepsilon_{\text{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
+\varepsilon_{\text{NRMSE}}(\hat{f}) \coloneqq \frac{\varepsilon_{\text{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
 \end{equation}
 as the normalized root mean squared error for the surrogate based on the given sample.
 \end{definition}
@@ -937,9 +937,9 @@ $1 \in C$ & ? & ?\\
 
 The ANOVA method decomposes the functions into four terms.
 A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2\}}$, and a two dimensional term $f_{\{1,2\}}$.
-As we can see in \cref{fig:anova_f1}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}}=? > 0$.
+As we can see in \cref{fig:anova_f1}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}})=? > 0$.
 Therefore the other terms can be dropped and the function can be completely represented using only a one-dimensional function.
-However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \cref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}> 0$ and the ANOVA method would report that no dimension reduction can be applied.
+However, we can observe the same problem as with spatially adaptive sparse grids, i.e. the ANOVA method fails to identify that the function $f_2$ is still intrinsically one-dimensional as seen in figure \cref{fig:anova_f2} since for all ANOVA components it holds that $\sigma^2(f_{c}) > 0$ and the ANOVA method would report that no dimension reduction can be applied.
 
 \subsection{Summary}
 
@@ -948,11 +948,10 @@ In contrast, other basis functions like radial basis functions do not depend on 
 In turn this means that an effective dimension reduction with conventional sparse grids based methods is highly dependent on the alignment of the model function.
 Without adding another layer of flexibility with an input transformation function, sparse grids can not use their full potential in many cases, as we have seen with function $f_2$.
 
-Therefore, adaptive sparse grids can not exploit model functions with non axis-aligned function terms with a low intrinsic dimension and the sparse grid dimension grows with the model dimension.
-Thus, in case a high-dimensional model function is not suitable for sparse grids, the sparse grid is subject the curse of dimensionality.
-To put the grid limitations into more concrete range, we can say that regular full grids already become infeasible for models with dimensionality of $d=4$, while regular sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
-The presented technique of transformed sparse grids is, at least in theory, not limited by the original model dimension.
-\Cref{fig:dim_ranges} visualizes the suitable dimension ranges of all three techniques.
+Therefore, adaptive sparse grids can not exploit model functions with non axis-aligned function terms with a low intrinsic dimension and the sparse grid surrogate has to cover $d$ dimensions, as the dimension reduction techniques are failing.
+Thus, in case a high-dimensional model function is not suitable for sparse grids, the sparse grid is subject the curse of dimensionality with the original model dimension $d$.
+To put the grid limitations into more concrete range, we can say that regular full grids already become infeasible for such  models with dimension of $d=4$, while regular sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
+The presented technique of transformed sparse grids has the goal of moving the surrogate dimension closer to the intrinsic dimension of a model through input transformations and is, at least in theory, not limited by the original model dimension even in cases where the function terms are not axis-aligned.
 
 \newpage
 \begin{mdframed}[style=style]
@@ -977,7 +976,7 @@ The presented technique of transformed sparse grids is, at least in theory, not 
 
 \vspace{2.5mm}
 \delimit
-\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations.}
+\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations in cases where axis-aligned dimension reduction techniques fail.}
 \label{fig:dim_ranges}
 \end{figure}
 \end{mdframed}
@@ -1000,7 +999,7 @@ This results in the possibility of drastically reducing the amount of grid point
 Let $W \in \mathds{R}^{d \times d}$ be the active direction matrix with $W^T W=I$, and let $r \leq d$ be the reduced dimension.
 We then define
 \begin{equation}
-W_r = \begin{bmatrix}
+W_r \coloneqq \begin{bmatrix}
   \\
     w_1 ~ w_2 ~ \dots ~ w_{r-1} ~ w_r\\
     \\
@@ -1021,10 +1020,10 @@ When applying a linear transformation $W_r^T x$ on the elements of a hypercube $
 Let $m$ be the dimension of the zonotope, and let $k \geq  m$ be the amount of zonotope generators.
 An $m$-dimensional zonotope
 \begin{equation}
-Z=\left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
+Z \coloneqq \left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
   \label{zonotope}
 \end{equation}
-with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$ corresponds a the $m$-dimensional minkowski sum.
+with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$ corresponds a the $k$-dimensional minkowski sum.
 \end{definition}
 
 
@@ -1079,7 +1078,7 @@ p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
 results in a projected input space that has the zonotope form of \cref{zonotope} with the $p_i$ are generators.
 The projected zonotope is then
 \begin{equation}
-Z_{p}=\left\{\sum_{i=1}^r p_i x_i , ~ -1 \leq x_i \leq 1\right\}, ~~ p_i=\frac{1}{2} W_r^T e_i,
+Z_{p} \coloneqq \left\{\sum_{i=1}^r p_i x_i , ~ -1 \leq x_i \leq 1\right\}, ~~ p_i \coloneqq \frac{1}{2} W_r^T e_i,
 \nonumber
 \end{equation}
 where according to \cref{zonotope_form}, the projected input space is exactly the zonotope with $Z_{p}=p(\Omega)$.
@@ -1090,12 +1089,12 @@ However, since the surrogate creation process expects inputs from a hypercube an
 The surrogate space is then later scaled and aligned to obtain the unit hypercube $\Omega_r$.
 Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to obtain the orthogonal vectors
 \begin{equation}
-q_i=\frac{q_i'}{\| q_i' \|},~~ q_i'=p_i - \sum_{k=1}^{i-1} \frac{\langle q_k, p_k\rangle}{\langle q_k, q_k\rangle}.
+q_i \coloneqq \frac{q_i'}{\| q_i' \|},~~ q_i' \coloneqq p_i - \sum_{k=1}^{i-1} \frac{\langle p_k q_k'\rangle}{\langle q_k', q_k' \rangle} q_k'.
 \label{q}
 \end{equation}
 The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
 \begin{equation}
-S=\left\{\sum_{i=1}^r s_i q_i x_i, ~ -1 \leq x_i \leq 1\right\},~~ s_i=\sum_{k=1}^d \langle q_i, p_k\rangle.
+S \coloneqq \left\{\sum_{i=1}^r s_i q_i x_i, ~ -1 \leq x_i \leq 1\right\},~~ s_i \coloneqq \sum_{k=1}^d \langle q_i, p_k\rangle.
 \label{surrogate_space}
 \end{equation}
 where the scaling factors $s_i$ are chosen in such a way that the hypercube $S$ exactly matches the extent of the zonotope $Z_p$, as seen in \cref{fig:surrogate_space}.
@@ -1128,12 +1127,12 @@ This should result in the best possible encasement of $Z_p$.
 The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$, as shown in \cref{fig:aligned}.
 First, we observe that the generators $g_i$ of $S$ are created using the orthogonal vectors $q_i$ and the scaling factors $s_i$ to obtain
 \begin{equation}
-G=\begin{bmatrix}
+G \coloneqq \begin{bmatrix}
   \\
     g_1 ~ \dots  ~ g_r\\
     \\
   \end{bmatrix}=Q ~ \text{diag}(s_1, \dots, s_r) ~, ~~~
-Q=\begin{bmatrix}
+Q \coloneqq \begin{bmatrix}
   \\
     q_1 ~ \dots  ~ q_r\\
     \\
@@ -1149,7 +1148,7 @@ y=G^{-1} p(x)=\text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p
 Per surrogate space definition \cref{surrogate_space}, we know that $y_i \in [-1,1]$ holds.
 Once the projected inputs are represented by the new basis, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
 \begin{equation}
-t_{W_r}(x)= c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
+t_{W_r}(x) \coloneqq c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
 \label{linear_trans}
 \end{equation}
 
@@ -1187,13 +1186,13 @@ To reverse the transformation completely, we have to deal with reversing $p(x)$ 
 Our goal is to reverse the transformation only onto certain representative elements of the equivalence classes $[x]_p=\{x \in \Omega \mid p(x)=x_{p}\}$.
 We then only consider the points
 \begin{equation}
-C=\{x - c_d  \in \text{span} ~ W_r \mid x \in \Omega\},
+C \coloneqq \{x - c_d  \in \text{span} ~ W_r \mid x \in \Omega\},
 \label{proj_rep}
 \end{equation}
 i.e. who lie in the vector subspace that is spanned by the active directions in $W_r$ and crosses the center $c_d$.
 Next, we reverse the projection $p(x)$ only onto the representative elements $x \in C$, so that we are able to map one element $x_r\in \Omega_r$ onto one element $x \in C$ to obtain $t_{W_r}^{\text{reverse}}\colon \Omega_r \mapsto C$ with
 \begin{equation}
-t_{W_r}^{\text{reverse}}(x_r)=~W_r Q ~ \text{diag}\left(2s_1, \dots, 2s_r\right) (x_r - c_r) + c_d.
+t_{W_r}^{\text{reverse}}(x_r) \coloneqq ~W_r Q ~ \text{diag}\left(2s_1, \dots, 2s_r\right) (x_r - c_r) + c_d.
 \end{equation}
 
 This function is called a reverse function, as it is not a true inverse of $t_{W_r}$.
@@ -1225,14 +1224,14 @@ The method of active subspaces \cite{CG15} aims to identify the most influential
 In constrast to conducting parameter studies, we will use the so-called active directions of a computed active subspace to construct the transformation matrix $W_r$.
 Let
 \begin{equation}
-C = \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
+C \coloneqq \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
 \label{eq:as_c}
 \end{equation}
 
 be the average outer product of the gradient, a $(d \times d)$ matrix.
 Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
 \begin{equation}
-C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
+C = V \Lambda V^T, ~~ \Lambda \coloneqq diag(\lambda_1, \dots, \lambda_d), ~~ V \coloneqq
   \begin{bmatrix}
   \\
     v_1 ~ v_2 ~ \dots ~ v_{d-1} ~ v_d\\
@@ -1241,7 +1240,7 @@ C = V \Lambda V^T, ~~ \Lambda = diag(\lambda_1, ..., \lambda_d), ~~ V=
 \nonumber
 \end{equation}
 
-We furthermore assume that the eigenvectors in this decomposition are ordered, i.e. $\lambda_1 \geq ... \geq \lambda_d$.
+We furthermore assume that the eigenvectors in this decomposition are ordered, i.e. $\lambda_1 \geq \dots \geq \lambda_d$.
 A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
 \begin{equation}
 \lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
@@ -1273,54 +1272,6 @@ In cases where the gradient function is not known and can not be easily computed
 However, as this section will show, the gradients can be approximated in various ways from the available input data in ways that allows for a acceptable active subspace approximation.
 The approximated gradients are then used as inputs for equation c\cref{eq:as_c_approx} to obtain the approximated active subspace matrix.
 There are various different methods of achieving that, where each method has its advantages and disadvantages.
-
-\begin{definition}[$L^2$ norm]
-Let $v \in \mathds{R}^{d}$ be a vector. Then
-\begin{equation}
-\| v\|_2=\sqrt{\sum_{i=1}^d |v_{i}|^2}
-\nonumber
-\end{equation}
-is the $L^2$ norm of the vector $v$.
-\end{definition}
-
-To judge the quality of approximated gradients, we first have to define an error metric for them.
-
-\begin{definition}[Average gradient error]
-Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
-\begin{equation}
-\varepsilon_{\text{grad}}(S)=\frac{1}{n} \sum_{i=1}^n \frac{\| \widetilde{\nabla} f(x_i) - \nabla f(x_i) \|_2}{\| \nabla f(x_i) \|_2}
-\label{eq:e_grad}
-\end{equation}
-as the average gradient approximation error of the sample.
-\end{definition}
-
-\begin{definition}[Frobenius norm]
-Let $A \in \mathds{R}^{m \times n}$ be a matrix. Then
-\begin{equation}
-\| A\|_2=\sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
-\nonumber
-\end{equation}
-is the Frobenius norm of the matrix $A$.
-\end{definition}
-
-The most basic error metric for an estimated active subspace matrix would be calculating the Frobenius norm of the approximation error compared to the true active subspace, i.e. to calculate $\| W - W^\ast \|_2$.
-However, this error calculation is not suitable for cases in which $\lambda_i \approx 0$, since the corresponding eigenvectors can vary greatly in that case.
-It has therefore to be adapted by omitting the affected eigenvectors, which are just the most inactive directions, from the calculation if such a case occurs, i.e. calculating $\| W_r - W_r^\ast \|_2$ instead with some $r$ with $\lambda_r \napprox 0$.
-
-\begin{definition}[Active subspace error]
-Given an estimated active subspace matrix $W_r$ and the reference matrix $W_r^*$, the
-active subspace error is defined by
-\begin{equation}
-\varepsilon_{\text{AS}}(W_r)=\frac{\| W_r - W_r^* \|_2}{\| W_r^* \|_2}.
-\label{eq:e_as}
-\end{equation}
-\end{definition}
-
-In the context of active subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
-Instead, the primary focus is the active subspace approximation error, which is decoupled from the individual gradients, as it is the only metric that matters in the end when working with active subspaces.
-Even though $\varepsilon_{\text{AS}}$ is entirely based on the average outer product of the gradients, there is no strong link between $\varepsilon_{\text{grad}}$ and $\varepsilon_{\text{AS}}$.
-While the individual gradients approximated by different methods can be far off, the average of the outer products of the gradients from \cref{eq:as_c_approx} can still come close to the real one if the general trend of the gradients is still be reflected in the approximated gradients.
-Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the approximated active subspace.
 
 \subsection{Finite differences}
 
@@ -1409,42 +1360,6 @@ The completely \red circle represents the sample point $x$ and other sample poin
 \end{figure}
 \end{mdframed}
 
-\subsection{Approximation quality}
-
-To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
-Two example functions are investigated for this purpose, wrt. the average gradient approximation error $\varepsilon_{\text{grad}}$ \cref{eq:e_grad} and the subsequent average active subspace approximation error $\varepsilon_{\text{AS}}$ \cref{eq:e_as}.
-
-\vspace{2mm}
-\textbf{Simple function~}
-The first example function is a simple $3$-dimensional polynomial function:
-\begin{equation}
-f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
-\nonumber
-\end{equation}
-
-As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
-The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
-
-
-\newpage
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\centering
-	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
-\delimit
-	\captionof{figure}{Gradient approximation error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
-	\label{fig:as_errors_f1}
-\end{figure}
-\end{mdframed}
-
-The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
-The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
-Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be a little bit better.
-It can also be observed that the gradient approximation quality does not exactly correlate with the active subspace approximation quality.
-While the nearest neighbour methods have a similar gradient errors compared to finite differences with $h=0.1$, the active subspace computed by the nearest neighbour method has a far better quality than the finite differences method with $h=0.1$.
-
 \subsection{Limitations}
 
 Active subspaces are however not a perfect indicator on which active directions are suitable for a linear transformation construction, since they can be misled.
@@ -1466,7 +1381,6 @@ In certain cases, like the example function presented in this section, this will
 This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
 We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
 The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
-We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W^\ast$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
 
 Until now, the focus was primarily on deterministic linear transformations, because they are relatively easy to construct using active subspaces.
 However, in theory we can construct and use arbitrary transformation functions.
@@ -1479,16 +1393,27 @@ A completely different approach to finding a transformation function is just gen
 A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
 It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
 
-Generating uniformly distributed orthonormal matrices is not trivial, but important when generating many of them to avoid any generation bias.
-\cite{ABC} presents an algorithm to generate unitary matrices and also a slightly modified version to uniformly generate elements from the orthogonal group $O(d)$.
-It starts off with generating a random matrix $Z$ with $z_{i,j} \sim \mathcal{N}\left(0, 1\right)$.
-The matrix $Z$ is then fed into a $QR$ decomposition with $Z=QR$.
-The entries of the diagonal matrix $R$ are then normalized to get
+A simple generation algorithm would first generate random matrices $R \in \mathds{R}^{d \times d}$ until all column vectors are significantly linear independent, and then orthonormalizing $R$ using the Gram-Schmidt method on the column vectors $r_i$ of $R$ to obtain the column vectors
 \begin{equation}
-\Lambda=\text{diag}\left(\frac{r_{1,1}}{|r_{1,1}|}, \dots, \frac{r_{d,d}}{|r_{d,d}|}\right)
+w_i=\frac{w_i'}{\| w_i' \|},~~ w_i'=r_i - \sum_{k=1}^{i-1} \frac{\langle r_k,  w_k' \rangle}{\langle w_k', w_k' \rangle} w_k'
 \end{equation}
-The matrix $W=Q \Lambda Q$ is then uniformly distributed with Haar measure, i.e. exactly what we are looking for.
-
+and therefore the orthonormal matrix
+\begin{equation}
+W = \begin{bmatrix}
+  \\
+    w_1 ~ w_2 ~ \dots ~ w_{r-1} ~ w_d\\
+    \\
+  \end{bmatrix}.
+\end{equation}
+The final step would randomly roll a value for $1 \leq r \leq d$ and cut off the last $d-r$ column vectors of $W$ to obtain the transformation matrix
+\begin{equation}
+W_r = \begin{bmatrix}
+  \\
+    w_1 ~ w_2 ~ \dots ~ w_{r-1} ~ w_r\\
+    \\
+  \end{bmatrix}.
+\end{equation}
+Note that although the generated random orthonormal matrices are perfectly uniformly distributed in the orthogonal group $O(d)$ and we would need a different algorithm to achieve a true uniform distribution \cite{}, they are still perfectly usable for the purpose of input transformations.
 
 
 \subsection{Periodic transformations}
@@ -1496,7 +1421,7 @@ The matrix $W=Q \Lambda Q$ is then uniformly distributed with Haar measure, i.e.
 Another possible use case for transformations are periodic functions.
 If the model function $f$ is for example approximately periodic along one dimension $i$ with the period $p_i$, i.e. it holds that $f(x_1,\dots,x_i,\dots,x_d) \approx f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation function
 \begin{equation}
-t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d)=(x_1,\dots, \frac{x_i\text{ mod } p_i}{p_i}, \dots,x_d)^T
+t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d) \coloneqq (x_1,\dots, \frac{x_i\text{ mod } p_i}{p_i}, \dots,x_d)^T
 \label{eq:per}
 \end{equation}
 and create a normal surrogate $\hat{f}$ on $\Omega$ with $f(x) \approx \hat{f}(t(x))$.
@@ -1507,7 +1432,7 @@ Of course this can concept can be expanded upon with handling multiple periodic 
 A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
 This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown in \cref{eq:per} by using the transformation
 \begin{equation}
-t_p(x_1,x_2)=\left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \left(x_2 \text{ mod } p\right)\right]^T.
+t_p(x_1,x_2) \coloneqq \left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \left(x_2 \text{ mod } p\right)\right]^T.
 \nonumber
 \end{equation}
 
@@ -1515,14 +1440,14 @@ t_p(x_1,x_2)=\left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \lef
 \vspace{2mm}
 \begin{figure}[H]
         \centering
-\begin{minipage}{.40\textwidth}
+\begin{minipage}{.4\textwidth}
         \centering
   \captionof{figure}{Approximation errors of various periodic transformations $t_p$ and sparse grid surrogates of level $\ell \in \{1, \dots, 11\}$, modified linear hat basis, and periods $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ for the example function $f$.\\
   The sparse grid surrogates were constructed using the normal interpolation approach.}
     \end{minipage}%
-    \begin{minipage}{0.60\textwidth}
+    \begin{minipage}{0.6\textwidth}
         \centering
-\includegraphics[width=0.95\textwidth]{graphics/periodic}
+\includegraphics[width=0.85\textwidth]{graphics/periodic}
     \end{minipage}
 \label{fig:periodic}
 \end{figure}
@@ -1554,7 +1479,7 @@ The transformation function was constructed in the last chapter in such a way th
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function.
 We define the transformed input space as
 \begin{equation}
-T=\{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r.
+T \coloneqq \{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r.
 \end{equation}
 \end{definition}
 
@@ -1565,7 +1490,7 @@ We should strive to have $T$ cover $\Omega_r$ as much as possible to not make a 
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function, and let $U_t=T \setminus \Omega_r$ be the unused reduced surrogate space.
 Then
 \begin{equation}
-\tilde{u}_t=\frac{|U_t|}{|\Omega_r|}
+\tilde{u}_t \coloneqq \frac{|U_t|}{|\Omega_r|}
 \end{equation}
 is the share of unused inputs of the reduced surrogate space.
 \end{definition}
@@ -1607,7 +1532,7 @@ Note that even if there are many grid points that were generated outside of $T$,
 The alternative approach would first require to create a modified model function $f' \colon \mathds{R}^d \mapsto \mathds{R}$ that can be evaluated outside of $\Omega$.
 We can either set all values outside $\Omega$ to 0 with
 \begin{equation}
-f'_0(x)=\begin{cases}
+f'_0(x) \coloneqq \begin{cases}
 f(x)&, \text{if $x \in \Omega$}\\
 0&,\text{else}
 \end{cases}
@@ -1626,15 +1551,16 @@ As a result, the transformed surrogate construction is usually an ill-posed prob
 \begin{mdframed}[style=style]
 \begin{figure}[H]
         \centering
-\begin{minipage}{.49\textwidth}
+\begin{minipage}{.45\textwidth}
         \centering
-  \captionof{figure}{Illustration of a possible case with $r=1$ and $d=2$, where the process in broken down into two steps. The surrounding \beige square represents $\Omega$, the \red line represents $\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$.
+  \captionof{figure}{Illustration of a possible case with $r=1$ and $d=2$.
+  The surrounding \beige square represents $\Omega$, the \lightblue line represents $\Omega_r=T$, the black dots are the grid points of the sparse grid surrogate.
 The \green points are sample points that are being mapped from $\Omega$ onto $\Omega_r$.
-Note that as $\Omega$ and $\Omega_r$ are distinct vector spaces, this figure visualizes the $\Omega_r$ as the elements crossing the center with $\Omega_r \times \{\frac{1}{2}\}$ in the same way as \cref{sec:vis_trans}.}
+Note that as $\Omega$ and $\Omega_r$ are distinct vector spaces, this figure visualizes the one dimensional $\Omega_r$ as the elements crossing the center in the same way as \cref{sec:vis_trans}.}
     \end{minipage}%
-    \begin{minipage}{0.49\textwidth}
+    \begin{minipage}{0.55\textwidth}
         \centering
-   \includegraphics[width=0.8\linewidth]{graphics/reduced_grid}
+   \includegraphics[width=0.85\linewidth]{graphics/reduced_grid}
 \label{fig:reduced_grid}
     \end{minipage}
 \end{figure}
@@ -1647,11 +1573,11 @@ It is however a certainly interesting approach worthy of being investigated furt
 
 The original function samples
 \begin{equation}
-S=\{(x_1, f(x_1), \dots, (x_n, f(x_n))\} \subseteq \Omega \times \mathds{R}
+S \coloneqq \{(x_1, f(x_1), \dots, (x_n, f(x_n))\} \subseteq \Omega \times \mathds{R}
 \end{equation}
 that were drawn randomly from to the given input probability distribution $\rho$, are transformed to obtain the transformed sample
 \begin{equation}
-S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}.
+S_t \coloneqq \{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}.
 \end{equation}
 We are aiming to construct the surrogate function $\hat{f}_t$ using sparse grids with the sparse grid point set $X$ and basis functions $\phi_{\underline{l},\underline{i}}$ for the transformed sample $S_t$ with
 \begin{equation}
@@ -1755,7 +1681,7 @@ If we take a look at similar dimension reduction methods and take some inspirati
 The projection pursuit regression method comes from the area of statistics and is in its core idea related to our approach with linear transformations.
 It tries to represent a dataset
 \begin{equation}
-P=\{(x_i, y_i)\}=\{(x_i, f(x_i))\}
+P \coloneqq \{(x_i, y_i)\}=\{(x_i, f(x_i))\}
 \end{equation}
 using the form
 \begin{equation}
@@ -1766,7 +1692,7 @@ where $\beta_0$ is a constant, $\beta_k$ are projection matrices, the $f_k$ are 
 Using the $\beta_k$ to project inputs onto a lower-dimensional space is very similar to our concept of creating linear transformations.
 The functions $f_k$ and projection matrices $\beta_k$ of this additive model can then be calculated iteratively by applying one step of finding a projection and constructing a surrogate repeatedly each time on the error function
 \begin{equation}
-e_k(x)=f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
+e_k(x) \coloneqq f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
 
 This term can be computed using an iterative approach, as seen in \cref{alg:ppr}.
@@ -1873,7 +1799,7 @@ Thus, configuration parameters have to examined in every iteration again, as the
 This algorithm determines the optimal configuration $c*$ with
 
 \begin{equation}
-c^\ast=\argmin_{c \in C} \varepsilon(\hat{f}_c^l)
+c^\ast \coloneqq \argmin_{c \in C} \varepsilon(\hat{f}_c^l)
 \nonumber
 \end{equation}
 
@@ -2322,6 +2248,92 @@ This is an advantage compared to any interpolation based approaches.
 \chapter{Evaluation}
 \label{chap:c7}
 
+\section{Active Subspaces}
+
+
+\begin{definition}[$L^2$ norm]
+Let $v \in \mathds{R}^{d}$ be a vector. Then
+\begin{equation}
+\| v\|_2 \coloneqq \sqrt{\sum_{i=1}^d |v_{i}|^2}
+\nonumber
+\end{equation}
+is the $L^2$ norm of the vector $v$.
+\end{definition}
+
+To judge the quality of approximated gradients, we first have to define an error metric for them.
+
+\begin{definition}[Average gradient error]
+Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
+\begin{equation}
+\varepsilon_{\text{grad}}(S) \coloneqq \frac{1}{n} \sum_{i=1}^n \frac{\| \widetilde{\nabla} f(x_i) - \nabla f(x_i) \|_2}{\| \nabla f(x_i) \|_2}
+\label{eq:e_grad}
+\end{equation}
+as the average gradient approximation error of the sample.
+\end{definition}
+
+\begin{definition}[Frobenius norm]
+Let $A \in \mathds{R}^{m \times n}$ be a matrix. Then
+\begin{equation}
+\| A\|_2 \coloneqq \sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
+\nonumber
+\end{equation}
+is the Frobenius norm of the matrix $A$.
+\end{definition}
+
+The most basic error metric for an estimated active subspace matrix would be calculating the Frobenius norm of the approximation error compared to the true active subspace, i.e. to calculate $\| W - W^\ast \|_2$.
+However, this error calculation is not suitable for cases in which $\lambda_i \approx 0$, since the corresponding eigenvectors can vary greatly in that case.
+It has therefore to be adapted by omitting the affected eigenvectors, which are just the most inactive directions, from the calculation if such a case occurs, i.e. calculating $\| W_r - W_r^\ast \|_2$ instead with some $r$ with $\lambda_r \napprox 0$.
+
+\begin{definition}[Active subspace error]
+Given an estimated active subspace matrix $W_r$ and the reference matrix $W_r^*$, the
+active subspace error is defined by
+\begin{equation}
+\varepsilon_{\text{AS}}(W_r) \coloneqq \frac{\| W_r - W_r^* \|_2}{\| W_r^* \|_2}.
+\label{eq:e_as}
+\end{equation}
+\end{definition}
+
+In the context of active subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
+Instead, the primary focus is the active subspace approximation error, which is decoupled from the individual gradients, as it is the only metric that matters in the end when working with active subspaces.
+Even though $\varepsilon_{\text{AS}}$ is entirely based on the average outer product of the gradients, there is no strong link between $\varepsilon_{\text{grad}}$ and $\varepsilon_{\text{AS}}$.
+While the individual gradients approximated by different methods can be far off, the average of the outer products of the gradients from \cref{eq:as_c_approx} can still come close to the real one if the general trend of the gradients is still be reflected in the approximated gradients.
+Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the approximated active subspace.
+
+\subsection{Approximation quality}
+
+To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
+Two example functions are investigated for this purpose, wrt. the average gradient approximation error $\varepsilon_{\text{grad}}$ \cref{eq:e_grad} and the subsequent average active subspace approximation error $\varepsilon_{\text{AS}}$ \cref{eq:e_as}.
+
+\vspace{2mm}
+\textbf{Simple function~}
+The first example function is a simple $3$-dimensional polynomial function:
+\begin{equation}
+f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
+\nonumber
+\end{equation}
+
+As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
+The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
+
+
+\newpage
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+	\includegraphics[width=\textwidth]{graphics/as_errors_f1}
+\delimit
+	\captionof{figure}{Gradient approximation error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
+	\label{fig:as_errors_f1}
+\end{figure}
+\end{mdframed}
+
+The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
+The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
+Also, using fewer closer neighbours $m$ for the nearest neighbour method seems to be a little bit better.
+It can also be observed that the gradient approximation quality does not exactly correlate with the active subspace approximation quality.
+While the nearest neighbour methods have a similar gradient errors compared to finite differences with $h=0.1$, the active subspace computed by the nearest neighbour method has a far better quality than the finite differences method with $h=0.1$.
 
 \vspace{2mm}
 \textbf{More complex function~}
@@ -2343,12 +2355,16 @@ f_2(x_0, \dots, x_{19})=&e^{0.2 x_0 x_1 x_2 x_3 x_4}\\
 	\includegraphics[width=\textwidth]{graphics/as_errors_f2}
 	
 \delimit
-	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_2$ as the average over 10 iterations..}
+	\captionof{figure}{Active subspace error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_2$ as the average over 10 iterations.}
 	\label{fig:as_grad_errors_f2}
 \end{figure}
 \end{mdframed}
 
 TODO: Right plot wrong
+
+\subsection{Summary}
+
+We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W^\ast$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
 
 
 \chapter{Automatic configurations}
