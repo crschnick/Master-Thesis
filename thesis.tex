@@ -1013,7 +1013,7 @@ For now, we assume that the $W$ and $r$ are given, but we will cover the process
 
 \subsection{Unit hypercube projections}
 
-To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ for a given transformation matrix $W_r$, several adjustments have to be made in order to obtain a usable transformation function as the naive approach with $W_r^T x$ would map inputs outside of $\Omega_r$ in certain cases.
+To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ with $r < d$ for a given transformation matrix $W_r$, several adjustments have to be made in order to obtain a usable transformation function as the naive approach with $W_r^T x$ would map inputs outside of $\Omega_r$ in certain cases.
 When applying a linear transformation $W_r^T x$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
 
 \begin{definition}[Zonotope]
@@ -2248,8 +2248,32 @@ This is an advantage compared to any interpolation based approaches.
 \chapter{Evaluation}
 \label{chap:c7}
 
+
+\section{Orientation changes}
+
+While the main focus lies on dimension reducing transformations with $r < d$, we can still take a short look at the quality of simple dimension preserving transformations with $r=d$ that are effectively only changing the orientation of the function inputs.
+As we discussed in \cref{sec:}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can apply the interpolation method to construct a transformed sparse grid surrogate.
+
+Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
+On the other side, the unused parts of surrogate space (see \cref{sec:}) effectively reduce the resolution of the sparse grid surrogate.
+Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
+
+As we can see in ... , the pure orientation change does not lead to better interpolation results.
+In this concrete example, the penalty of the unused transformation space $U_t$ evens out the gains from a more optimal orientation for sparse grid surrogates.
+The computed active subspace eigenvectors and eigenvalues are
+
+As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space as in \cref{a} that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.72$, which means that $T$ only makes up $28\%$ of the surrogate space $S$.
+
+However, this result was to be expected.
+Even though there is no improvement with this method, there is also no significant downside, even when $\tilde{u}$ is large.
+This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using linear transformations, approximately cancels out with the orientation improvements.
+As the next evaluation step involves dimension reducing linear transformations, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
+Therefore, dimension reducing transformations seem to have a much bigger potential.
+
 \section{Active Subspaces}
 
+Another central aspect of the transformation pipeline is the quality of the generated transformations, which are mainly constructed with the help of the active subspace method.
+We are mainly concerned with the quality differences between the different active subspace approximation methods, and want to ideally make use of the neighbour approximation methods, as they don't require known gradients and no additional function evaluations.
 
 \begin{definition}[$L^2$ norm]
 Let $v \in \mathds{R}^{d}$ be a vector. Then
@@ -2365,6 +2389,36 @@ TODO: Right plot wrong
 \subsection{Summary}
 
 We then investigated the quality of the resulting active subspaces $W$ by comparing them to the true active subspace $W^\ast$, and observed that even though the approximated gradients are not accurate at all, the resulting active subspaces are still decent and usable.
+
+
+\section{Random transformations}
+
+To verify the quality of the active subspace method in general compared to the true optimal linear transformation, which we can't necessarily construct deterministicly with active subspaces, another presented approach are random linear transformation from \cref{a}.
+This generation method is not affected by any potential biases or compounding gradient approximation errors as the active subspace method is.
+To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal transformation.
+As the mainly used transformation evaluator component is forward looking, i.e. generating an actual transformed surrogate, we have to employ very lo-fi surrogates for that.
+
+The used lo-fi surrogate generator creates a grid that has very grid points and does not perform any refinements.
+
+\begin{mdframed}[style=algstyle,frametitle={\textbf{struct} \texttt{randomLofiConfig}}]
+\normalsize
+\vspace{5.5mm}
+\begin{algorithmic}
+    \State \texttt{gridType = ModLinear}
+    \State \texttt{approxMaxGridPoints = 1000}
+    \State \texttt{refinements = 0}
+    \State \texttt{maxSampleCount = 1000}
+    \State \texttt{trainDataPerGridPoint = 1}
+    \State \texttt{lambdas = \{0.00001, 0.0001, 0.001, 0.01, 0.1, 0.5, 1\}}
+    \State \texttt{regularizationBases = \{1.0, 0.5, 0.25, 0.125\}}
+\end{algorithmic}
+\vspace{-1.5mm}
+\delimit
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. The parameters the set of possible surrogate configurations $C$ and the transformation function $t$.}
+\end{mdframed}
+
+Once the algorithm has found the transformation with the lowest error based on lofi surrogates, we calculate the error again using a hifi surrogate s.t. we come closer to the real error.
+
 
 
 \chapter{Automatic configurations}
