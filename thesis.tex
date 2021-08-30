@@ -2245,36 +2245,102 @@ The sample subset, that is passed down by each component to the next ones is als
 The pipeline works for any amount of input samples, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work efficiently, which makes it very flexible.
 This is an advantage compared to any interpolation based approaches.
 
-\chapter{Evaluation}
+\chapter{Componentwise evaluation}
 \label{chap:c7}
 
+The construction process for transformed surrogates is realized through a transformation pipeline, which consists out of many different components.
+These components interact with each other and pass data down the transformation pipeline, which can cause compounding inaccuries and errors if the inputs from a previous stage are off.
+In the first of two evaluation chapters we investigate the qualities and properties of single units of the transformation pipeline in an isolated environment.
+For this purpose, we start with a low dimensional model function, the Ishigami Function \cite{}, which has already been used to test various uncertainty quantification \cite{} and sensitivity analysis techniques \cite{}:
+\begin{equation}
+f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
+\end{equation}
+Applying the active subspace method on this function yields the following results:
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+  \begin{tabular}{ l c c c}
+& $v_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
+\hline
+$1$ \vline & $(+0.005, +0.999, +0.007)^T$ & 967.93 & $81.7\%$\\
+$2$ \vline & $(+0.540, +0.003, -0.841)^T$ & 112.20 & $9.5\%$\\
+$3$ \vline & $(-0.841, +0.008, +0.540)^T$ & 104.77 & $8.8\%$\\
+\end{tabular}
+
+\delimit
+
+\captionof{figure}{Computed eigen vectors, eigen values, and eigen value shares of the active subspaces of $f$ with the Monte-Carlo method and $10^6$ samples.}
+\end{figure}
+\end{mdframed}
+
+This means that the second input dimension is reponsible for a big chunk of the function value change, while the other two  are less important, but not neglible, as their combined eigen value share still is $18.3\%$.
 
 \section{Orientation changes}
 
 While the main focus lies on dimension reducing transformations with $r < d$, we can still take a short look at the quality of simple dimension preserving transformations with $r=d$ that are effectively only changing the orientation of the function inputs.
 As we discussed in \cref{sec:}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can apply the interpolation method to construct a transformed sparse grid surrogate.
+We are therefore interested in answering the following questions:
+\begin{enumerate}
+\item How big is the approximation error difference between interpolation and regression surrogates?
+\item How does the approximation error fare when applying an orientation changing transformation with $r=d$?
+\item How does the approximation error fare when both changes are applied together?
+\end{enumerate}
 
 Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
 On the other side, the unused parts of surrogate space (see \cref{sec:}) effectively reduce the resolution of the sparse grid surrogate.
 Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
+As orientation change, we use the computed active subspace directions from \cref{a}.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/ishigami_orientation}
+\delimit
+
+\captionof{figure}{Approximation errors of various sparse grid surrogates for the Ishigami function.}
+\label{fig:tpex}
+\end{figure}
+\end{mdframed}
 
 As we can see in ... , the pure orientation change does not lead to better interpolation results.
 In this concrete example, the penalty of the unused transformation space $U_t$ evens out the gains from a more optimal orientation for sparse grid surrogates.
-The computed active subspace eigenvectors and eigenvalues are
+As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space as in \cref{a} that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$ and the grid resolution is effectively lower.
+Furthermore, the approximation quality lost by the regression is relatively low compared to the interpolation quality.
 
-As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space as in \cref{a} that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.72$, which means that $T$ only makes up $28\%$ of the surrogate space $S$.
 
 However, this result was to be expected.
-Even though there is no improvement with this method, there is also no significant downside, even when $\tilde{u}$ is large.
+Even though there is no improvement with this method, there is also no significant downside, even as $\tilde{u}$ is large and regression is used.
 This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using linear transformations, approximately cancels out with the orientation improvements.
-As the next evaluation step involves dimension reducing linear transformations, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
+Also, using regression only results in a slight increase of the approximation error.
+As the next evaluation step involves dimension reducing linear transformations that have to deal with unused space and use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
 Therefore, dimension reducing transformations seem to have a much bigger potential.
 
-\section{Active Subspaces}
+\section{Dimension reducing transformations}
+
+Next, we look at transformations with $r < d$, 
+\begin{enumerate}
+\item How does the reduction process increase the approximation error?
+\item How much do the approximation errors correlate with the computed eigen values from \cref{a}?
+\item Is a dimension reduction worth it for the example function?
+\end{enumerate}
+
+Based off the active subspace information from \cref{a}, a one-dimensional reduction by cutting off the eigen vectors $v_2$ and $v_3$ looks feasible, as the first active direction covers the majority of the eigen value share.
+However, as already discussed in \cref{sec:}, the active subspace method can be biased and not return active directions that are really suited for the transformation process.
+Therefore, the primarily used pipeline component uses a look ahead approach to evaluate the qualities of active subspaces.
+To better investigate the active subspace properties, we generate transformations for $r=1$ and $r=2$.
+
+\section{Active subspace approximations}
 
 Another central aspect of the transformation pipeline is the quality of the generated transformations, which are mainly constructed with the help of the active subspace method.
 We are mainly concerned with the quality differences between the different active subspace approximation methods, and want to ideally make use of the neighbour approximation methods, as they don't require known gradients and no additional function evaluations.
+We are interested in answering the following questions:
+\begin{enumerate}
+\item How much do the rougly approximated active subspaces differ from the true active subspaces?
+\item Which approximation method performs the best?
+\item Do the active subspace differences actually manifest themselves in the approximation error?
+\end{enumerate}
 
+To judge the quality of approximated gradients, we first have to define an error metric for them:
 \begin{definition}[$L^2$ norm]
 Let $v \in \mathds{R}^{d}$ be a vector. Then
 \begin{equation}
@@ -2284,7 +2350,6 @@ Let $v \in \mathds{R}^{d}$ be a vector. Then
 is the $L^2$ norm of the vector $v$.
 \end{definition}
 
-To judge the quality of approximated gradients, we first have to define an error metric for them.
 
 \begin{definition}[Average gradient error]
 Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
@@ -2295,54 +2360,18 @@ Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_
 as the average gradient approximation error of the sample.
 \end{definition}
 
-\begin{definition}[Frobenius norm]
-Let $A \in \mathds{R}^{m \times n}$ be a matrix. Then
-\begin{equation}
-\| A\|_2 \coloneqq \sqrt{\sum_{i=1}^m \sum_{j=1}^n |a_{i,j}|^2}
-\nonumber
-\end{equation}
-is the Frobenius norm of the matrix $A$.
-\end{definition}
-
-The most basic error metric for an estimated active subspace matrix would be calculating the Frobenius norm of the approximation error compared to the true active subspace, i.e. to calculate $\| W - W^\ast \|_2$.
-However, this error calculation is not suitable for cases in which $\lambda_i \approx 0$, since the corresponding eigenvectors can vary greatly in that case.
-It has therefore to be adapted by omitting the affected eigenvectors, which are just the most inactive directions, from the calculation if such a case occurs, i.e. calculating $\| W_r - W_r^\ast \|_2$ instead with some $r$ with $\lambda_r \napprox 0$.
-
-\begin{definition}[Active subspace error]
-Given an estimated active subspace matrix $W_r$ and the reference matrix $W_r^*$, the
-active subspace error is defined by
-\begin{equation}
-\varepsilon_{\text{AS}}(W_r) \coloneqq \frac{\| W_r - W_r^* \|_2}{\| W_r^* \|_2}.
-\label{eq:e_as}
-\end{equation}
-\end{definition}
-
 In the context of active subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
-Instead, the primary focus is the active subspace approximation error, which is decoupled from the individual gradients, as it is the only metric that matters in the end when working with active subspaces.
-Even though $\varepsilon_{\text{AS}}$ is entirely based on the average outer product of the gradients, there is no strong link between $\varepsilon_{\text{grad}}$ and $\varepsilon_{\text{AS}}$.
+Instead, the primary focus is the resulting surrogate approximation error, which is decoupled from the individual gradients, as it is the only metric that matters in the end.
+Even though the active subspaces computation is based entirely on the average outer product of the gradients, there is not necessarily a strong link between $\varepsilon_{\text{grad}}$ and the quality of the resulting active subspace.
 While the individual gradients approximated by different methods can be far off, the average of the outer products of the gradients from \cref{eq:as_c_approx} can still come close to the real one if the general trend of the gradients is still be reflected in the approximated gradients.
-Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the approximated active subspace.
+Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the approximated active subspace, which doesn't necessarily have to be bad as even the true active subspaces might not result in an optimal transformation.
 
-\subsection{Approximation quality}
+The most basic error metric for an estimated active subspace matrix would be calculating some matrix norm of the approximation error compared to the true active subspace, i.e. to calculate $\| W - W^\ast \|$.
+However, this error calculation is not suitable for cases in which $\lambda_i \approx 0$, since the corresponding eigenvectors can vary greatly in that case.
+Also, if two eigen values $\lambda_i, \lambda_j$ are similar in magnitude, the order of eigen vectors might switch arbitrarily and result in a huge matrix norm value.
+An error calculation of this type would therefore be potentially very unstable and not suitable.
+We therefore just use the surrogate look ahead approximation error.
 
-To get an idea of the actual quality of the different methods, especially regarding the resulting active subspace error $\varepsilon_{\text{AS}}$, this section will focus on the gradient approximation methods to gauge whether the methods can be used to generate meaningful input transformations.
-Two example functions are investigated for this purpose, wrt. the average gradient approximation error $\varepsilon_{\text{grad}}$ \cref{eq:e_grad} and the subsequent average active subspace approximation error $\varepsilon_{\text{AS}}$ \cref{eq:e_as}.
-
-\vspace{2mm}
-\textbf{Simple function~}
-The first example function is a simple $3$-dimensional polynomial function:
-\begin{equation}
-f_1(x)=(0.8 {x_1}^2 - x_2) / (x_3 + 0.5)
-\nonumber
-\end{equation}
-
-As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
-The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
-
-
-\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
@@ -2352,6 +2381,12 @@ Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neigh
 	\label{fig:as_errors_f1}
 \end{figure}
 \end{mdframed}
+
+As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
+The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
+
 
 The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
 The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
@@ -2397,6 +2432,13 @@ To verify the quality of the active subspace method in general compared to the t
 This generation method is not affected by any potential biases or compounding gradient approximation errors as the active subspace method is.
 To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal transformation.
 As the mainly used transformation evaluator component is forward looking, i.e. generating an actual transformed surrogate, we have to employ very lo-fi surrogates for that.
+We are interested in answering the following questions:
+\begin{enumerate}
+\item What is the approximation error distribution of the randomly generated transformations?
+\item How do random transformations compare to active subspaces?
+\item Are random transformations a viable alternative?
+\end{enumerate}
+
 
 The used lo-fi surrogate generator creates a grid that has very grid points and does not perform any refinements.
 
@@ -2419,7 +2461,90 @@ The used lo-fi surrogate generator creates a grid that has very grid points and 
 
 Once the algorithm has found the transformation with the lowest error based on lofi surrogates, we calculate the error again using a hifi surrogate s.t. we come closer to the real error.
 
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+        \centering
+\begin{minipage}{.4\textwidth}
+        \centering
+  \captionof{figure}{Histogram of lo-fi approximation errors for 1000 randomly generated transformations with $r=3$, a bin range of $?$, and .. . The lowest error is $?$ and the highest one is $?$.\\The surrogates were created using regression.}
+\label{fig:aligned_grid}
+    \end{minipage}%
+    \begin{minipage}{0.6\textwidth}
+        \centering
+   \includegraphics[width=\linewidth]{graphics/random_hist_3}
+    \end{minipage}
+\end{figure}
+\end{mdframed}
 
+Note that all approximation errors in the histograms stem from lo-fi surrogates.
+The actual hi-fi approximation error is calculated separately only for the best transformation.
+The histogram however still gives valuable insight into the actual approximation error distribution, as the lo-fi surrogates should still be comparatively representative.
+
+\begin{mdframed}[style=style]
+\vspace{2mm}
+\begin{figure}[H]
+  \centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/random_hist_3}
+  \captionof{figure}{Random transformation approximation error distribution for $r=2$.}
+  \label{fig:as_rn}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/random_hist_3}
+  \captionof{figure}{Random transformation approximation error distribution for $r=1$.}
+  \label{fig:as_nn}
+\end{subfigure}
+\delimit
+\captionof{figure}{Differences in sample selection between the two neighbour approximation methods for examples with $|S|=10$.
+The \darkblue dots are the available samples $S \setminus \{x\}$. A filled dot signals that it is considered when looking for neighbours.
+The completely \red circle represents the sample point $x$ and other sample points circled in \red indicate that they were chosen as a neighbour of $x$.}
+\end{figure}
+\end{mdframed}
+
+In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function, as it comes close to the active subspace error.
+However, for higher dimensional functions, the required amount of random generation iterations to find an acceptable transformation will grow, as more dimension will mean more possible directions and also orders of directions.
+We can order a set of the same directions in many more ways in higher dimensions.
+Therefore, the active subspace method scales better with higher dimensions as it only requires exactly one run an ordering of directions is implicitly given.
+
+\chapter{Componentwise evaluation (2)}
+\label{chap:c8}
+
+Now that we investigated several important pipeline components with regards to a low-dimensional model function, we compare the results to a case with a high-dimensional example model function to look out for properties that can't be generalized from one low-dimensional case study.
+For this purpose, we start with a low dimensional model function, the Ishigami Function \cite{}, which has already been used to test various uncertainty quantification \cite{} and sensitivity analysis techniques \cite{}:
+\begin{equation}
+f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
+\end{equation}
+Applying the active subspace method on this function yields the following results:
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+  \begin{tabular}{ l c c c}
+& $v_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
+\hline
+$1$ \vline & $(+0.005, +0.999, +0.007)^T$ & 967.93 & $81.7\%$\\
+$2$ \vline & $(+0.540, +0.003, -0.841)^T$ & 112.20 & $9.5\%$\\
+$3$ \vline & $(-0.841, +0.008, +0.540)^T$ & 104.77 & $8.8\%$\\
+\end{tabular}
+
+\delimit
+
+\captionof{figure}{Computed eigen vectors, eigen values, and eigen value shares of the active subspaces of $f$ with the Monte-Carlo method and $10^6$ samples.}
+\end{figure}
+\end{mdframed}
+
+This means that the second input dimension is reponsible for a big chunk of the function value change, while the other two  are less important, but not neglible, as their combined eigen value share still is $18.3\%$.
+
+We first observe that we can't apply orientation changing transformations on the model function as this would imply a value of $r=$, which is too high for regular sparse grids.
+We therefore skip straight to the topic of dimension reducing transformations with manageable values for $r$.
+
+\chapter{Case study 1: High dimensional function approximation}
+\label{chap:c9}
+
+\chapter{Case study 2: High dimensional regression}
+\label{chap:c9}
 
 \chapter{Automatic configurations}
 \label{chap:c8}
