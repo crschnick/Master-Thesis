@@ -1,6 +1,6 @@
 % !TeX spellcheck = en-US
 % !TeX encoding = utf8
-% !TeX program = lualatex
+% !TeX program = pdflatex
 % !BIB program = biber
 % -*- coding:utf-8 mod:LaTeX -*-
 
@@ -31,87 +31,16 @@
   title={Transformed Sparse Grids for high-dimensional models},
   author={Christopher Schnick},
   type=master,
-  institute=ipvs, % or other institute names - or just a plain string using {Demo\\Demo...}
+  institute=ipvs,
   course={Informatik},
   examiner={Prof.\ Dr.\ Dirk Pflüger},
-  supervisor={Dr. Michael Rehme},
+  supervisor={Dr.\ Michael Rehme},
   startdate={April 26, 2021},
-  enddate={October 26, 2021}
+  enddate={October 26, 2021},
+  language=english
 ]{scientific-thesis-cover}
 
 \makeindex
-
-
-\newtheorem{proof}{Proof}
-\newtheorem{lemma}{Lemma}
-\newtheorem{theorem}{Theorem}
-\DeclareMathOperator*{\argmin}{arg\,min}
-\DeclareMathOperator*{\argmax}{arg\,max}
-
-\definecolor{charcoal}{HTML}{264653}
-\definecolor{persian_green}{HTML}{2A9D8F}
-\definecolor{light_cornflower_blue}{HTML}{8ECAE6}
-\definecolor{eggshell}{HTML}{F4F1DE}
-\definecolor{silver}{HTML}{C0C0C0}
-\definecolor{persian_red}{HTML}{D03030}
-
-\mdfdefinestyle{style}{%
-linecolor=charcoal,
-linewidth=1.3px,
-innermargin=0,
-innertopmargin=0,
-frametitlebackgroundcolor=eggshell,
-frametitlealignment=\center,
-frametitlerulewidth=1.3px,
-frametitlerule=true,
-frametitlerulecolor=silver,
-frametitleaboveskip=6.5pt,
-frametitlebelowskip=3.5pt,
-frametitlefont=\small\normalfont\bfseries
-}
-
-\mdfdefinestyle{algstyle}{%
-linecolor=charcoal,
-linewidth=1.3px,
-innermargin=0,
-innertopmargin=0,
-frametitlebackgroundcolor=eggshell,
-frametitlerulewidth=1.3px,
-frametitlerule=true,
-frametitlerulecolor=silver,
-frametitleaboveskip=6.5pt,
-frametitlebelowskip=3.5pt,
-frametitlefont=\small\normalfont\bfseries
-}
-
-
- \captionsetup[subfigure]{width=0.9\linewidth}
-
-
-\newcommand{\Hsquare}{%
-  \text{\fboxsep=-.2pt\fbox{\rule{0pt}{1.4ex}\rule{1.4ex}{0pt}}}%
-}
-\newcommand\red{red\,{\setlength\fboxsep{0pt}\colorbox{persian_red}{\Hsquare}} }
-\newcommand\green{green\,{\setlength\fboxsep{0pt}\colorbox{persian_green}{\Hsquare}} }
-\newcommand\grey{grey\,{\setlength\fboxsep{0pt}\colorbox{silver}{\Hsquare}} }
-\newcommand\beige{beige\,{\setlength\fboxsep{0pt}\colorbox{eggshell}{\Hsquare}} }
-\newcommand\lightblue{light blue\,{\setlength\fboxsep{0pt}\colorbox{light_cornflower_blue}{\Hsquare}} }
-\newcommand\darkblue{dark blue\,{\setlength\fboxsep{0pt}\colorbox{charcoal}{\Hsquare}} }
-
-\usepackage[normalem]{ulem}
-\newcommand\coloruline{\bgroup\markoverwith{\textcolor{light_cornflower_blue}{\rule[-0.6ex]{2pt}{0.3pt}}}\ULon}
-\crefformat{figure}{\coloruline{#2fig.$~$#1#3}}
-\Crefformat{figure}{\coloruline{#2Fig.$~$#1#3}}
-\crefformat{equation}{\coloruline{#2(#1#3)}}
-\crefformat{section}{\coloruline{#2sec.$~$#1#3}}
-\crefformat{chapter}{\coloruline{#2chap.$~$#1#3}}
-\Crefformat{chapter}{\coloruline{#2Chap.$~$#1#3}}
-\crefformat{definition}{\coloruline{#2def.$~$#1#3}}
-\crefformat{algorithm}{\coloruline{#2alg.$~$#1#3}}
-\Crefformat{algorithm}{\coloruline{#2Alg.$~$#1#3}}
-
-
-\newcommand{\delimit}{{\color{silver}\noindent\rule{\textwidth}{1pt}}}
 
 \begin{document}
 
@@ -137,7 +66,7 @@ frametitlefont=\small\normalfont\bfseries
 \input{commands}
 \setcounter{page}{1}
 \pagenumbering{roman}
-\Titelblatt
+\Coverpage
 
 %Eigener Seitenstil fuer die Kurzfassung und das Inhaltsverzeichnis
 \deftripstyle{preamble}{}{}{}{}{}{\pagemark}
@@ -153,12 +82,7 @@ frametitlefont=\small\normalfont\bfseries
   \section*{Abstract}
 \fi
 
-Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
-However, many simulation results mainly depend only on a subset of the inputs and are therefore possible targets for dimension reduction techniques, which aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.\\
-Various approaches to dimension reduction already exist in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
-Active subspaces are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.\\
-In this thesis, the active subspace method is applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimension reduction technique that exploits the best of both worlds.
-This combined approach views the model from a black-box perspective and therefore can and will be employed on a wide variety of high-dimensional real world models, with the goal to evaluate their general quality of the produced surrogates show their advantages and disadvantages in different contexts.
+\input{abstract_en.txt}
 
 \cleardoublepage
 
@@ -1482,7 +1406,6 @@ We define the transformed input space as
 T \coloneqq \{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r.
 \end{equation}
 \end{definition}
-
 The main difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ might not be one.
 As we will show later, in many cases $T$ is not a unit hypercube and it holds that $T \subset \Omega_r$.
 We should strive to have $T$ cover $\Omega_r$ as much as possible to not make a portion of $\Omega_r$ go unused when constructing the surrogate.
@@ -2271,9 +2194,9 @@ To get an idea of the general structure and importance of the inputs, we apply t
   \begin{tabular}{ l | c c c}
 $i$ & $v_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
 \hline
-$1$ & $(+0.005, +0.999, +0.007)^T$ & 967.93 & $81.7\%$\\
-$2$  & $(+0.540, +0.003, -0.841)^T$ & 112.20 & $9.5\%$\\
-$3$ & $(-0.841, +0.008, +0.540)^T$ & 104.77 & $8.8\%$\\
+$1$ & $(+0.005, ~+0.999, ~+0.007)^T$ & 967.93 & $81.7\%$\\
+$2$  & $(+0.540, ~+0.003, ~-0.841)^T$ & 112.20 & $9.5\%$\\
+$3$ & $(-0.841, ~+0.008, ~+0.540)^T$ & 104.77 & $8.8\%$\\
 \end{tabular}
 \egroup
 
@@ -2525,15 +2448,11 @@ In theory, any surrogate type that uses the tensor-product approach to construct
 Other common candidates aside from sparse grids would be , ...
 As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would be trivial.
 
-- Formalize relationship between AS and surrogate quality
-
-- Determine lo-fi surrogates
-
 \vspace{1em}
 \textbf{Determining optimal lo-fi surrogates}
 Right now, suitable lo-fi surrogates that are indicative of the comparative quality of their high fidelity surrogates, are determined more or less empirically.
-However, in theory it should not be too difficult to develop an algorithm that automatically determines optimal lo-fu surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
-
+However, in theory it should not be too difficult to develop an algorithm that automatically determines optimal lo-fi surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
+This would make the transformation process even simpler to apply on a variety of models, as it would eliminate prior probing of the model function.
 
 \appendix
 \chapter{Appendix}
