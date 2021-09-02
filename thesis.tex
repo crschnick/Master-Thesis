@@ -223,116 +223,126 @@ We also reflect on the limitations and possible improvements of the method.
 \chapter{Surrogate construction}
 \label{chap:c2}
 
-Computer simulations almost always work with mathematical models and rely on evaluations of the underlying mathematical model on the lowest level.
-More formally, we assume that this mathematical model is represented by a model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
-While the domain of many models may not be the unit hypercube, the domain can easily be translated and scaled to obtain the unit hypercube, as long as it is bounded.
-Furthermore, many models are subject to uncertanties in their inputs.
+The complexity of computer simulations that work on mathematical models is heavily dependent on the model dimensionality.
+Threfore, to succesfully perform complex simulations on high-dimensional models, various optimizations, such as model function surrogates, have been developed to ease the curse of dimensionality.
+More formally, we assume that this model is represented by a model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
+While the domain of many models may not be the unit hypercube, it can easily be transformed in a linear fashion to obtain the unit hypercube, as long as the domain is bounded.
+Furthermore, many models are also subject to uncertanties in their inputs.
 To incorporate these uncertanties, we model the inputs stochastically with a probability distribution defined by a probability density function $\rho \colon \Omega \to \mathds{R_+}$.
 
-Model function surrogates come into play in cases where it is expensive to directly evaluate $f$ as many operations on model functions, such as optimization, quadrature, and others, require many evaluations.
-This is usually the case when a differential equation has to be solved by the model function.
-The usual course of action is then to construct a surrogate $\hat{f}$ that has the advantage of being much faster to evaluate while preserving an required amount of accuracy such that $\forall x \in \Omega \colon f(x) \approx \hat{f}(x)$ holds.
-Moreover, the surrogate can come with other desirable properties, such as the gradients or moments being easily to calculate, and therefore providing additional useful features for free.
+Surrogates for model functions come into play in cases where many operations on model functions have to be performed to achieve accurate results and it wourld be too computationally expensive to directly evaluate $f$.
+Common use cases are operations such as optimization and quadrature, to be performed on a model that is given by a differential equation.
+The usual course of action is then to construct a surrogate $\hat{f}$ that approximates $f$ and has the advantage of being much faster to evaluate.
+Of course, the surrogate has to preserve an required amount of accuracy, such that the simulation results are still representative of the original model.
+In other words, we are trying to construct an approximating function $\hat{f}$ that fulfills the following condition: $\forall x \in \Omega \colon f(x) \approx \hat{f}(x)$.
+Moreover, by constructing a surrogate of a certain type, such as spline based surrogates, other desirable properties can be provided automatically.
+For example, with spline based surrogates the gradients and moments are very easy to compute, and they therefore provide additional useful features essentially for free, even if they were not available in the original model function.
 
-Plenty of different surrogate types and construction methods exist where each one comes with its own idiosyncrasies.
-These surrogate type and construction method specific properties can range from their sensitivity to the input dimension of the model to their approximation quality in general or with regards to a specific type of model. 
-The primary focus of this thesis lies on the already established sparse grid surrogates and their various subtypes and construction methods, with the goal of enhancing the standard construction approach by finding and exploiting lower-dimensional important subsets of the model inputs.
+Plenty of different surrogate types and construction methods already exist and each one comes with its own idiosyncratic advantages and limitations.
+These surrogate type and construction method specific properties can range from their sensitivity to the model dimensionality to their approximation quality in general or with regards to certain types of functions. 
+The primary focus of this thesis lies on the already established sparse grid surrogates, their various subtypes, and construction methods, with the goal of enhancing the sparse grid technique by finding and exploiting important lower-dimensional subsets of the model inputs.
 
 \section{Full grids}
 
 Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
-More formally, we construct a one-dimensional mesh of level $\ell$ with mesh size $h=2^{-\ell}$ and use a basic tensor product approach to obtain a $d$-dimensional grid mesh.
-By then using nodal basis functions at each grid point, we can interpolate functions very accurately.
+More formally, by constructing a one-dimensional mesh of level $\ell$ with resulting mesh size $h=2^{-\ell}$ and then associating simple nodal basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with each grid point at index $i \in \{0, \dots, 2^\ell\}$, we can interpolate functions very accurately.
+Using a basic tensor product approach, we can obtain a uniform $d$-dimensional grid mesh where the grid point indices are multi-indices and the basis functions $\phi_{\ell,\underline{i}} \colon [0,1]^d \mapsto \mathds{R}$ are multivariate functions.
 The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{\ell d})$ grid points.
-Full grids suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for $\ell$ and $d$.
+Full grids therefore suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for both the level $\ell$ and dimensionality $d$.
 \begin{definition}[Levels and indices]
-Let
-\begin{equation}
-\underline{\ell} \coloneqq (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d
-\end{equation}
-be a $d$-dimensional multi level index. For every multi level index $\underline{l}$, we define the hierarchical index set
+Let $\underline{\ell} \coloneqq (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d$ be a $d$-dimensional multi-index.
+For every multi-index $\underline{\ell}$, we define the hierarchical index set
 \begin{equation}
 H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathds{N}^d_0 \mid
 \begin{cases}
-    i_t=1,3\dots,2^{\ell_t} - 3, 2^{\ell_t} - 1, & \ell_t \geq 1 \\
-    i_t=0,1, & \ell_t = 0
+    i_t=1,3\dots,2^{\ell_k} - 3, 2^{\ell_k} - 1, & \ell_k \geq 1 \\
+    i_t=0,1, & \ell_k = 0
 \end{cases} \right\}.
+\nonumber
 \end{equation}
 \end{definition}
-
-We use these hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given multi level index $\underline{\ell}$ and its associated index set $H_{\underline{l}}$, such that every point in the grid mesh is assigned to one level and hierarchical index.
+%
+We use these hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given multi-index $\underline{\ell}$ and its associated index set $H_{\underline{l}}$, such that every point in the grid mesh is assigned to one multi-level and hierarchical multi-index.
 This incremental construction will make it easier to transition from full grids to sparse grids later on.
 \begin{definition}[Grid points]
-Let $x_{l,i}=i2^{-\ell}$ be a one-dimensional grid point coordinate, and let
+Let $x_{\ell,i}=i2^{-\ell}$ be a one-dimensional grid point coordinate with $x_{\ell,i} \in [0,1]$, and let
 \begin{equation}
 x_{\underline{\ell},\underline{i}} \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_d,i_d})
 \end{equation}
 be a $d$-dimensional grid point. The set of grid points of a regular full grid with boundary is then given by
 \begin{equation}
-X^{\text{fb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\}
+X^{\mathrm{fb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\},
+\nonumber
 \end{equation}
 and the set of grid points of regular full grid without boundary by
 \begin{equation}
-X^{\text{f}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{1} \leq \ell',  \underline{i} \in H_{\underline{\ell}}\}.
+X^{\mathrm{f}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{1} \leq \ell',  \underline{i} \in H_{\underline{\ell}}\}.
+\nonumber
 \end{equation}
 \end{definition}
-
-Next, we assign each grid point a supporting basis function, where the basis functions usually stem from one family of basis functions, like a family of linear or polynomial basis functions.
+%
+Next, we assign each grid point a supporting multivariate basis function, where the basis function usually stems from one family of one-dimensional basis functions, like a family of linear hat functions or polynomial basis functions.
 \begin{definition}[Basis functions]
-Let $\phi_{\ell,i}(x)$ be univariate basis functions for the one-dimensional grid points $x_{\ell,i}$.\\
-By applying the tensor-product approach at a grid point $x_{\underline{\ell}}$, we obtain the multivariate $d-$dimensional basis function
+Let $\phi_{\ell,i}(x)$ be a univariate basis function for the one-dimensional grid points $x_{\ell,i}$.\\
+By applying the tensor product approach on $\phi_{\ell,i}(x)$, we obtain the multivariate $d-$dimensional basis function
 \begin{equation}
 \phi_{\underline{\ell},\underline{i}} \coloneqq \prod_{k=1}^{d} \phi_{\ell_k,i_k}.
 \label{eq:basis_functions}
 \end{equation}
+for the grid point $x_{\underline{\ell},\underline{i}}$.
 \end{definition}
-
+%
 \begin{definition}[Full grid]
-Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.\\
-The span of the basis functions over all boundary grid points
+The span of the multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$ over all regular full boundary grid points
 \begin{equation}
-V^{\text{fb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{fb}}_{\ell}\}
+V^{\mathrm{fb}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{fb}}_{\ell}\}
+\nonumber
 \end{equation}
-is referred to as a regular full boundary grid of level $\ell$ and span over all non-boundary grid points
+is defined as a regular full boundary grid of level $\ell$ and the span over all regular non-boundary full grid points
 \begin{equation}
-V^{\text{f}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{f}}_{\ell}\}
+V^{\mathrm{f}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{f}}_{\ell}\}
+\nonumber
 \end{equation}
-is referred to as a regular full grid.
-
+is defined as a regular full grid of level $\ell$.
 \label{def:full_grid}
 \end{definition}
-
 
 \section{Sparse grids}
 
 Full grids, as defined in \cref{def:full_grid}, can be decomposed into a direct sum of subspaces in a hierarchical way, to allow for a more granular selection of which subspaces to keep.
-Keeping only a subset of subspaces results in a worse interpolation error compared to full grids with the asymptotic error $\mathcal{O}(h^2 (\log h^{-1})^{d-1})$ including an additional logarithmic factor.
-The amount of grid points however only grows with $\mathcal{O}(h^{-1} (\log h^{-1})^{d-1})$, which is a significant improvement over full grids and makes it possible to apply the sparse grid technique to higher dimensional problems than full grids.
+By keeping only a specific subset of subspaces results, we obtain the so-called sparse grids.
+Cmpared to full grids, this construction leads to a worse approximation quality with the asymptotic interpolation error $\mathcal{O}(h^2 (\log h^{-1})^{d-1})$ including an additional logarithmic factor.
+The amount of grid points however only grows with $\mathcal{O}(h^{-1} (\log h^{-1})^{d-1})$, which is a significant improvement over full grids.
+The reduced amount of required grid points makes it possible to apply the sparse grid technique to higher-dimensional problems than the naive full grid technique.
 \begin{definition}[Sparse grid points]
 Let $\ell$ be a level. Using the hierarchical index sets $H_{\underline{\ell}}$, we define the grid points for a regular sparse boundary grid as
 \begin{equation}
-X^{\text{sb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{i} \in H_{\underline{\ell}}\}
+X^{\mathrm{sb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{i} \in H_{\underline{\ell}}\}
 \end{equation}
 and the grid points for a regular sparse grid as
 \begin{equation}
-X^{\text{s}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell', \underline{i} \in H_{\underline{\ell}}\}.
+X^{\mathrm{s}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell', \underline{i} \in H_{\underline{\ell}}\}.
 \end{equation}
 \end{definition}
-
+%
+As we can see, the sparse grid point set definition is very similar to the full grid definition (\cref{a}), with the only difference being the level multi-index selection using the $\ell_1$ norm $|\cdot|_1$ instead of the maximum norm $|\cdot|_\infty$.
+The sparse grid itself can then also be defined similar to full grids:
 \begin{definition}[Sparse grid]
-Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X^{\text{s}}_{\ell}$ a set of sparse grid points.\\
-The span of the basis functions over all boundary grid points
+The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ over all regular sparse boundary grid points
 \begin{equation}
-V^{\text{sb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\},
+V^{\mathrm{sb}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{sb}}_{\ell}\},
 \end{equation}
-is referred to as a regular sparse boundary grid, and the span span over all non-boundary grid points
+is referred to as a regular sparse boundary grid, and the span over all regular sparse non-boundary grid points
 \begin{equation}
-V^{\text{s}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{s}}_{\ell}\},
+V^{\mathrm{s}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{s}}_{\ell}\},
+\label{eq:sparse_grid}
 \end{equation}
 is referred to as a regular sparse grid.
 \label{def:sparse_grid}
 \end{definition}
-
+%
+The grid construction process of both full grids and sparse grids using grid increments is visualized in \cref{fig:grid_construction}.
+%
 \newpage
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
@@ -359,62 +369,57 @@ is referred to as a regular sparse grid.
 \label{fig:grid_construction}
 \end{figure}
 \end{mdframed}
-
-In related sparse grid literature, the hierarchical decomposition of sparse grids, which can be seen in \cref{fig:grid_construction}, is realized through the decomposition of subspaces instead of decomposition of the grid point set.
+%
+In related sparse grid literature, the hierarchical decomposition of sparse grids, which can be seen in \cref{fig:grid_construction}, is realized through the decomposition of subspaces instead of the decomposition of the grid point set.
 This allows for easier proofs of various approximation qualities, but is not required here.
-It is sufficient to see that a grid construction through hierarchical subspaces is equivalent:
+It is sufficient to see that a grid construction through hierarchical subspaces is equivalent to the construction used in this thesis:
 \begin{definition}[Hierarchical subspaces]
-The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ for of a grid increment indentified by a multi level index $\underline{\ell}$,
+The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ of a grid increment indentified by a level multi-index $\underline{\ell}$,
 \begin{equation}
-W_{\underline{\ell}} \coloneqq \text{span}~ \{\phi_{\underline{\ell'},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
+W_{\underline{\ell}} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell'},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
 is the hierarchical subspace of $\underline{\ell}$.\\
-A sparse grid can then also be represented as a direct sum of hierarchical subspaces:
+A sparse grid can then also be represented as a direct sum of the hierarchical subspaces:
 \begin{equation}
-V^{\text{sb}}_{\ell} \coloneqq \text{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\text{sb}}_{\ell}\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}
+V^{\mathrm{sb}}_{\ell} \coloneqq \mathrm{span}~ \left\{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{sb}}_{\ell}\right\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}.
 \label{eq:direct_sum}
 \end{equation}
 \end{definition}
-The sparse grid construction of \cref{def:sparse_grid} is equal to \cref{eq:direct_sum}, as the only difference between both is that the same hierarchical decomposition is realized in different stages of the sparse grid construction.
+The sparse grid construction through \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid}, as the only difference between both is that the hierarchical decomposition is realized in different stages of the sparse grid construction.
 
 \section{Basis functions}
 
 The multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$, as defined in \cref{eq:basis_functions}, are a central aspect of sparse grids.
 Many different basis function families exist, each with various levels of complexity, capabilities, and properties.
-In this section we will take a look at all the different basis functions used in this thesis and some reasons for using them.
+In this section we will take a look at all the different basis functions used in this thesis and reasons for using them.
 
-\vspace{0.3em}
-\textbf{Hat basis }
-A one-dimensional hat function is defined by $h(x) \coloneqq \max(1 - |x|,0)$.
-They can be transformed into basis functions for a level $l$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^\ell x-i)$.
-It holds that $\phi^h_{\ell,i}(x_{\ell,i})=1$ and $\phi^h_{\ell,i}(x_{\ell,i-1})=\phi^h_{\ell,i}(x_{\ell,i-1})=0$.
+\paragraph{Hat basis}
+One of the most simple types of basis functions are hat functions.
+A one-dimensional hat function $h(x) \coloneqq \max(1 - |x|,0)$ can be transformed into a basis function for a level $\ell$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^\ell x-i)$.
+For the same level index $\ell$, it holds that the function supports are disjoint with $\phi^h_{\ell,i}(x_{\ell,i})=1$ and $\phi^h_{\ell,i}(x_{\ell,i'})=0, ~ i' \in H_{\ell} \setminus \{i\}$.
 They are also not differentiable at their supporting grid point $x_{\ell,i}$.
 
-\vspace{0.3em}
-\textbf{Modified basis }
+\paragraph{Modified basis}
 One method of removing the need of using boundary grid points, at least to some degree, are modified basis functions.
 These basis functions do not require grid points at the boundary and instead extrapolate the values at the boundaries from the grid points closest to the boundaries using a modified version of normal basis functions.
 It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by defining the modified basis as follows:
 \begin{equation}
-\phi^{\text{mod}}_{\ell,i}(x) \coloneqq
+\phi^{\mathrm{mod}}_{\ell,i}(x) \coloneqq
 \begin{cases}
 1 &, \ell=1\\
-\phi^{\text{left}}_{\ell}(x)&, \ell>1, i=1\\
-\phi^{\text{right}}_{\ell}(x)&, \ell>1, i=2^\ell - 1\\
+\phi^{\mathrm{left}}_{\ell}(x)&, \ell>1, i=1\\
+\phi^{\mathrm{right}}_{\ell}(x)&, \ell>1, i=2^\ell - 1\\
 \phi_{\ell,i}(x)&, \text{else}
 \end{cases},
 \nonumber
 \end{equation}
-where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special boundary extrapolation functions.
-Usually $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are similar with regards to their structure of the normal basis functions $\phi_{\ell,i}$, e.g. a hat basis is usually modified with special hat functions.
+where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special boundary extrapolation functions that are usually are similar with regards to their construction compared to the normal basis functions $\phi_{\ell,i}$.
 
-\vspace{0.3em}
-\textbf{Splines }
+\paragraph{Splines}
 One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
 They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
 
-\vspace{0.3em}
-\textbf{Prewavelets }
+\paragraph{Prewavelets}
 A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
 Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
 One of these properties is the orthogonality property with $\langle \phi_{\ell, i},\phi_{\ell, j} \rangle = 0$ for all wavelets with $i \neq j$.
@@ -428,39 +433,40 @@ TODO: Image of basis functions
 \section{Grid surrogate construction}
 \label{sec:gsc}
 
-The are multiple different approaches of constructing a sparse grid surrogate to approximate a model function.
-A sparse grid surrogate $\hat{f} \in V^{\text{s}}_{\ell}$ is a linear combination of all basis functions.
-Therefore, to represent $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight, also called hierarchical surplus, $\alpha_{\underline{\ell},\underline{i}}$.
+Sparse grid surrogates that try to approximate a model function can be constructed using multiple different approaches.
+A regular sparse grid surrogate $\hat{f} \in V^{\text{s}}_{\ell}$ is a linear combination of all basis functions.
+Therefore, to represent the instance $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight $\alpha_{\underline{\ell},\underline{i}}$, also called hierarchical surplusses.
 \begin{definition}[Sparse grid surrogates]
 Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
-Furthermore, let $\alpha_{\underline{l},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
-A grid surrogate is then a linear combination
+Furthermore, let $\alpha_{\underline{\ell},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.\\
+A grid surrogate is then the linear combination
 \begin{equation}
 \hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
 \underline{\ell},\underline{i}}(x).
 \end{equation}
-In the case of a regular sparse grid with $X=X^{\text{sb}}_{\ell}$, the surrogate simply is
+In the case of a regular sparse grid with $X=X^{\mathrm{sb}}_{\ell}$, the surrogate is equal to
 \begin{equation}
 \hat{f}(x) \coloneqq \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
 \underline{\ell},\underline{i}}(x).
 \end{equation}
 \end{definition}
-
+%
 The interpolation method is the most simple and common sparse grid surrogate construction scheme.
-It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses, $\alpha_{\underline{\ell},\underline{i}}$.
-The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}_{\text{hier}}(x)$.
-Furthermore, the method requires the model function to be evaluated at every grid point, which means that it requires exactly $|X|$ function evaluations and it can not be used to approximate a function from a given function sample.
+It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses $\alpha_{\underline{\ell},\underline{i}}$.
+The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}_{\mathrm{int}}(x)$.
+As the model function has to be evaluated at every grid point, a grid interpolation surrogate requires exactly $|X|$ function evaluations at the grid points and can not be used to approximate a function from a given function sample.
 
-Another method of constructing the surrogate is by using a regression based approach \cite{}.
-In contrast to interpolation, we no longer require the function values at the grid points to interpolate between them.
-Instead, the regression method uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$. wrt. to the approximation error by using train and validation samples drawn from the model function and input distribution.
-As a result, the size of the function sample and therefore function evaluations, does no longer have to be equal to the amount of grid points, which results in a greater level of flexibility as the amount of model function evaluations and the amount of grid points can vary.
-The basic approach is to solve the least squares problem for $n$ function samples $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
+Another surrogate construction scheme is sparse grid based regression \cite{}.
+In contrast to interpolation, a regression approach does no longer require the function values at the grid points to interpolate between them.
+Instead, it uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$. with regards to the approximation error, by using train and validation samples drawn from the model function and input distribution.
+As a result, the size of the function sample, and therefore the amount of function evaluations, does no longer have to be equal to the amount of grid points.
+This provides a greater level of flexibility, as the amount of model function evaluations and the amount of grid points can vary.
+The basic approach is to solve the least squares problem for the function sample $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
 \begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2 
+\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2 
 \end{equation}
 and a regularization parameter $\lambda > 0$ to prevent overfitting.
-Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\Lambda$ and sparse grid level $\ell$ with
+Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\lambda \in \Lambda$ and sparse grid level $\ell$ to obtain
 \begin{equation}
 \hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
 \end{equation}
@@ -468,70 +474,71 @@ Sparse grid based regression therefore tries to solve the regularized least squa
 \section{Spatially adaptive sparse grids}
 
 In many cases, generating a regular sparse grid can be improved upon by introducing adaptivity into the process.
-This allows us to spend more grid points, and therefore be more accurate, in regions that are more important and conversely reduce the amount of grid points is less important regions.
-One method of realizing adaptivity in sparse grids are spatially adaptive sparse grids \cite{}.
-By defining a grid point hierarchy such that each non-boundary grid point has two child grid points in every dimension, one can create a stepwise algorithm that creates these child grid points if they are needed and do not exist yet.
-This creation of new grid points of a parent is called refinement of a grid point.
-
-\begin{definition}[Grid point children]
+This allows us to spend more grid points, and therefore be more accurate, in regions that are more important and conversely reduce the amount of grid points spent in less important regions.
+One method of implementing adaptivity during the sparse grid construction process are spatially adaptive sparse grids \cite{}.
+The central idea of them is to define a grid point hierarchy, such that each non-boundary grid point has two child grid points on the next level increment along every dimension.
+A stepwise algorithm then add these child grid points to the surrogate if they are needed and do not exist yet.
+This creation of new grid points that stem from a parent grid point is called the refinement of a grid point.
+\begin{definition}[Hierarchical grid point children]
 Let $x_{\underline{\ell},\underline{i}} \in X$ be a grid point.
-We then define
+We define
 \begin{equation}
-c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k - 1}, \dots, x_{\ell_d,i_d}), ~~ 
+c_{k}^{\mathrm{left}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k - 1}, \dots, x_{\ell_d,i_d}), ~~ 
 \end{equation}
-as its left child if $i_k > 0$ and
+as its left child if $i_k > 0$ along the $k$-th dimension and
 \begin{equation}
-c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k + 1}, \dots, x_{\ell_d,i_d}), ~~ 
+c_{k}^{\mathrm{right}}(x_{\underline{\ell},\underline{i}}) \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_k + 1,2  i_k + 1}, \dots, x_{\ell_d,i_d}), ~~ 
 \end{equation}
-as its right child if $i_k < 2^{\ell_k}$.
+as its right child along the $k$-th dimension if $i_k < 2^{\ell_k}$.
 Then
 \begin{equation}
 c_{k}(x_{\underline{\ell},\underline{i}}) \coloneqq
 \begin{cases}
-\{c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}})\}&, i_k=0\\
-\{c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}})\}&,i_k= 2^{l_k}\\
-\{c_{k}^{\text{left}}(x_{\underline{\ell},\underline{i}}),c_{k}^{\text{right}}(x_{\underline{\ell},\underline{i}}) \}&, \text{else}
+\left\{c_{k}^{\mathrm{right}}(x_{\underline{\ell},\underline{i}})\right\}&, i_k=0\\
+\left\{c_{k}^{\mathrm{left}}(x_{\underline{\ell},\underline{i}})\right\}&,i_k= 2^{\ell_k}\\
+\left\{c_{k}^{\mathrm{left}}(x_{\underline{\ell},\underline{i}}), ~ c_{k}^{\mathrm{right}}(x_{\underline{\ell},\underline{i}}) \right\}&, \text{else}
 \end{cases}
 \end{equation}
-is the set of possible children of a grid point in dimension $k$ and 
+is the set of possible children of a grid point along dimension $k$, and 
 \begin{equation}
-c(x_{\underline{\ell},\underline{i}}) \coloneqq \bigcup_{k=1}^d \{c_{k}(x_{\underline{\ell},\underline{i}})\}
+c(x_{\underline{\ell},\underline{i}}) \coloneqq \bigcup_{k=1}^d \left\{c_{k}(x_{\underline{\ell},\underline{i}})\right\}
 \end{equation}
-is the set of children of a grid point. It holds that $|c(x_{\underline{\ell},\underline{i}})| \leq 2d$ and $|c(x_{\underline{\ell},\underline{i}})| =2d$ if there is no boundary involved.
-We define a grid point $x_{\underline{\ell},\underline{i}} \in X$ as a leaf if
+is the set of children of a grid point. It holds that $|c(x_{\underline{\ell},\underline{i}})| \leq 2d$ and in case there is no boundary involved, $|c(x_{\underline{\ell},\underline{i}})| =2d$ also holds.\\
+Furthermore, we define a grid point $x_{\underline{\ell},\underline{i}} \in X$ as a leaf grid point if it holds that
 \begin{equation}
-c(x_{\underline{\ell},\underline{i}}) \cap X = \emptyset
+c(x_{\underline{\ell},\underline{i}}) \cap X = \emptyset,
 \end{equation}
+i.e. no child grid points are already contained in $X$.
 \end{definition}
-
+%
 To choose the best grid points to refine, a refinement criterion is introduced.
-This abstract refinement criterion assigns a value to grid point and $r$ grid points with the highest value are refined.
-
+This abstract refinement criterion assigns a value to grid point such that the grid points with the highest value can be refined.
 \begin{definition}[Refinement criterion]
 Let $X$ be a set of grid points.
-Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assins each grid point a value that determines the suitability of a refinement of that grid point.
-
-Let $\hat{f} \in V^X$.
-The commonly used surplus criterion is defined as
+Then $\xi \colon X \mapsto \mathds{R}$ denotes the refinement criterion function, which assigns each grid point a value that determines the suitability of a refinement.\\
+The commonly used surplus criterion
 \begin{equation}
-\xi_s(x_{\underline{\ell},\underline{i}}) \coloneqq |\alpha_{\underline{\ell},\underline{i}}|
+\xi_s(x_{\underline{\ell},\underline{i}}) \coloneqq \abs{\alpha_{\underline{\ell},\underline{i}}}
 \end{equation}
-Since in this thesis we also assume that the input is distributed according to the probability density $\rho$, we also introduce the distribution surplus criterion with
-\begin{equation}
-\xi_{ds}(x_{\underline{\ell},\underline{i}}) \coloneqq \rho(x_{\underline{\ell},\underline{i}}) |\alpha_{\underline{\ell},\underline{i}}|
-\end{equation}
+just uses the absolute hierarchical surplus value, as a high value indicates steep rates of change in the area of a grid point.
 \end{definition}
-We define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$
+%
+To prepare for an iterative adaptivity algorithm, we define the grid points a of adaptive sparse grids after $m$ steps as $X_a^{(m)}$.
 A spatially adaptive sparse grid usually starts out as a regular sparse grid with a coarse level, i.e. $X_a^{(0)}=X^{\text{s}}_{\ell}$.
-Then during the $m$-th iteration, we first order all leaf grid points $x_i$ with $x_1, \dots, x_p \in X_a^{(k-1)}, ~~ \xi(x_1) \geq \dots \geq \xi(x_p)$ and then refine with $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_r)$.
+Then, during the $m$-th iteration, we first order all leaf grid points
+\begin{equation}
+\xi(x_1) \geq \dots \geq \xi(x_p), ~~ x_1, \dots, x_p \in X_a^{(m-1)}
+\end{equation}
+and then perform $k$ refinements to obtain $X_a^{(m)}=X_a^{(m-1)} \cup c(x_1) \cup \dots \cup c(x_k)$.
 Usually, if a leaf grid point is refined, all children are created because selective grid point creation would create additional overhead.
-After $n$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(n)}$ is finished.
-The important parameters that influence the results are the iterations $n$, the refinements per step $r$, the refinement criterion $\xi$ and the initial grid type and size.
+After $q$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(q)}$ is finished.
+The important parameters that influence the results are the iterations $q$, the refinements per step $k$, the refinement criterion $\xi$, as well as the initial grid type and size of $X_a^{(0)}$.
 
-The concept of spatially adaptive Sparse Grids is similar to other established adaptivity methods, such as the preceededing  dimensionally adaptive sparse grids \cite{} or dimensionally adaptive sparse grids \cite{}.
-One downside of the classical version of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
-In a dimension reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
-Spatially dimension adaptive Sparse Grids do exactly that, and are therefore better suited for dimension reduction.
+Various other established adaptivity methods exist, such as dimensionally adaptive sparse grids \cite{}, which uses a more rigid refinement rule that iteratively adds all grid points of whole hierarchical subspaces to the surrogate.
+Another more recent method are spatially dimension adaptive sparse grids \cite{}.
+One small downside of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
+In a dimensionality reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
+Spatially dimension adaptive sparse grids provide a solution by only selectively adding child grid points along a certain dimension.
 
 \section{Sparse Grid based ANOVA}
 
@@ -593,102 +600,93 @@ However, one way or the other, one has to deal with the negative effects of the 
 
 \section{Radial basis functions}
 
-A radial basis function $\varphi \colon \Omega \mapsto \mathds{R}$ is a function, whose value solely depends on the distance between its input and some center point $c \in \Omega$, i.e. it holds that $\varphi(x)=\varphi(\|x - c\|)$.
-They can also be used to for function approximation with 
+Radial basis function interpolation is another technique for function interpolation that utilizes radial basis functions to construct a surrogate.
+A radial basis function $\varphi' \colon \Omega \mapsto \mathds{R}$ is a function whose value solely depends on the distance between its input and its center point $c \in \Omega$, i.e. it holds that $\varphi$ is a radial function of the form $\varphi'(x)=\varphi(\|x - c\|)$.
+The univariate function $\varphi$ is then called the radial kernel centered at $c$.
+Similar to sparse grid surrogates, a radial basis function surrogate is a linear combination
 \begin{equation}
-f(x) \approx \sum_{i=1}^n \omega_i \varphi(\|x - c_i\|)
+f(x) \approx \sum_{i=1}^m \omega_i \varphi(\|x - c_i\|)
 \end{equation}
-In the context of this thesis, only Gaussian functions \cite{} with the euclidean distance as a distance measure are used as basis functions:
+of $m$ basis functions with center points $c_i$ and weights $\omega_i$.
+In the context of this thesis, only Gaussian functions \cite{} with the euclidean distance $|\cdot |_2$ as a distance measure are used as basis functions.
+The basis functions have the form
 \begin{equation}
-\varphi(x) \coloneqq e^{-(\epsilon \|x - c_i\|)^2}
+\varphi(x) \coloneqq e^{-(\epsilon |x - c_i|_2)^2},
 \end{equation}
-The only parameter that can be tuned is $\epsilon$, which is referred to as the shape parameter and is used to scale the effects of the input radius.
-
-Given a set of center points, type of basis functions, and shape parameter $\epsilon$, we can calculate the weight coefficients $\omega_i$, usually using a linear least squares technique that involves solving an $m \times m$-dimensional system of linear equations.
+and the only parameter that can be tuned is $\epsilon$, which is referred to as the shape parameter and is used to scale the effects of the input radius.
+Given a set of center points, type of basis functions, and shape parameter $\epsilon$, we can calculate the weight coefficients $\omega_i$, usually using a linear least squares technique.
 This, combined with the fact that exponentially more center points are needed to maintain the same level coverage when model dimensions increase, also causes this method to suffer from the curse of dimensionality.
 
-The basics of radial basis functions are covered in this thesis, because they are almost a polar opposite to the grid based approximation methods.
-Radial basis function surrogates allow arbitrary center points, while Sparse Grid surrogates require a strict, hierarchical, and axis-aligned grid.
-Furthermore, radial basis functions are fundamentally different to tensor-product based basis functions wrt. to their orientation.
+Radial basis function approximation is covered in this thesis, as it is almost a polar opposite to the grid based approximation methods.
+Radial basis function surrogates allow arbitrary center points, while sparse grid surrogates require a strict, hierarchical, and axis-aligned grid.
+Furthermore, radial basis functions are fundamentally different to tensor-product based basis functions with regards to their orientation.
 While tensor product basis functions are strictly axis-aligned, radial basis functions are unaware of the concept of axis-alignment or orientation.
-This property will allow us to use radial basis functions as good comparision references when investigating the effects of basis function alignment.
+This property will allow us to use radial basis functions as references when investigating the effects of basis function alignment later on.
 
 \section{Sampling}
 
-We assume that the inputs of model functions are distributed according to a multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$, which consists out of $d$ independent distributions $\rho_i$.
-In the coming chapters we will make use of some Monte-Carlo based methods and for this purpose, even the relatively simple process of drawing samples from a probality distribution can improved in different ways to create better results.
-
-\subsection{Quasirandom sequences}
-
-A problem that arises when generating a sequence of random samples using a pseudorandom number generator to draw samples from the input distribution $\rho$ is that the sequence does not cover the function domain as even and quick as it theoretically can.
+In the coming chapters we will often make use of some Monte-Carlo based methods that require function samples from the model function.
+For this purpose, even the relatively simple process of drawing samples from a probality distribution can improved in different ways to achieve better results.
+We assume that the inputs of model functions are distributed according to a multivariate distribution
+\begin{equation}
+\rho(x)=\prod_{i=1}^d \rho_i(x_i),
+\end{equation}
+which is made up out of $d$ independent distributions $\rho_i$.
+A problem that arises when generating a sequence of random samples using a pseudorandom number generator to draw samples from the uniform input distribution $\rho=\mathcal{U}[0,1]^d$ is that the sequence does not cover the function domain as even and quick as it theoretically can.
 One solution are low-discrepancy sequences, also called quasirandom sequences to distinguish them from pseudorandom sequencens.
 These sequences are more evenly distributed than pseudorandom samples and therefore have a lower discrepancy.
 As a result, they cause the result of various Monte-Carlo methods to converge faster than one using the same amount of pseudorandom samples.
 A commonly used sequence is the Sobol sequence, which is also used in this thesis.
 It is generated using the Antonov and Saleev variant, which uses the Gray code of $i$ to construct the $i$-th sample.
 
-\subsection{Inverse transform sampling}
+This approach can also be extended to allow for the generation of pseudorandom samples from non-uniform distributions through the commonly used inverse transformations method \cite{}.
+However, this approach is not used in this thesis, as the gains are minimal.
 
-To extend the generation pseudorandom samples to non-uniform distributions, one commonly used approach are inverse transformations.
-\begin{definition}[Inverse transformation]
-Given a cumulative distribution function $F_X$ that describes the distribution of the random variable $X$, we define the transformation for the random variable
-\begin{equation}
-T_X \colon [0,1] \mapsto \mathds{R}, ~ T_X(U)=X,
-\end{equation}
-where $U \sim \mathcal{U}[0,1]$ is a uniformly distributed random variable.
-\end{definition}
-
-This transformation is exactly the inverse of $F_X$ with $T_X=F_X^{-1}$, hence the name inverse transform sampling.
-Unfortunately, the inverse $F_X^{-1}$, also called the quantile function, does not always have a closed-form solution.
-There exist many different algorithms to approximate the quantile function for commonly used distributions.
-The variant that is used in this thesis is presented in \cite{} and is basically a combination of different algorithms that excel for specific ranges of values for $U$.
-The rest of the implementation just needs to generate a set of a quasirandom samples from $\mathcal{U}[0,1]^d$ and apply the quantile function on the samples componentwise to get the quasirandom samples distributed according to the multivariate distribution $\rho(x)=\prod_{i=1}^d \rho_i(x_i)$.
-
-\section{Error metrics}
+\section{Approximation error measures}
 
 To evaluate the quality of a constructed surrogate $\hat{f}$, we define a couple of error metrics to measure the approximation error and also make it comparable to other surrogates.
-An established and commonly used error metric for function approximation is the $L_2$ error.
-\begin{definition}[$L_2$ error]
+An established and commonly used error metric for function approximation is the $L^2$ error:
+\begin{definition}[$L^2$ error]
 Let
 \begin{equation}
-||g||_{L^p}^p \coloneqq \int_{\Omega} |g(x)|^p \text{d}x
+||g||_{L^p}^p \coloneqq \int_{\Omega} \abs{g(x)}^p \mathrm{d}x
 \end{equation}
 be the $L^p$ norm for real functions $g \colon \Omega \mapsto \mathds{R}$.
 We then define
 \begin{equation}
-\varepsilon_{\text{$L^2$}}(\hat{f}) \coloneqq \|f - \hat{f}\|_{L_2}=\sqrt{\int_{\Omega} |f(x) - \hat{f}(x)|^2 \text{d}x}
+\varepsilon_{\text{$L^2$}}(\hat{f}) \coloneqq \|f - \hat{f}\|_{L^2}=\sqrt{\int_{\Omega} |f(x) - \hat{f}(x)|^2 \mathrm{d}x}
 \end{equation}
 as the $L^2$ surrogate approximation error.
 \label{def:l2}
 \end{definition}
-
+%
 In statistics, to evaluate the accuracy of an estimator, the mean squared error and the root mean squared error are commonly used.
-They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors.
+They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors:
 \begin{definition}[Mean squared error]
-Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
+Let $\hat{f}$ be the surrogate for the model function and $S=\left\{(x_i, f(x_i)\right\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2
+\varepsilon_{\mathrm{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2
 \end{equation}
 as the mean squared error for the surrogate based on the given sample.
-Similarly, we also define
+In the same fashion, we also define
 \begin{equation}
-\varepsilon_{\text{RMSE}}(\hat{f}) \coloneqq \sqrt{\varepsilon_{\text{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n (f(x_i) - \hat{f}(x_i))^2}
+\varepsilon_{\mathrm{RMSE}}(\hat{f}) \coloneqq \sqrt{\varepsilon_{\mathrm{MSE}}(\hat{f})} = \sqrt{\frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2}
 \end{equation}
-as the root mean squared error for the surrogate based on the given sample.
+as the root mean squared error.
 \end{definition}
-The RMSE is closely related to the definition of the continous $L_2$ error from \cref{def:l2}, as it is just a discrete version of it.
-It holds that $\lim_{n \to \infty} \varepsilon_{\text{RMSE}}(\hat{f}) = \varepsilon_{\text{$L^2$}}(\hat{f})$.
+The RMSE is closely related to the definition of the continous $L^2$ error from \cref{def:l2}, as it is just a discrete version of it.
+It holds that $\lim_{n \to \infty} \varepsilon_{\mathrm{RMSE}}(\hat{f}) = \varepsilon_{\text{$L^2$}}(\hat{f})$.
 
 One problem of the introduced error metrics is that they are all sensitive to the size of the function values.
-To improve upon absolute error metrics and allow for comparisions across model functions with different ranges of function values, we define normalized errors.
+To improve upon absolute error metrics and allow for comparisions across model functions with different ranges of function values, we define normalized errors:
 \begin{definition}[Normalized root mean squared error]
 Let $\hat{f}$ be the surrogate for the model function $f$ and $S=\{(x_i, f(x_i)\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
 We then define
 \begin{equation}
-\varepsilon_{\text{NRMSE}}(\hat{f}) \coloneqq \frac{\varepsilon_{\text{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
+\varepsilon_{\mathrm{NRMSE}}(\hat{f}) \coloneqq \frac{\varepsilon_{\mathrm{RMSE}}(\hat{f})}{\max_{x \in S} f(x) - \min_{x \in S} f(x)}
 \end{equation}
-as the normalized root mean squared error for the surrogate based on the given sample.
+as the normalized root mean squared error.
 \end{definition}
 
 
@@ -1254,8 +1252,9 @@ One limitation of this calculation is the linear nature of the computed gradient
 Furthermore, the choice of the $y_i$ heavily influences the result as well as the size of $m$.
 The next sections introduce different ways of choosing the neighbours $y_i$ and also evaluate the results.
 
-\vspace{2mm}
-\textbf{Random neighbour approximation~} The random neighbour approximation method takes as an input a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$.
+
+\paragraph{Random neighbour approximation}
+The random neighbour approximation method takes as an input a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$.
 The set $S_{\text{rn}}=\{y_1, \dots, y_{m}\}$ is called a random neighbour set of $x$.
 This random neighbour set is then used as an input for equation \cref{eq:dd_sle} to approximate the gradient $\nabla_x f$.
 
@@ -1263,8 +1262,7 @@ For $n,m \to \infty$, the approximated gradient does not converge to the actual 
 The problem of determining average neighbour distance is related to finding the mean line segment length $\Delta (d)$ in a d-dimensional unit hypercube \cite{}.
 There is no closed form solution for $\Delta (d)$, but several approximations have been made for various dimensions \cite{}, e.g. $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
 
-\vspace{2mm}
-\textbf{Nearest neighbour approximation~}
+\paragraph{Nearest neighbour approximation}
 The nearest neighbour variant picks a subset $S' \subseteq S \setminus \{x\}$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $S_{\text{nn}}=\{y_1,\dots,y_m\} \subseteq S'$ of the point $x$ with $\|(y_1-x)\|_2 < \|(y_2-x)\|_2< \dots<\|(y_{m-1}-x)\|_2 < \|(y_{m}-x)\|_2$.
 
 Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
@@ -2437,6 +2435,9 @@ We therefore skip straight to the topic of dimension reducing transformations wi
 
 \chapter{Conclusion and outlook}
 \label{chap:c9}
+
+We discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression without the need for additional model function evaluations or gradients by using the effective neighbour approximation methods as a basis for the active subspace computations.
+However, if more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve improved results.
 
 \vspace{1em}
 \textbf{Parallelization}
