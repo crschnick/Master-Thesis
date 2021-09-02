@@ -194,18 +194,30 @@ The concrete process of reducing the input dimensions takes inspiration from the
 Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still preserving input structures suitable for sparse grids and therefore achieving an acceptable additional approximation error.
 Overall, this enables us to work with high dimensional models that normally would cause sparse grids to run into problems.
 
-\section{Structure}
+\section{Outline}
 
-\Cref{chap:c2} covers all the basics needed to understand and use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity, function interpolation and regression.
-It will also give an overview over the currently most commonly used methods for dimension reduction with sparse grids.
-The concept of input transformations, which are the central focus of this thesis, are introduced in \cref{chap:c3}.
-Various types of transformations are discussed, but the main focus lies on linear transformations generated with the help of active subspaces.
-In \cref{chap:c4} we look at the process of generating reduced sparse grid surrogates for a given input transformation to obtain transformed sparse grids.
-\Cref{chap:c5} combines the transformation process of the previous chapters with an iterative approach, inspired from projection pursuit regression, and formalizes the theoretical transformation algorithms.
-Then, in \cref{chap:c6}, we will cover the general structure of the practical implementation and explore various configuration options that can be used to fine tune different aspects of the surrogate creation process.
-The implementation is then put to the test in \cref{chap:c7}, which will apply the new transformation-based approach to different models and compares the results with the conventional sparse grids.
-The obtained evaluation results are used to draw conclusions about the technique in general and about its comparative quality.
-The goal of \cref{chap:c8} is to deduce a decision process to determine optimal configuration options and to assign good default values to them, such that the method is easier to use.
+We start off in \cref{chap:c2} by covering all the basics needed to understand and use sparse grids in conjunction with different kinds of basis functions, spatial adaptivity for function interpolation and regression.
+Furthermore, we will also take a look at commonly used sparse grid based methods for dimensionality reduction.
+
+Next, we define the concept of input transformations, the central focus of this thesis, in \cref{chap:c3}.
+These input transformations are introduced through a motivational example function that causes various established sparse grid based methods to underperform, but can easily be corrected with an input transformation to fix the occuring  problems.
+Following that, various concrete types of input transformations are introduced, with main focus lying on linear transformations generated with the active subspace method.
+
+Over the course of \cref{chap:c4}, we look at the process of generating transformed sparse grid surrogates for a given input transformation to obtain the name-giving transformed sparse grids.
+We focus on highlighting the differences compared to the normal sparse grid workflow and resulting surrogates.
+
+\Cref{chap:c5} then combines the input transformation process of the previous chapters with an iterative approach inspired from projection pursuit regression, and formalizes an algorithm on which the practical implementation is based on.
+The inner workings of the algorithm are also investigated with the help of a simple example function.
+
+Then, in \cref{chap:c6}, we model the general structure of the practical implementation and explore various configuration options that can be used to fine tune different aspects of the transformation process.
+
+The individual components of the implementation are evaluated in \cref{chap:c7}, in which we apply the new transformation-based approach on two models using a variety of different configurations, with the goal of evaluating the implementation components in an isolated enviroment to prepare for the practical experiments in the succeeding chapter.
+
+The implementation is then put to the test in \cref{chap:c8}, as we perform multiple experiments on high-dimensional models to draw conclusions about the technique in general and about its comparative quality.
+To achieve the best possible results, we utilize the insights gained from the preceeding evaluation chapter.
+
+\Cref{chap:c9} concludes this thesis by providing a summary of the newly introduced techniques and its practical results.
+We also reflect on the limitations and possible improvements of the method.
 
 
 \chapter{Surrogate construction}
