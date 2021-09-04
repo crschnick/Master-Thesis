@@ -180,19 +180,25 @@
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-Sparse grids, a discretimzation scheme for functions on hypercubes, were introduced as an alternative to the more simple full grid discretisization scheme, which suffers heavily from the curse of dimensionality, as the amount of grid points required to generate a full grid grows exponentially with the dimension of the model.
+Computer simulations for complex models are usually very computationally expensive and are therefore limited in the feasible amount of simulation runs.
+Because of this limitation, a common approach is to construct a model function surrogate and adapt the simulation to work on the surrogate instead.
+Done properly, this severely reduces the required resources, such as runtime and memory, to perform the simulation.
+Discretization methods are one such way of constructing a surrogate by discretisizing the model domain to approximate the solution.
+Full grids, a simple discretimzation scheme for functions on hypercubes, suffer heavily from the curse of dimensionality, as the amount of grid points required to generate a uniform grid grows exponentially with the dimensionality of the model.
 As a result, the model function evaluations for a full grid construction also grow exponentially, heavily limiting the feasible model dimensionality for full grids.
-While all grid-based methods all share the common problem of being affected by the curse of dimensionality to some degree, sparse grids manage to reduce the impact of it and therefore delay the point where they become infeasible to use compared to full grids.
-To decouple the model dimension from the actual sparse grid dimension, at least to some degree, various sparse grid based techniques that can be used for dimension reduction, like adaptive sparse grids, were introduced with the goal to eliminate or neglect certain  dimensions of the model inputs.
-These techniques, and grid based techniques in general, are however limited in their effectiveness, as all grid points and tensor product basis functions used are effectively axis-aligned.
-As we will see, this axis-aligned construction becomes rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
 
-This limitation is used as a motivation to look into ways of adapting the model function inputs in a better way, by first conducting a parameter study to identify potential starting points.
-This parameter study is then conducted with the goal of exploring the influence of different function parameters on the function output and exploiting the gained knowlegde for dimension reduction.
-The insights gained can then be used to transform the model inputs prior to feeding them into sparse grids, such that the resulting sparse grid surrogates have a lower dimension, require less grid points, and also have a comparable approximation error compared to regular sparse grids.
-The concrete process of reducing the input dimensions takes inspiration from the concepts of intrinsic dimension in signal processing and already established dimension reduction techniques in data science such as PCA, and tries to combine the process of determining the optimal model input alignment along active directions with dimension reduction.
-Done well, this allows us to transform the model function approximation problem into a lower-dimensional one, while still preserving input structures suitable for sparse grids and therefore achieving an acceptable additional approximation error.
-Overall, this enables us to work with high dimensional models that normally would cause sparse grids to run into problems.
+While all grid-based methods all share the common problem of being affected by the curse of dimensionality to some degree, the later introduced sparse grids technique manages to reduce the impact of it and therefore delay the point where they become infeasible to use compared to full grids.
+To decouple the model dimension from the actual sparse grid dimension, at least to some degree, various sparse grid based methods can be used for dimension reduction, like adaptive sparse grids, which were introduced with the goal to eliminate or neglect certain dimensions of the model and also adapt the constructed surrogate to the model.
+These grid based techniques in general, are however limited in their effectiveness, as all grid structures and tensor product basis functions used are effectively axis-aligned.
+As we will see, axis-aligned basis functions become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
+
+This limitation is used as a motivation to look into ways of transforming the model function inputs in a better way.
+By conducting a parameter study to identify potential starting points and exploring the influence of different input parameters on the model function output, we then try to exploit the gained knowlegde to perform a dimensionality reduction.
+Insights about the model parameter behaviour is then used to transform the model inputs prior to feeding them into sparse grids, such that the resulting sparse grid surrogate has a lower dimensionality, requires less grid points, but still maintains a comparable approximation error compared to regular sparse grids.
+The concrete method presented in this thesis to reduce the input dimensionality tries to combine the process of determining active directions in the inputs with dimensionality reduction techniques.
+It takes inspiration from already established ideas in data science, such as the concept of intrinsic dimension \cite{} and Principal component analysis (PCA) \cite{}.
+Done well, this allows us to transform the original model function approximation problem into a lower-dimensional one, while still preserving input structures suitable for sparse grids.
+Over the course of this thesis, we will first introduce and explore the name-giving function approximation method of transformed sparse grids, and then put it to the test in multiple experiments with high-dimensional models. 
 
 \section{Outline}
 
@@ -241,6 +247,42 @@ For example, with spline based surrogates the gradients and moments are very eas
 Plenty of different surrogate types and construction methods already exist and each one comes with its own idiosyncratic advantages and limitations.
 These surrogate type and construction method specific properties can range from their sensitivity to the model dimensionality to their approximation quality in general or with regards to certain types of functions. 
 The primary focus of this thesis lies on the already established sparse grid surrogates, their various subtypes, and construction methods, with the goal of enhancing the sparse grid technique by finding and exploiting important lower-dimensional subsets of the model inputs.
+
+\section{Notation}
+
+Prior to starting out with formalizing the basis of the surrogate construction, we first have to define some basic notation for working with vectors that is commonly used during the sparse grid construction process.
+In cases where a scalar and vector with the same identifier are used, for example for the level and index notation of sparse grids, we use an underlined identifier to differentiate a vector from a scalar.
+One such use case are sparse grid levels, where $\ell$ represents a level scalar, and $\underline{\ell}$ represents a level vector.
+Furthermore, an underlined constant value $\underline{k}$ is defined as a $d$-dimensional vector of the form $(k, \dots, k)^T \in \mathds{R}^d$.
+Other times, when no differentiation between scalars and vectors is required, no underline is used for vectors. 
+Some other commonly used notation include basic vector norms and vector comparisions:
+\begin{definition}[Vector norms]
+Let $v \in \mathds{R}^d$ be a $d$-dimensional vector.
+We make use of the $\ell_1$ norm
+\begin{equation}
+|v|_1 \coloneqq \sum_{i=1}^d |v_i|,
+\nonumber
+\end{equation}
+the Euclidean norm
+\begin{equation}
+|v|_2 \coloneqq \sqrt{\sum_{i=1}^d v_i^2},
+\nonumber
+\end{equation}
+and the maximum norm
+\begin{equation}
+|v|_\infty \coloneqq \mathrm{max}_{1 \leq i \leq d} v_i
+\nonumber
+\end{equation}
+\end{definition}
+%
+\begin{definition}[Component-wise vector comparision]
+Let $u, v \in \mathds{R}^d$ be $d$-dimensional vectors.
+We define the vector comparision operator with
+\begin{equation}
+u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i.
+\nonumber
+\end{equation}
+\end{definition}
 
 \section{Full grids}
 
@@ -430,7 +472,7 @@ However, in the context of sparse grid based ANOVA we can also work with a semi-
 
 TODO: Image of basis functions
 
-\section{Grid surrogate construction}
+\section{Sparse grid surrogates}
 \label{sec:gsc}
 
 Sparse grid surrogates that try to approximate a model function can be constructed using multiple different approaches.
@@ -600,7 +642,7 @@ However, one way or the other, one has to deal with the negative effects of the 
 
 \section{Radial basis functions}
 
-Radial basis function interpolation is another technique for function interpolation that utilizes radial basis functions to construct a surrogate.
+Radial basis function interpolation \cite{Broomhead1988} is another technique for function interpolation that utilizes radial basis functions to construct a surrogate.
 A radial basis function $\varphi' \colon \Omega \mapsto \mathds{R}$ is a function whose value solely depends on the distance between its input and its center point $c \in \Omega$, i.e. it holds that $\varphi$ is a radial function of the form $\varphi'(x)=\varphi(\|x - c\|)$.
 The univariate function $\varphi$ is then called the radial kernel centered at $c$.
 Similar to sparse grid surrogates, a radial basis function surrogate is a linear combination
@@ -608,7 +650,7 @@ Similar to sparse grid surrogates, a radial basis function surrogate is a linear
 f(x) \approx \sum_{i=1}^m \omega_i \varphi(\|x - c_i\|)
 \end{equation}
 of $m$ basis functions with center points $c_i$ and weights $\omega_i$.
-In the context of this thesis, only Gaussian functions \cite{} with the euclidean distance $|\cdot |_2$ as a distance measure are used as basis functions.
+In the context of this thesis, only Gaussian functions with the euclidean distance $|\cdot |_2$ as a distance measure are used as basis functions.
 The basis functions have the form
 \begin{equation}
 \varphi(x) \coloneqq e^{-(\epsilon |x - c_i|_2)^2},
@@ -639,7 +681,7 @@ As a result, they cause the result of various Monte-Carlo methods to converge fa
 A commonly used sequence is the Sobol sequence, which is also used in this thesis.
 It is generated using the Antonov and Saleev variant, which uses the Gray code of $i$ to construct the $i$-th sample.
 
-This approach can also be extended to allow for the generation of pseudorandom samples from non-uniform distributions through the commonly used inverse transformations method \cite{}.
+This approach can also be extended to allow for the generation of pseudorandom samples from non-uniform distributions through the commonly used inverse transform sampling method \cite{Devroye1986}.
 However, this approach is not used in this thesis, as the gains are minimal.
 
 \section{Approximation error measures}
@@ -864,7 +906,7 @@ $1 \in C$ & ? & ?\\
   \label{fig:anova_f2}
 \end{subfigure}
 \delimit
-\captionof{figure}{Results of an analysis of variance of $f_1$ and $f_2$.}
+\captionof{table}{Results of an analysis of variance of $f_1$ and $f_2$.}
 \label{fig:anova}
 \end{figure}
 \end{mdframed}
@@ -1200,6 +1242,7 @@ C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(x_i)) (\nabla f(x_i))^T
 \end{equation}
 
 \subsection{Estimating gradients for active subspaces}
+\label{sec:as_est}
 
 One superficial downside of the active subspace method is that gradients are required to approximate the matrix $C$ in \cref{eq:as_c_approx}.
 In cases where the gradient function is not known and can not be easily computed, this would seem like a limiting factor is the feasability of active subspaces.
@@ -1259,8 +1302,8 @@ The set $S_{\text{rn}}=\{y_1, \dots, y_{m}\}$ is called a random neighbour set o
 This random neighbour set is then used as an input for equation \cref{eq:dd_sle} to approximate the gradient $\nabla_x f$.
 
 For $n,m \to \infty$, the approximated gradient does not converge to the actual gradients, since the expected distance to the neighbours in a random neighbour set does not go to zero.
-The problem of determining average neighbour distance is related to finding the mean line segment length $\Delta (d)$ in a d-dimensional unit hypercube \cite{}.
-There is no closed form solution for $\Delta (d)$, but several approximations have been made for various dimensions \cite{}, e.g. $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
+The problem of determining average neighbour distance is related to finding the mean line segment length $\Delta (d)$ in a d-dimensional unit hypercube \cite{Bailey2007}.
+There is no closed form solution for $\Delta (d)$, but several approximations have been made for various dimensions \cite{Weisstein}, e.g. $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
 
 \paragraph{Nearest neighbour approximation}
 The nearest neighbour variant picks a subset $S' \subseteq S \setminus \{x\}$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $S_{\text{nn}}=\{y_1,\dots,y_m\} \subseteq S'$ of the point $x$ with $\|(y_1-x)\|_2 < \|(y_2-x)\|_2< \dots<\|(y_{m-1}-x)\|_2 < \|(y_{m}-x)\|_2$.
@@ -1295,6 +1338,7 @@ The completely \red circle represents the sample point $x$ and other sample poin
 \end{mdframed}
 
 \subsection{Limitations}
+\label{sec:asl}
 
 Active subspaces are however not a perfect indicator on which active directions are suitable for a linear transformation construction, since they can be misled.
 A larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector $v_i$ with $\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]$ \cite{CG14}.
@@ -1307,16 +1351,12 @@ that illustrates the limitations of active subspaces.
 The optimal active direction worth keeping would be the first component only, as the second term can be seen as a highly changing noise term that does not effect the approximation error a lot if removed, as the amplitude of the sinus is small.
 However, as the average squared directional derivative along the second dimension $(0,1)^T$ is way higher than along the first $(1,0)^T$, the calculated active subspace is biased heavily along the second dimension.
 
-A positive aspect of the active subspace approximation methods is that they introduce a regularization through discretization \cite{}, i.e. as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
+A positive aspect of the active subspace approximation methods is that they introduce a regularization through discretization \cite{Kress1999}, i.e. as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
 In certain cases, like the example function presented in this section, this will lead to better function approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences.
 
-\section{Summary and outlook}
+\section{Alternative transformations}
 
-This chapter started out by showing how the orientation of function terms affects surrogates created in the standard way and gave a motivation on why using input transformations may be beneficial.
-We then showed how, given an orthonormal alignment matrix $W$ and a $r \leq d$, we can construct a transformation function that maps between hypercubes from $\Omega$ to $\Omega_r$ and preserves function structures that can be exploited by the lower dimensional surrogate.
-The main focus lied on the active subspaces method to determine $W$, and we extensively looked at different methods to compute the active subspace input matrix $C$.
-
-Until now, the focus was primarily on deterministic linear transformations, because they are relatively easy to construct using active subspaces.
+Until now, the focus lied primarily on deterministic linear transformations, because they are relatively easy to use and construct with the help of active subspaces.
 However, in theory we can construct and use arbitrary transformation functions.
 This section will briefly cover a few alternative types of transformations that are not the primary focus of this thesis, but do show some potential that could be investigated further.
 
@@ -1347,7 +1387,7 @@ W_r = \begin{bmatrix}
     \\
   \end{bmatrix}.
 \end{equation}
-Note that although the generated random orthonormal matrices are perfectly uniformly distributed in the orthogonal group $O(d)$ and we would need a different algorithm to achieve a true uniform distribution \cite{}, they are still perfectly usable for the purpose of input transformations.
+Note that although the generated random orthonormal matrices are perfectly uniformly distributed in the orthogonal group $O(d)$ and we would need a different algorithm to achieve a true uniform distribution \cite{Wang2008}, they are still perfectly usable for the purpose of input transformations.
 
 
 \subsection{Periodic transformations}
@@ -1392,7 +1432,7 @@ As we can see, a smaller value for $p$ results in a notable improvement, and goi
 
 \subsection{Active Manifolds}
 
-Inspired from Active Subspaces, which are purely linear in their nature, one can extend the concept to identifying a one-dimensional curve in the domain $\Omega$ along the flow of most active change, which is called the Active Manifold.
+Inspired from active subspaces, which are purely linear in their nature, one can extend the concept to identifying a one-dimensional curve in the domain $\Omega$ along the flow of most active change, which is called an active manifold \cite{Bridges2019}.
 Compared to Active Subspaces, calculating the Active Manifold is more complex and resource intensive.
 Furthermore, defining a transformation function that maps from $\Omega$ onto the local one-dimensional space of the curve is way more complex and can be constructed in many ways.
 Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
@@ -1406,6 +1446,7 @@ As we will see in this chapter, this is not trivial to do with sparse grids and 
 Some of these are specific to sparse grids, while others are independent of the used surrogate type.
 
 \section{Transformed input space}
+\label{sec:tis}
 
 All transformed inputs form the transformed input space, which is a part of the reduced surrogate space $\Omega_r$.
 The transformation function was constructed in the last chapter in such a way that every transformed inputs lies in $\Omega_r$, while also applying scaling to use as much space of $\Omega_r$ as possible.
@@ -1434,6 +1475,7 @@ Thus, grid points are only completely unused if their basis function support doe
 Other surrogate types do not have the same issue, as radial basis functions for example can freely choose their support points and therefore automatically adapt to $T$.
 
 \section{Method selection}
+\label{sec:ms}
 
 Usually, the standard sparse grid technique makes use of the sparse grid interpolation method, which is able to generate an accurate interpolant quickly as described in \cref{sec:gsc}.
 However, as we will show in this section, sparse grid interpolation is not suitable for many scenarios with transformed sparse grids and we will therefore differentiate between two cases.
@@ -1536,7 +1578,7 @@ The regression algorithm also provides the ability to make use of spatially adap
 \label{sec:lofi}
 
 The construction of the best possible Sparse Grid surrogate, given a function sample, a transformation, and set of possible configuration parameters can become very computationally expensive, since every parameter combination has to be evaluated to determine the best one.
-To mitigate this problem, we employ the concept of multifidelity simulations \cite{}, i.e. reducing the cost of parametrization by using low fidelity Sparse Grids and datasets to evaluate a parameter combination and only using high fidelity Sparse Grids and datasets when creating the final surrogate using the determined to be optimal parameters.
+To mitigate this problem, we employ the concept of multifidelity simulations \cite{Robinson2006}, i.e. reducing the cost of parametrization by using low fidelity Sparse Grids and datasets to evaluate a parameter combination and only using high fidelity Sparse Grids and datasets when creating the final surrogate using the determined to be optimal parameters.
 
 A low fidelity Sparse Grid surrogate $\hat{f}^l$ has less grid points compared to an otherwise identical high fidelity Sparse Grid surrogate $\hat{f}^h$.
 This means that the level of $\hat{f}^l$ is lower and less or not refinements at all are used.
@@ -1837,7 +1879,7 @@ The amount of samples is set to $n=1000$.
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_local_2}
-  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_2$ in \red.}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_2$ in \reddot}
 \label{fig:pipeline_local_2}
 \end{subfigure}
 \delimit
@@ -2113,7 +2155,7 @@ While this is a pretty straightforward process, it can still be customized by ch
 \end{figure}
 \end{mdframed}
 
-\section {Surrogate generator}
+\section {Surrogate generators}
 \label{sec:sg}
 
 The last component needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
@@ -2125,7 +2167,7 @@ Their implementation is straightforward, as the construction of sparse grid surr
 
 \subsection {Sparse Grid surrogate generator}
 
-The sparse grid generation implementation is realized with SGpp \cite{} library.
+The sparse grid generation implementation is realized with SGpp \cite{Pflueger2010} library.
 In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
 Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimension, as a surrogate generator should be decoupled from the used dimension $r$. 
 This means that instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
@@ -2133,7 +2175,7 @@ Furthermore, for sparse grid regression we similarly express the amount of train
 
 \subsection {RBF surrogate generator}
 
-Radial basis function surrogates are implemented with the help of ALGLIB \cite{}, a numerical analysis and data processing library which supports fitting RBFs on arbitrary input data.
+Radial basis function surrogates are implemented with the help of ALGLIB \cite{Bochkanov}, a numerical analysis and data processing library which supports fitting RBFs on arbitrary input data.
 Compared to sparse grids, RBFs do not have a lot of configuration parameters.
 The main parameters are the shape parameter $\epsilon$ and also a regularization factor $\lambda$.
 RBF surrogates can be created with the interpolation approach, as they can interpolate from arbitrary function samples $S_t$.
@@ -2182,18 +2224,19 @@ This is an advantage compared to any interpolation based approaches.
 \label{chap:c7}
 
 The construction process for transformed surrogates is realized through the transformation pipeline, which consists out of many different components.
-These components interact with each other and pass data down the transformation pipeline, which can cause compounding inaccuries and errors if the inputs from a previous stage are off.
-In this evaluation chapter we investigate the qualities and properties of single units of the transformation pipeline in an isolated environment before performing experiments with various model functions in the next chapter.
-For this purpose, we first look at the low-dimensional Ishigami function followed by the high-dimensional wing weight function.
+These components interact with each other and pass data down the transformation pipeline, which can cause compounding inaccuries and errors if the inputs from a previous stage are inaccurate.
+In this evaluation chapter, we investigate the qualities and properties of transformation pipeline components in an isolated environment before performing experiments on real world model functions in the next chapter.
+For this purpose, we first look at the low-dimensional Ishigami function followed by the higher-dimensional wing weight function.
 
 \section{Ishigami function}
 
-We start off with the low dimensional Ishigami function \cite{}, which has already been used to test various uncertainty quantification \cite{} and sensitivity analysis techniques \cite{}:
+We start off with the low dimensional Ishigami function \cite{Ishigami1990AnIQ}:
 \begin{equation}
 f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
 \end{equation}
-
-To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function , which yields the following results:
+%
+The function originally has been used for uncertainty quantification purposes, but has also been used to test sensitivity analysis techniques \cite{Sobol1999}
+To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function, which yields the following results:
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2209,30 +2252,33 @@ $2$  & $(+0.540, ~+0.003, ~-0.841)^T$ & 112.20 & $9.5\%$\\
 $3$ & $(-0.841, ~+0.008, ~+0.540)^T$ & 104.77 & $8.8\%$\\
 \end{tabular}
 \egroup
+\vspace{0.5em}
 
 \delimit
 
-\captionof{figure}{Computed eigen vectors, eigen values, and eigen value shares of the active subspaces of $f$ with the Monte-Carlo method and $10^6$ samples.}
+\captionof{table}{Computed eigen vectors, eigen values, and eigen value shares of the active subspaces for the Ishigami function using the Monte-Carlo method and $10^6$ samples.}
+\label{tab:ishigami_as}
 \end{figure}
 \end{mdframed}
-
-This means that the most active directions almost exactly corresponds to second input dimension, and is reponsible for a big chunk of the function value change, while the other two active directions less important and not axis aligned, but not neglible, as their combined eigen value share still is $18.3\%$.
+%
+Based of the values in \cref{tab:ishigami_as}, we can see that the most active direction almost exactly corresponds to second input dimension, and is reponsible for a big chunk of the function value change, while the other two active directions are less important and also not axis aligned.
+These two less active directions are however not neglible, as their combined eigen value share still is $18.3\%$.
 
 \subsection{Orientation changes}
 
-While the main focus lies on dimension reducing transformations with $r < d$, we still take a short look at the quality of simple dimension preserving transformations with $r=d$, which are effectively only changing the orientation of the function inputs.
-For orientation change, we use all computed active subspace directions from \cref{a}, i.e. apply the transformation $t_{W_3}$ on the inputs.
-As we discussed in \cref{sec:}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
-We are therefore interested in answering the following questions:
+While the main focus lies on dimension reducing transformations with $r < d$, we still take a short look at the quality of simple dimension preserving linear transformations with $r=d$, which are effectively only changing the orientation of the function inputs.
+For the orientation change, we use all computed active subspace directions from \cref{tab:ishigami_as}, or in other words apply the transformation $t_{W_3}$ on the inputs.
+As we discussed in \cref{sec:ms}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
+In this section, we are interested in answering the following questions:
 \begin{enumerate}
+\item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
 \item How big is the approximation error difference between interpolation and regression surrogates?
-\item How does the approximation error compare when using normal sparse grids and applying an orientation changing transformation with $r=d$?
-\item How is the approximation error affected when transformation and regression are used together?
+\item How is the approximation error affected when transformations and regression are used together?
 \item How does the boundary grid behaviour change when using input transformations?
 \end{enumerate}
-
+%
 Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
-On the other side, the unused parts of surrogate space (see \cref{sec:}) effectively reduce the resolution of the sparse grid surrogate and make certain grid points obsolete.
+On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
 Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
 
 \begin{mdframed}[style=style]
@@ -2244,7 +2290,7 @@ Furthermore, the necessary model function evaluations outside of $\Omega$ might 
 \label{fig:ishigami_errors}
 \end{figure}
 \end{mdframed}
-
+%
 As we can see in \cref{fig:ishigami_errors}, the pure orientation change does not lead to better interpolation results.
 In this concrete example, the penalty of the unused transformation space $U_t$ evens out the gains from a more optimal orientation for sparse grid surrogates.
 As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$ and the grid resolution is effectively lower and some grid points may be unused.
@@ -2256,58 +2302,52 @@ Also, using regression only results in a slight increase of the approximation er
 As the tansformation process focuses on dimension reducing linear transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
 Therefore, dimension reducing transformations seem to have a much bigger potential.
 
-\subsection{Dimension reducing transformations}
+\subsection{Dimensionality reducing transformations}
 
-Next, we look at transformations with $r < d$ and are interested in answering the following questions
+Next, we look at dimensionality reducing transformations with $r < d$ and are interested in answering the following questions:
 \begin{enumerate}
-\item By how much does dimension reduction increase the approximation error?
-\item How much do the increased approximation errors correlate with the computed eigen values from \cref{a}?
-\item Is a dimension reduction worth it for the example function?
+\item By how much does dimensionality reduction increase the approximation error?
+\item How much do the increased approximation errors correlate with the computed active subspace eigen values?
+\item Is a dimensionality reduction worth it for the Ishigami function?
 \end{enumerate}
+%
+Based off the active subspace information from \cref{tab:ishigami_as}, a one-dimensional reduction by cutting off the eigen vectors $v_2$ and $v_3$ looks feasible, as the first active direction covers the majority of the eigen value share.
+However, as already discussed in \cref{sec:asl}, the active subspace method can be biased and also not return active directions that are suited for the transformation process.
+Therefore, the primarily used pipeline component uses a look ahead approach to evaluate the suitability of the computed active directions and corresponding eigen values, instead of relying solely on the active subspaces results.
 
-Based off the active subspace information from \cref{a}, a one-dimensional reduction by cutting off the eigen vectors $v_2$ and $v_3$ looks feasible, as the first active direction covers the majority of the eigen value share.
-However, as already discussed in \cref{sec:}, the active subspace method can be biased and not return active directions that are really suited for the transformation process.
-Therefore, the primarily used pipeline component uses a look ahead approach to evaluate the qualities of active subspaces.
 To better investigate the active subspace properties, we generate transformations for $r=1$ and $r=2$.
+Since these are dimensionality reducing transformations, we can only create regression surrogates.
 
 \subsection{Active subspace approximations}
 
-Another central aspect of the transformation pipeline is the quality of the generated transformations, which are mainly constructed with the help of the active subspace method.
-We are mainly concerned with the quality differences between the different active subspace approximation methods, and want to ideally make use of the neighbour approximation methods, as they don't require known gradients and no additional function evaluations.
+Another central aspect of the transformation pipeline is the quality of the generated transformations for any given value for $r$.
+In cases the transformation is constructed using the active subspace method, we are interested in the quality differences between the available active subspace approximation methods (see \cref{sec:as_est}), and want to ideally make use of the neighbour approximation methods, as they don't require known gradients and no additional model function evaluations.
 We are interested in answering the following questions:
 \begin{enumerate}
-\item How much do the rougly approximated active subspaces differ from the true active subspaces?
+\item How much do the approximated active subspaces differ from the true active subspaces?
 \item Which approximation method performs the best?
 \item Do the active subspace differences actually manifest themselves in the approximation error?
 \end{enumerate}
-
+%
 To judge the quality of approximated gradients, we first have to define an error metric for them:
-\begin{definition}[$L^2$ norm]
-Let $v \in \mathds{R}^{d}$ be a vector. Then
-\begin{equation}
-\| v\|_2 \coloneqq \sqrt{\sum_{i=1}^d |v_{i}|^2}
-\nonumber
-\end{equation}
-is the $L^2$ norm of the vector $v$.
-\end{definition}
-
-
 \begin{definition}[Average gradient error]
-Let $S=\{x_1, \dots, x_n\}$ be an input sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
+Let $S=\{(x_i, f(x_i)\}_{i=1}^n$ be a function sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
 \begin{equation}
-\varepsilon_{\text{grad}}(S) \coloneqq \frac{1}{n} \sum_{i=1}^n \frac{\| \widetilde{\nabla} f(x_i) - \nabla f(x_i) \|_2}{\| \nabla f(x_i) \|_2}
+\varepsilon_{\mathrm{grad}}(S) \coloneqq \frac{1}{n} \sum_{i=1}^n \frac{\|{\widetilde{\nabla} f(x_i) - \nabla f(x_i)}\|_2}{{\| \nabla f(x_i) \|}_2}
 \label{eq:e_grad}
 \end{equation}
 as the average gradient approximation error of the sample.
 \end{definition}
-
+%
 In the context of active subspaces, the approximation error of the gradients is not the relevant metric to evaluate a method.
-Instead, the primary focus is the resulting surrogate approximation error, which is decoupled from the individual gradients, as it is the only metric that matters in the end.
+Instead, the primary focus should be the resulting surrogate approximation error, as it is the only metric that matters in the end.
 Even though the active subspaces computation is based entirely on the average outer product of the gradients, there is not necessarily a strong link between $\varepsilon_{\text{grad}}$ and the quality of the resulting active subspace.
-While the individual gradients approximated by different methods can be far off, the average of the outer products of the gradients from \cref{eq:as_c_approx} can still come close to the real one if the general trend of the gradients is still be reflected in the approximated gradients.
-Therefore, inaccuracies of single gradients can be averaged out but systematic biases of the gradients will influence the approximated active subspace, which doesn't necessarily have to be bad as even the true active subspaces might not result in an optimal transformation.
+While the individual approximated gradients approximated can be far off, the average of the outer products of the gradients can still come close to the real one, if the general trend of the gradients is still be reflected in the approximated gradients.
+Therefore, inaccuracies of single gradients can be averaged out, but systematic biases of the gradients will influence the approximated active subspace.
+The end result doesn't necessarily have to be bad however, as even the true active subspaces might not result in an optimal transformation.
 
-The most basic error metric for an estimated active subspace matrix would be calculating some matrix norm of the approximation error compared to the true active subspace, i.e. to calculate $\| W - W^\ast \|$.
+While at first glance, using some sort of approximated active subspace deviation $\| W - W^\ast \|$ looks like a good metric to evaulate approximated active subspaces, we can easily see that this is not the case.
+The most basic error metric for an estimated active subspace matrix would be calculating some matrix norm of the approximation error compared to the true active subspace, that is to calculate $\| W - W^\ast \|$.
 However, this error calculation is not suitable for cases in which $\lambda_i \approx 0$, since the corresponding eigenvectors can vary greatly in that case.
 Also, if two eigen values $\lambda_i, \lambda_j$ are similar in magnitude, the order of eigen vectors might switch arbitrarily and result in a huge matrix norm value.
 An error calculation of this type would therefore be potentially very unstable and not suitable.
@@ -2322,12 +2362,11 @@ We therefore just use the surrogate look ahead approximation error.
 	\label{fig:as_errors_f1}
 \end{figure}
 \end{mdframed}
-
+%
 As seen on the left in \cref{fig:as_errors_f1}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\text{grad}}$.
 The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
 Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
-
 
 The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
 The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
@@ -2337,19 +2376,19 @@ While the nearest neighbour methods have a similar gradient errors compared to f
 
 \subsection{Random transformations}
 
-To verify the quality of the active subspace method in general compared to the true optimal linear transformation, which we can't necessarily construct deterministicly with active subspaces, another approach are random linear transformation from \cref{a}.
+To verify the quality of the active subspace method compared to the true optimal linear transformation, which we can't necessarily construct deterministicly with active subspaces, another approach are random linear transformation (see \cref{sec:rt}).
 This generation method is not affected by any potential biases or compounding gradient approximation errors like the active subspace method is.
-To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal transformation.
-As the mainly used transformation evaluator component is forward looking, i.e. generating an actual transformed surrogate, we have to employ very lo-fi surrogates for that.
+To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal linear transformation.
+As the mainly used transformation evaluator component is forward looking, \ie generating an actual transformed surrogate, we have to employ very lo-fi components to achieve a high transformation count.
 We are interested in answering the following questions:
 \begin{enumerate}
-\item What is the approximation error distribution of the randomly generated transformations?
 \item How do the best found random transformations compare to active subspaces?
+\item What is the approximation error distribution of the randomly generated transformations?
 \item Are random transformations a viable alternative for constructing transformations?
 \end{enumerate}
-
-The used lo-fi surrogate generator creates a grid that has very grid points and does not perform any refinements.
-Once the algorithm has determined the random transformation with the lowest error based on lofi surrogates, we construct an actual hifi surrogate and calculate the error again, s.t. we come closer to the approximation real error.
+%
+The used lo-fi surrogate generator creates a grid that has very few grid points and does not perform any refinements.
+Once the algorithm has determined the random transformation with the lowest error based on the lofi surrogates, we construct an actual hifi surrogate and calculate the error again, s.t. we come closer to the approximation real error.
 The lo-fi transformation errors are visualized using histograms and while the errors do not come close to the actual hi-fi errors, the distribution of lo-fi errors can provide valuable insight into the actual approximation error distribution, as the lo-fi surrogates should still be comparatively representative.
 
 \begin{mdframed}[style=style]
@@ -2357,7 +2396,7 @@ The lo-fi transformation errors are visualized using histograms and while the er
         \centering
 \begin{minipage}{.4\textwidth}
         \centering
-  \captionof{figure}{Histogram of lo-fi approximation errors for 1000 randomly generated transformations with $r=3$, a bin range of $?$, and .. . The lowest error is $?$ and the highest one is $?$.\\The surrogates were created using regression.}
+  \captionof{figure}{Histogram of lo-fi approximation errors for $10^3$ randomly generated transformations with $r=3$, a bin range of $?$, and .. . The lowest error is $?$ and the highest one is $?$.\\The surrogates were created using regression.}
 \label{fig:aligned_grid}
     \end{minipage}%
     \begin{minipage}{0.6\textwidth}
@@ -2389,7 +2428,7 @@ The \darkblue dots are the available samples $S \setminus \{x\}$. A filled dot s
 The completely \red circle represents the sample point $x$ and other sample points circled in \red indicate that they were chosen as a neighbour of $x$.}
 \end{figure}
 \end{mdframed}
-
+%
 In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function, as it comes close to the active subspace error.
 However, for higher dimensional functions, the required amount of random generation iterations to find an acceptable transformation will grow, as more dimension will mean more possible directions and also orders of directions.
 We can order a set of the same directions in many more ways in higher dimensions.
@@ -2398,7 +2437,6 @@ Therefore, the active subspace method scales better with higher dimensions as it
 \section{Wing weight function}
 
 Now that we investigated several important pipeline components with regards to a low-dimensional model function, we compare the results to a case with a high-dimensional example model function to look out for properties that can't be generalized from one low-dimensional case study.
-For this purpose, we start with a low dimensional model function, the Ishigami Function \cite{}, which has already been used to test various uncertainty quantification \cite{} and sensitivity analysis techniques \cite{}:
 \begin{equation}
 f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
 \end{equation}
@@ -2436,33 +2474,32 @@ We therefore skip straight to the topic of dimension reducing transformations wi
 \chapter{Conclusion and outlook}
 \label{chap:c9}
 
-We discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression without the need for additional model function evaluations or gradients by using the effective neighbour approximation methods as a basis for the active subspace computations.
+To summarise, we discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients, by using the effective neighbour approximation methods as a basis for the active subspace computations.
 However, if more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve improved results.
+The question, for which application the transformed sparse grid technique is most suitable, also warrants further experiments.
+While we looked at two major applications, function approximation and regression, in a few experiments, this does not constitute enough evidence to draw definite conclusions.
+There are also a few more areas of interest regarding transformed sparse grids that might warrant further research and also potential areas of improvement:
 
-\vspace{1em}
-\textbf{Parallelization}
+\paragraph{Parallelization}
 The implementation of the transformation pipeline has the potential to be almost perfectly parallized.
 A huge portion of the total runtime is spent on evaluating multiple surrogates that either come from transformation streams (\cref{a}) or from the process of determining the optimal surrogate configuration parameters (\cref{a}) .
 These parts can be parallelized by evaluating all of them in parallel on separate threads.
 Furthermore, other optimizations like vectorization and GPU support could also be implemented.
 This can be combined with the already implemented parallelization and GPU support of the used sparse grid library SGpp to obtain a complete and very performant pipeline.
 
-\vspace{1em}
-\textbf{Formalization of concepts}
+\paragraph{Formalization of concepts}
 The main workflow used to eventually come up with the resulting transformation pipeline was mainly based on ideas and practical experiments.
 While some formal concepts, like intrinsic dimension \cref{a} or active subspaces \cref{a}, were used, many parts, especially the transformation construction and the iterative algorithm design, were introduced constructively without any proof of their qualities.
 Maybe there exists a better way to construct transformed surrogates compared to the one used in this thesis or a better way to design an iterative transformation algorithm itself.
 Therefore, the general ideas of this thesis can be investigated with more formal and rigorous approach, s.t. eventual results can be better explained and understood with a theory as well.
 
-\vspace{1em}
-\textbf{More surrogate types}
+\paragraph{More surrogate types}
 In this thesis we used sparse grid surrogates as primary reduced surrogates and radial basis function surrogates as a control method to identify grid specific surrogate properties.
 In theory, any surrogate type that uses the tensor-product approach to construct basis functions and supports regression can benefit from input transformations.
 Other common candidates aside from sparse grids would be , ...
 As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would be trivial.
 
-\vspace{1em}
-\textbf{Determining optimal lo-fi surrogates}
+\paragraph{Determining optimal lo-fi surrogates}
 Right now, suitable lo-fi surrogates that are indicative of the comparative quality of their high fidelity surrogates, are determined more or less empirically.
 However, in theory it should not be too difficult to develop an algorithm that automatically determines optimal lo-fi surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
 This would make the transformation process even simpler to apply on a variety of models, as it would eliminate prior probing of the model function.

@@ -71,7 +71,7 @@ location = {Sydney, NSW, Australia},
 series = {KDD '15}
 }
 
-@Book{P10,
+@Book{Pflueger2010,
   author    = {Pfl{\"{u}}ger, Dirk},
   publisher = {Verlag Dr. Hut},
   title     = {Spatially Adaptive Sparse Grids for High-Dimensional Problems},
@@ -159,25 +159,26 @@ keywords = {Quasi-Monte Carlo methods, Low discrepancy sequences, Discrepancy, M
 abstract = {Quasi-Monte Carlo (QMC) methods have been successfully used to compute high-dimensional integrals arising in many applications, especially in finance. To understand the success and the potential limitation of QMC, this paper focuses on quality measures of point sets in high dimensions. We introduce the order-ℓ, superposition and truncation discrepancies, which measure the quality of selected projections of a point set on lower-dimensional spaces. These measures are more informative than the classical ones. We study their relationships with the integration errors and study the tractability issues. We present efficient algorithms to compute these discrepancies and perform computational investigations to compare the performance of the Sobol’ nets with that of the sets of Latin hypercube sampling and random points. Numerical results show that in high dimensions the superiority of the Sobol’ nets mainly derives from the one-dimensional projections and the projections associated with the earlier dimensions; for order-2 and higher-order projections all these point sets have similar behavior (on the average). In weighted cases with fast decaying weights, the Sobol’ nets have a better performance than the other two point sets. The investigation enables us to better understand the properties of QMC and throws new light on when and why QMC can have a better (or no better) performance than Monte Carlo for multivariate integration in high dimensions.}
 }
 
-@Article{WEI,
+@Article{Weisstein,
   author  = {Eric W. Weisstein},
   journal = {MathWorld--A Wolfram Web Resource},
   title   = {Hypercube Line Picking.},
   url     = {https://mathworld.wolfram.com/HypercubeLinePicking.html},
 }
-@article{BAILEY2007196,
-title = {Box integrals},
-journal = {Journal of Computational and Applied Mathematics},
-volume = {206},
-number = {1},
-pages = {196-208},
-year = {2007},
-issn = {0377-0427},
-doi = {https://doi.org/10.1016/j.cam.2006.06.010},
-url = {https://www.sciencedirect.com/science/article/pii/S0377042706004250},
-author = {D.H. Bailey and J.M. Borwein and R.E. Crandall},
-keywords = {Box integrals, Multi-dimensional integrals, High-precision quadrature},
-abstract = {By a “box integral” we mean here an expectation 〈|r⇒-q⇒|s〉 where r⇒ runs over the unit n-cube, with q⇒ and s fixed, explicitly:∫01⋯∫01((r1-q1)2+⋯+(rn-qn)2)s/2dr1…drn.The study of box integrals leads one naturally into several disparate fields of analysis. While previous studies have focused upon symbolic evaluation and asymptotic analysis of special cases (notably s=1), we work herein more generally—in interdisciplinary fashion—developing results such as: (1) analytic continuation (in complex s), (2) relevant combinatorial identities, (3) rapidly converging series, (4) statistical inferences, (5) connections to mathematical physics, and (6) extreme-precision quadrature techniques appropriate for these integrals. These intuitions and results open up avenues of experimental mathematics, with a view to new conjectures and theorems on integrals of this type.}
+
+@Article{Bailey2007,
+  author   = {D.H. Bailey and J.M. Borwein and R.E. Crandall},
+  journal  = {Journal of Computational and Applied Mathematics},
+  title    = {Box integrals},
+  year     = {2007},
+  issn     = {0377-0427},
+  number   = {1},
+  pages    = {196-208},
+  volume   = {206},
+  abstract = {By a “box integral” we mean here an expectation 〈|r⇒-q⇒|s〉 where r⇒ runs over the unit n-cube, with q⇒ and s fixed, explicitly:∫01⋯∫01((r1-q1)2+⋯+(rn-qn)2)s/2dr1…drn.The study of box integrals leads one naturally into several disparate fields of analysis. While previous studies have focused upon symbolic evaluation and asymptotic analysis of special cases (notably s=1), we work herein more generally—in interdisciplinary fashion—developing results such as: (1) analytic continuation (in complex s), (2) relevant combinatorial identities, (3) rapidly converging series, (4) statistical inferences, (5) connections to mathematical physics, and (6) extreme-precision quadrature techniques appropriate for these integrals. These intuitions and results open up avenues of experimental mathematics, with a view to new conjectures and theorems on integrals of this type.},
+  doi      = {https://doi.org/10.1016/j.cam.2006.06.010},
+  keywords = {Box integrals, Multi-dimensional integrals, High-precision quadrature},
+  url      = {https://www.sciencedirect.com/science/article/pii/S0377042706004250},
 }
 @article{huber1985projection,
   title={Projection pursuit},
@@ -186,6 +187,87 @@ abstract = {By a “box integral” we mean here an expectation 〈|r⇒-q⇒|s�
   pages={435--475},
   year={1985},
   publisher={JSTOR}
+}
+@article{Ishigami1990AnIQ,
+  title={An importance quantification technique in uncertainty analysis for computer models},
+  author={T. Ishigami and T. Homma},
+  journal={[1990] Proceedings. First International Symposium on Uncertainty Modeling and Analysis},
+  year={1990},
+  pages={398-403}
+}
+@Article{Sobol1999,
+  author  = {Sobol, ' and Levitan, I and Y},
+  journal = {Computer Physics Communications},
+  title   = {On the use of variance reducing multipliers in Monte Carlo computations of a global sensitivity index},
+  year    = {1999},
+  number  = {1},
+  pages   = {52--61},
+  volume  = {117},
+  date    = {1999},
+}
+@Inbook{Kress1999,
+author="Kress, Rainer",
+title="Regularization by Discretization",
+bookTitle="Linear Integral Equations",
+year="1999",
+publisher="Springer New York",
+address="New York, NY",
+pages="308--319",
+abstract="We briefly return to the study of projection methods and will consider their application to ill-posed equations of the first kind. In particular we will present an exposition of the moment discretization method. For further studies of regularization through discretization, we refer to Baumeister [13], Kirsch [87], Louis [116], and Natterer [136].",
+isbn="978-1-4612-0559-3",
+doi="10.1007/978-1-4612-0559-3_17",
+url="https://doi.org/10.1007/978-1-4612-0559-3_17"
+}
+
+@Article{Wang2008,
+  author   = {Xiaoqun Wang and Ian H. Sloan},
+  journal  = {Journal of Computational and Applied Mathematics},
+  title    = {Low discrepancy sequences in high dimensions: How well are their projections distributed?},
+  year     = {2008},
+  issn     = {0377-0427},
+  number   = {2},
+  pages    = {366-386},
+  volume   = {213},
+  abstract = {Quasi-Monte Carlo (QMC) methods have been successfully used to compute high-dimensional integrals arising in many applications, especially in finance. To understand the success and the potential limitation of QMC, this paper focuses on quality measures of point sets in high dimensions. We introduce the order-ℓ, superposition and truncation discrepancies, which measure the quality of selected projections of a point set on lower-dimensional spaces. These measures are more informative than the classical ones. We study their relationships with the integration errors and study the tractability issues. We present efficient algorithms to compute these discrepancies and perform computational investigations to compare the performance of the Sobol’ nets with that of the sets of Latin hypercube sampling and random points. Numerical results show that in high dimensions the superiority of the Sobol’ nets mainly derives from the one-dimensional projections and the projections associated with the earlier dimensions; for order-2 and higher-order projections all these point sets have similar behavior (on the average). In weighted cases with fast decaying weights, the Sobol’ nets have a better performance than the other two point sets. The investigation enables us to better understand the properties of QMC and throws new light on when and why QMC can have a better (or no better) performance than Monte Carlo for multivariate integration in high dimensions.},
+  doi      = {https://doi.org/10.1016/j.cam.2007.01.005},
+  keywords = {Quasi-Monte Carlo methods, Low discrepancy sequences, Discrepancy, Multivariate integration},
+  url      = {https://www.sciencedirect.com/science/article/pii/S0377042707000374},
+}
+
+@Article{Robinson2006,
+  author  = {Robinson, T and Willcox, K and Eldred, Michael and Haimes, Robert},
+  journal = {Collection of Technical Papers - 11th AIAA/ISSMO Multidisciplinary Analysis and Optimization Conference},
+  title   = {Multifidelity Optimization for Variable-Complexity Design},
+  year    = {2006},
+  month   = {09},
+  volume  = {4},
+  doi     = {10.2514/6.2006-7114},
+}
+
+@Article{Broomhead1988,
+  author  = {Broomhead, David and Lowe, David},
+  journal = {Complex Systems},
+  title   = {Multivariable Functional Interpolation and Adaptive Networks},
+  year    = {1988},
+  pages   = {321-355},
+  volume  = {2},
+  date    = {1988},
+}
+
+@InBook{Devroye1986,
+  author    = {Devroye, Luc},
+  chapter   = {Chapter II.2: The lnverslon method.},
+  pages     = {27--40},
+  publisher = {Springer-Verlag},
+  title     = {Non-Uniform Random Variate Generation},
+  year      = {1986},
+  address   = {New York},
+  date      = {1986},
+}
+
+@Misc{Bochkanov,
+  author = {Sergey Bochkanov},
+  title  = {ALGLIB (www.alglib.net)},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

@@ -1,8 +1,11 @@
 Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to the simulation enables it to represent reality more accurately.
-However, many simulation results mainly depend only on a subset of the inputs and are therefore possible targets for dimension reduction techniques, which aim to identify such inputs and allow to adapt the simulation accordingly, while preserving a required level of accuracy.
+However, many complex simulations suffer heavily from the curse of dimensionality.
+In many cases, the simulation results mainly depend only on a subset of the inputs and are therefore possible targets for dimensionality reduction techniques.
+These techniques aim to identify such inputs and adapt the simulation to use a lower-dimensional model surrogate instead, while still preserving a required level of accuracy.
 
-Various approaches to dimension reduction already exist in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
-Active subspaces are another dimension reduction technique, which in contrast to sparse grid based methods, can replace parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
+Various approaches to dimensionality reduction already exist in the context of sparse grids, such as adaptive sparse grids or sparse grid based analysis of variance, where the goal is to neglect or eliminate less important dimensions of model functions.
+Active subspaces are another dimensionality reduction technique, which in contrast to sparse grid based methods, can replace input parameters through linear combiniations of others, thus making them more flexible than purely dimension oriented approaches.
 
-In this thesis, the active subspace method is applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimension reduction technique that exploits the best of both worlds.
-This combined approach views the model from a black-box perspective and therefore can and will be employed on a wide variety of high-dimensional real world models, with the goal to evaluate their general quality of the produced surrogates show their advantages and disadvantages in different contexts.
+In this thesis, the active subspace method is applied in combination with sparse grids to obtain transformed sparse grids and create a more flexible dimensionality reduction technique that exploits the best of both worlds.
+This combined approach views the model from a black-box perspective and can therefore be employed on a wide variety of high-dimensional real world models.
+To evaluate the quality of the produced transformed sparse grid surrogates and to show their advantages and disadvantages in different contexts, we also perform experiments on a variety of high-dimensional models.
