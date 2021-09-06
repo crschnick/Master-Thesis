@@ -2276,10 +2276,10 @@ For the orientation change, we use all computed active subspace directions from 
 As we discussed in \cref{sec:ms}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
 In this section, we are interested in answering the following questions:
 \begin{enumerate}
-\item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
 \item How big is the approximation error difference between interpolation and regression surrogates?
 \item How is the approximation error affected when transformations and regression are used together?
 \item How does the boundary grid behaviour change when using input transformations?
+\item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
 \end{enumerate}
 %
 Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
@@ -2360,11 +2360,20 @@ We therefore just use the surrogate look ahead approximation error.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-\begin{subfigure}{\textwidth}
 	\includegraphics[width=\textwidth]{graphics/ishigami_as_grad_errors}
-	\caption{Average gradient approximation errors of all used gradient approximation methods.}
+\delimit
+	\caption{Average gradient approximation errors of all used gradient approximation methods over 10 iterations.}
 	\label{fig:ishigami_as_grad}
-\end{subfigure}
+\end{figure}
+\end{mdframed}
+%
+As seen on the left in \cref{fig:ishigami_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
+Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\mathrm{grad}}$.
+The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
+Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_as_3_inter}
@@ -2385,8 +2394,8 @@ We therefore just use the surrogate look ahead approximation error.
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
-   \includegraphics[width=\linewidth]{graphics/ishigami_as_2}
-	\caption{Regressed surrogates with $r=3$.}
+   \includegraphics[width=\linewidth]{graphics/ishigami_as_1}
+	\caption{Regressed surrogates with $r=1$.}
 	\label{fig:ishigami_as_1}
 \end{subfigure}
 \delimit
@@ -2395,22 +2404,17 @@ We therefore just use the surrogate look ahead approximation error.
 \end{figure}
 \end{mdframed}
 %
-As seen on the left in \cref{fig:ishigami_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\mathrm{grad}}$.
-The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
-
-The random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
-The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
-Also, using fewer closer neighbours $m$ for the nearest neighbour method performs a little bit better.
-
-All the other figures in \cref{fig:ishigami_as} show the actual performance of the different methods by using the look-ahead error.
-It can also be observed that the gradient approximation quality does not correlate with the constructed surrogate quality.
-While the finite differences method with $h=0.01$ has the best error $\varepsilon_{\mathrm{grad}}$ by far, the constructed surrogate does not perform better than basically the other finite differences methods and also the nearest neighbour methods.
+\Cref{fig:ishigami_as} shows the actual performance of the different methods by using the look-ahead error.
+It can also be observed that the gradient approximation quality from \cref{fig:ishigami_as_grad} does not exactly correlate with the constructed surrogate quality.
+While the finite differences method with $h=0.01$ has the best error $\varepsilon_{\mathrm{grad}}$ by far, the constructed surrogate does not perform better than basically the other finite differences methods and also the nearest neighbour methods in \cref{fig:ishigami_as_3_inter} and \cref{fig:ishigami_as_3}.
 The random neighbour methods lag a little bit behind in terms of the gradient errors and surrogate errors, but are still in a comparable range to the other methods.
 They also take more active subspace samples to converge to the other methods.
 
-These results are good news, as they indicate that the approximation methods, which are way cheaper with regards to required function evaluations, deliver almost the same results as more expensive methods.
+In the dimensionality reducing cases \cref{fig:ishigami_as_2} and \cref{fig:ishigami_as_1}, the random neighbour method errors are still contained in a small range with an error comparable to the finite differences approximation with a very big step size of $h=0.5$.
+The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
+
+These results are good news, as they indicate that approximation methods, which are way cheaper with regards to required function evaluations, can deliver almost the same results as more expensive methods.
+For this case, the nearest neighbour method is the preferable approximation method.
 
 \subsection{Random transformations}
 
@@ -2425,7 +2429,6 @@ We are interested in answering the following questions:
 \item Are random transformations a viable alternative for constructing transformations?
 \end{enumerate}
 %
-The used lo-fi surrogate generator creates a grid that has very few grid points and does not perform any refinements.
 Once the algorithm has determined the random transformation with the lowest error based on the lofi surrogates, we construct an actual hifi surrogate and calculate the error again, s.t. we come closer to the approximation real error.
 The lo-fi transformation errors are visualized using histograms and while the errors do not come close to the actual hi-fi errors, the distribution of lo-fi errors can provide valuable insight into the actual approximation error distribution, as the lo-fi surrogates should still be comparatively representative.
 
@@ -2434,26 +2437,25 @@ The lo-fi transformation errors are visualized using histograms and while the er
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_3_inter}
-  \captionof{figure}{Interpolated transformed sparse grid surrogate with $r=3$.}
+  \captionof{figure}{Interpolated transformed sparse grid surrogate with $r=3$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.0007$.}
 \vspace{3mm}
   \label{fig:ishigami_hist_3_inter}
 \end{subfigure}%
 \begin{subfigure}[H]{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_3}
-  \captionof{figure}{Regressed transformed sparse grid surrogate with $r=3$.}
+  \captionof{figure}{Regressed transformed sparse grid surrogate with $r=3$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
 \vspace{3mm}
   \label{fig:ishigami_hist_3}
 \end{subfigure}
 \delimit
-  \captionof{figure}{Histogram of lo-fi approximation errors for $10^5$ randomly generated transformations with $r=3$.}
-\label{fig:ishigami_hist_3}
+  \captionof{figure}{Histogram of lo-fi approximation errors for $10^4$ randomly generated transformations with $r=3$.}
+\label{fig:ishigami_hist_3_both}
 \end{figure}
 \end{mdframed}
 %
-\Cref{fig:ishigami_hist_3} shows the approximation error distribution of interpolation and regression surrogates with $r=3$.
-As these errors are calculated using lo-fi surrogates, they are not equal to the hi-fi errors.
-In case of \cref{fig:ishigami_hist_3_inter}, the corresponding hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.0012$, and for \cref{fig:ishigami_hist_3}, the hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$, where the hi-fi grid surrogates uses $1597$ grid points.
+\Cref{fig:ishigami_hist_3_both} shows the approximation error distribution of interpolation and regression surrogates with $r=3$.
+As these histogram errors are calculated using lo-fi surrogates, they are not equal to the hi-fi errors, which are listed in the figure captions.
 Comparing these results to the previous transformation results that were achieved with active subspaces, we see that random transformations delivered competitive results.
 
 \begin{mdframed}[style=style]
@@ -2463,14 +2465,14 @@ Comparing these results to the previous transformation results that were achieve
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_2}
-  \caption{Random transformation approximation error distribution for $r=2$.}
+  \caption{Random transformation approximation error distribution for $r=2$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_1}
-  \caption{Random transformation approximation error distribution for $r=1$.}
+  \caption{Random transformation approximation error distribution for $r=1$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_1}
 \end{subfigure}
@@ -2480,11 +2482,12 @@ Comparing these results to the previous transformation results that were achieve
 \end{figure}
 \end{mdframed}
 %
-\Cref{fig:ishigami_hist_12} shows the approximation error distribution of transformed regression surrogates with $r=2$ and $r=1$.
-In case of \cref{fig:ishigami_hist_2}, the corresponding hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.0012$, where the hi-fi grid surrogate uses $1597$ grid points.
-Similarly for \cref{fig:ishigami_hist_1}, the hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.125$, where the hi-fi grid surrogate uses $1223$ grid points.
+\Cref{fig:ishigami_hist_12} shows the lo-fi approximation error distribution of transformed regression surrogates with dimensionality reducing transformations.
+Compared to the orientation changing only case from \Cref{fig:ishigami_hist_3_both}, we can see that the distribution has a high peak towards to the tail end of the approximation error range.
+As a result, it requires more generation runs to obtain a good transformation, as the probabily of finding one far too the left of the peak is very low.
+The best found random transformation still proves to be very competetive compared to active subspaces, as the hi-fi errors are close.
 
-In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function, as it comes close to the active subspace error.
+In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function and enough runs, as it comes close to the active subspace error.
 However, for higher dimensional functions, the required amount of random generation iterations to find an acceptable transformation is expected grow very fast, as more dimension will mean more possible directions and also orders of directions.
 We can order a set of the same directions in many more ways in higher dimensions.
 Therefore, we expect the active subspace method to scale better with higher dimensions as it only requires exactly one run an ordering of directions is implicitly given.
