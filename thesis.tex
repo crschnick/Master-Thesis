@@ -740,7 +740,8 @@ However, the primary focus lied on optimizing sparse grids itself and less on in
 The basic idea that is propagated in this thesis is that instead of directly using the sparse grids to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V^{\text{s}}_{\ell}$, we insert another layer of flexibility into the process by introducing an input transformation function $t$ and creating the surrogate $\hat{f}$ in tandem with $t$ such that the transformed approximation $f(x) \approx \hat{f}(t(x))$ has the potential to perform better.
 This general idea and also its details can and will be expanded upon in this chapter.
 
-\section{Intrinsic dimension}
+\section{Intrinsic dimensionality}
+\label{sec:intrinsic}
 
 There already exist several concepts used in signal processing and data science that are related to the idea of input transformations to exploit certain characteristics of the input data like PCA \cite{} or the concept of intrinsic dimension \cite{}.
 The intrinsic dimension of a function or dataset is the minimal amount of features required to completely represent its output.
@@ -1737,6 +1738,7 @@ In the case that we use a linear transformation function, \cref{alg:itappr} is p
 \end{mdframed}
 
 \section{Generating the best surrogate}
+\label{sec:gs}
 
 Surrogates can, depending on their type, have possibly many independent configuration parameters, which can heavily influence the end result and therefore the approximation error.
 The amount of possible configuration parameter combinations makes finding the best combination difficult, as it would require the examination of a lot of combinations and in most cases the actual surrogate has to be constructed with a given set of parameters to evaluate the suitability of the parameters.
@@ -1980,6 +1982,7 @@ The transformation generator component has the responsibility of finding a good 
 We covered the creation of input transformation extensively in chapter \cref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods, with the goal to provide a uniform interface.
 
 \subsection {Transformation stream generator}
+\label{sec:tsg}
 
 We saw previsouly that we can generate a whole family of transformations for every calculated active subspace matrix or random orthogonal basis, which is usually accomplished by using different values for the reduced dimension $r$, i.e. cutting less or more dimensions off.
 To apply this concept and to couple it with other components introduced later on, such as transformation evaluators, this implementation makes use of so-called transformation stream generators.
@@ -2281,39 +2284,42 @@ In this section, we are interested in answering the following questions:
 \item How does the boundary grid behaviour change when using input transformations?
 \item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
 \end{enumerate}
-%
-Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
-On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
-Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/ishigami_orientation}
 \delimit
 
-\captionof{figure}{Approximation errors of various sparse grid surrogates for the Ishigami function.}
+\captionof{figure}{Approximation errors of transformed and untransformed sparse grid surrogates for the Ishigami function. On the left, the surrogates are regular sparse boundary grids with the hat basis. On the right, the surrogates are regular sparse grids with a modified hat basis. The transformation is constructed with active subspaces and the finite differences method.}
 \label{fig:ishigami_errors}
 \end{figure}
 \end{mdframed}
 %
+Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
+On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
+Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
+
 As we can see in \cref{fig:ishigami_errors}, the pure orientation change does not lead to better interpolation results.
 In this concrete example, the penalty of the unused transformation space $U_t$ evens out the gains from a more optimal orientation for sparse grid surrogates.
 As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$ and the grid resolution is effectively lower and some grid points may be unused.
-Furthermore, the regression approximation quality, compared to the interpolation method, is only slighly worse.
+Furthermore, the introduced regression penalty, compared to the interpolation method, is only slighly worse by factor of approximately $10^1$.
+There are no significant quality differences when using modified linear basis functions instead of a linear basis with boundaries, which is why we will continue to use a modified basis for the Ishigami function for the rest of this section, as they require less grid points.
 
 Based on these results we can conclude that, even though there is no improvement with this method, there is also no significant downside, even as $\tilde{u}$ is large and regression is used.
 This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using linear transformations, approximately cancels out with the orientation improvements.
 Also, using regression only results in a slight increase of the approximation error.
 As the tansformation process focuses on dimension reducing linear transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
-Therefore, dimension reducing transformations seem to have a much bigger potential.
+Therefore, dimensionality reducing transformations seem to have a much bigger potential.
 
 \subsection{Dimensionality reducing transformations}
 
-Next, we look at dimensionality reducing transformations with $r < d$ and are interested in answering the following questions:
+Next, we look at dimensionality reducing transformations with $r < d$.
+Note that for this low-dimensional model function, there is no real need to perform a dimensionality reduction, as the curse of dimensionality does not affect sparse grid surrogates heavily for $d=3$.
+We can therefore not expect to see any gain from applying a transformation with $r < d$, as this will only happen for higher dimensions.
+We are still interested in answering some basic questions:
 \begin{enumerate}
 \item By how much does dimensionality reduction increase the approximation error?
 \item How much do the increased approximation errors correlate with the computed active subspace eigen values?
-\item Is a dimensionality reduction worth it for the Ishigami function?
 \end{enumerate}
 %
 Based off the active subspace information from \cref{tab:ishigami_as}, a one-dimensional reduction by cutting off the eigen vectors $v_2$ and $v_3$ looks feasible, as the first active direction covers the majority of the eigen value share.
@@ -2322,6 +2328,20 @@ Therefore, the primarily used pipeline component uses a look ahead approach to e
 
 To better investigate the active subspace properties, we generate transformations for $r=1$ and $r=2$.
 Since these are dimensionality reducing transformations, we can only create regression surrogates.
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/ishigami_red}
+\delimit
+
+\captionof{figure}{Approximation errors of reduced sparse grid surrogates for the Ishigami function with linear boundary and modified linear basis types. A normal interpolated sparse grid surrogate is also included for comparision.}
+\label{fig:ishigami_red}
+\end{figure}
+\end{mdframed}
+%
+As we can see in \cref{fig:ishigami_red}, the dimensionality reducing transformations leads to, as expected, way worse results and does not provide usable surrogates.
+We see that the approximation error for the reduced surrogates hits the convergent state very fast and an increase in grid points does not improve the surrogate quality.
+Furthermore, the actual approximation error of the reduced surrogates does not correlate with the active subspace eigen values.
+Even though the eigen value share of the first two eigen vectors is around $90\%$, the loss of the approximation quality when cutting of the most inactive eigen vector in the $r=2$ case is way higher.
 
 \subsection{Active subspace approximations}
 
@@ -2399,7 +2419,7 @@ Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neigh
 	\label{fig:ishigami_as_1}
 \end{subfigure}
 \delimit
-	\caption{Gradient approximation error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting active subspace error $\varepsilon_{\text{AS}}$ on the right, computed for the example function $f_1$ as the average over 10 iterations.}
+	\caption{Gradient approximation error $\varepsilon_{\text{grad}}$ of the previously introduced approximation methods on the left, and the resulting approximation error on the right, computed as the average over 10 iterations.}
 	\label{fig:ishigami_as}
 \end{figure}
 \end{mdframed}
@@ -2539,28 +2559,30 @@ While we looked at two major applications, function approximation and regression
 There are also a few more areas of interest regarding transformed sparse grids that might warrant further research and also potential areas of improvement:
 
 \paragraph{Parallelization}
-The implementation of the transformation pipeline has the potential to be almost perfectly parallized.
-A huge portion of the total runtime is spent on evaluating multiple surrogates that either come from transformation streams (\cref{a}) or from the process of determining the optimal surrogate configuration parameters (\cref{a}) .
-These parts can be parallelized by evaluating all of them in parallel on separate threads.
-Furthermore, other optimizations like vectorization and GPU support could also be implemented.
-This can be combined with the already implemented parallelization and GPU support of the used sparse grid library SGpp to obtain a complete and very performant pipeline.
+The implementation of the transformation pipeline has the potential to be almost perfectly parallelized.
+A huge portion of the total runtime is spent on evaluating multiple surrogates that either come from transformation stream generators (\cref{sec:tsg}) or from the process of determining the optimal surrogate configuration parameters (\cref{sec:gs}) .
+These components can be parallelized by evaluating all of them in parallel, as they don't exchange any data or need to coordinate, using an API like OpenMP \cite{openmp08}.
+Furthermore, other optimizations like vectorization \cite{Maleki2011} or GPU execution support with OpenCL \cite{Stone2010} could also be implemented.
+This can be combined with the already implemented support of the many of the listed frameworks and technologies by the sparse grid library SG$^{++}$, to obtain a completely optimized and very performant pipeline.
 
 \paragraph{Formalization of concepts}
 The main workflow used to eventually come up with the resulting transformation pipeline was mainly based on ideas and practical experiments.
-While some formal concepts, like intrinsic dimension \cref{a} or active subspaces \cref{a}, were used, many parts, especially the transformation construction and the iterative algorithm design, were introduced constructively without any proof of their qualities.
-Maybe there exists a better way to construct transformed surrogates compared to the one used in this thesis or a better way to design an iterative transformation algorithm itself.
-Therefore, the general ideas of this thesis can be investigated with more formal and rigorous approach, s.t. eventual results can be better explained and understood with a theory as well.
+While some formal concepts, like intrinsic dimensionality (\cref{sec:intrinsic}) or active subspaces (\cref{sec:as}), were used, many parts, especially the transformation construction and the iterative algorithm design, were introduced constructively without any proof of their qualities.
+Maybe there exist better ways to construct transformed surrogates compared to the ones used in this thesis or a better way to design an iterative transformation algorithm that works with these surrogates.
+Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach, such that the results are backed by a theory and can be better explained and understood.
 
-\paragraph{More surrogate types}
-In this thesis we used sparse grid surrogates as primary reduced surrogates and radial basis function surrogates as a control method to identify grid specific surrogate properties.
-In theory, any surrogate type that uses the tensor-product approach to construct basis functions and supports regression can benefit from input transformations.
-Other common candidates aside from sparse grids would be , ...
-As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would be trivial.
+\paragraph{Surrogate types}
+In this thesis we used sparse grid surrogates as primary reduced surrogates and to a limited degree radial basis function surrogates as well, but mainly as a control method to identify grid specific surrogate properties.
+In theory, any surrogate type that uses the tensor-product approach to construct basis functions and supports some form of regression can benefit from the presented linear input transformations.
+Other common candidates aside from sparse grids would be polynomial chaos expansion \cite{Crestaux2009} or stochastic collocation \cite{Nobile2008}.
+As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would not be too difficult.
 
-\paragraph{Determining optimal lo-fi surrogates}
-Right now, suitable lo-fi surrogates that are indicative of the comparative quality of their high fidelity surrogates, are determined more or less empirically.
-However, in theory it should not be too difficult to develop an algorithm that automatically determines optimal lo-fi surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
-This would make the transformation process even simpler to apply on a variety of models, as it would eliminate prior probing of the model function.
+\paragraph{Lo-fi surrogates}
+As mentioned before, it is vital to determine good lo-fi surrogates to guarantee a fast pipeline execution.
+Suitable lo-fi surrogates are indicative of the comparative quality of their high fidelity surrogates.
+Right now, these are determined more or less empirically, as automating this process is not trivial, epsecially when dealing with pre-convergent behaviour of the lo-fi surrogates.
+However, it should be possible to develop an algorithm that automatically determines optimal lo-fi surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
+This would make the transformation process even simpler to apply on a variety of models, as it would eliminate prior manual probing of the model function.
 
 \appendix
 \chapter{Appendix}
