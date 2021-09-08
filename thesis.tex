@@ -26,6 +26,8 @@
 ]{scrbook}
 \input{config}
 
+\DeclareFieldFormat{labelalpha}{\mkbibbold{#1}}
+\DeclareFieldFormat{extraalpha}{\mkbibbold{\mknumalph{#1}}}
 
 \usepackage[
   title={Transformed Sparse Grids for high-dimensional models},
@@ -232,7 +234,7 @@ We also reflect on the limitations and possible improvements of the method.
 The complexity of computer simulations that work on mathematical models is heavily dependent on the model dimensionality.
 Threfore, to succesfully perform complex simulations on high-dimensional models, various optimizations, such as model function surrogates, have been developed to ease the curse of dimensionality.
 More formally, we assume that this model is represented by a model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain, here a $d$-dimensional unit hypercube.
-While the domain of many models may not be the unit hypercube, it can easily be transformed in a linear fashion to obtain the unit hypercube, as long as the domain is bounded.
+While the domain of many models may not be the unit hypercube, it can easily be transformed in a linear fashion to obtain the unit hypercube, as long as the domain is a bounded Cartesian product.
 Furthermore, many models are also subject to uncertanties in their inputs.
 To incorporate these uncertanties, we model the inputs stochastically with a probability distribution defined by a probability density function $\rho \colon \Omega \to \mathds{R_+}$.
 
@@ -286,8 +288,9 @@ u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i.
 
 \section{Full grids}
 
-Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
-More formally, by constructing a one-dimensional mesh of level $\ell$ with resulting mesh size $h=2^{-\ell}$ and then associating simple nodal basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with each grid point at index $i \in \{0, \dots, 2^\ell\}$, we can interpolate functions very accurately.
+Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform isotropic grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
+More formally, by constructing a one-dimensional mesh of level $\ell$ with equidistant points $x_{\ell,i}=i2^{-\ell}$ resulting in a mesh size $h=2^{-\ell}$, and associating appropriate basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with every grid point, we can interpolate functions very accurately.
+The basis functions are chosen to be nodal basis functions that fullfil $\phi_{\ell,i}(x_{\ell,j})=\delta_{ij}$, as they allow for a very convenient interpolation.
 Using a basic tensor product approach, we can obtain a uniform $d$-dimensional grid mesh where the grid point indices are multi-indices and the basis functions $\phi_{\ell,\underline{i}} \colon [0,1]^d \mapsto \mathds{R}$ are multivariate functions.
 The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{\ell d})$ grid points.
 Full grids therefore suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for both the level $\ell$ and dimensionality $d$.
@@ -576,7 +579,7 @@ Usually, if a leaf grid point is refined, all children are created because selec
 After $q$ steps, the spatially adaptive sparse grid with the grid points $X_a^{(q)}$ is finished.
 The important parameters that influence the results are the iterations $q$, the refinements per step $k$, the refinement criterion $\xi$, as well as the initial grid type and size of $X_a^{(0)}$.
 
-Various other established adaptivity methods exist, such as dimensionally adaptive sparse grids \cite{}, which uses a more rigid refinement rule that iteratively adds all grid points of whole hierarchical subspaces to the surrogate.
+Various other established adaptivity methods exist, such as dimensionally adaptive sparse grids \cite{}, which uses a more rigid refinement rule that adds all grid points of whole hierarchical subspaces to the surrogate.
 Another more recent method are spatially dimension adaptive sparse grids \cite{}.
 One small downside of spatially adaptive sparse grids is that all children grid points are added in a refinement step.
 In a dimensionality reduction focused setting this behaviour is not optimal, since we want to focus on more important dimensions only when refining a grid point.
@@ -685,6 +688,7 @@ This approach can also be extended to allow for the generation of pseudorandom s
 However, this approach is not used in this thesis, as the gains are minimal.
 
 \section{Approximation error measures}
+\label{sec:errors}
 
 To evaluate the quality of a constructed surrogate $\hat{f}$, we define a couple of error metrics to measure the approximation error and also make it comparable to other surrogates.
 An established and commonly used error metric for function approximation is the $L^2$ error:
@@ -702,10 +706,10 @@ as the $L^2$ surrogate approximation error.
 \label{def:l2}
 \end{definition}
 %
-In statistics, to evaluate the accuracy of an estimator, the mean squared error and the root mean squared error are commonly used.
+In numerics, to evaluate the accuracy of an estimator, the mean squared error and the root mean squared error are commonly used.
 They can be described as the expected value of the squared errors and the square root of the expected value of the squared errors:
 \begin{definition}[Mean squared error]
-Let $\hat{f}$ be the surrogate for the model function and $S=\left\{(x_i, f(x_i)\right\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a function sample.
+Let $\hat{f}$ be the surrogate for the model function and $S=\left\{(x_i, f(x_i)\right\}_{i=1}^n \subseteq \Omega \times \mathds{R}$ a set of samples.
 We then define
 \begin{equation}
 \varepsilon_{\mathrm{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2
@@ -735,10 +739,10 @@ as the normalized root mean squared error.
 \chapter{Input transformations}
 \label{chap:c3}
 
-A lot of work has already gone into exploring all kinds of variants and optimizations for sparse grids, which resulted in many different families of basis functions, grid point structures, and algorithms, such that the general sparse grids technique can be applied in a better and more flexible to many different kinds of problems.
+A lot of work has already gone into exploring all kinds of variants and optimizations for sparse grids, which resulted in many different families of basis functions \cite{Valentin2019, Feuersaenger2010}, grid point structures \cite{Feuersaenger2010}, and algorithms on sparse grids \cite{Gerstner1998, Garcke2001, Pflueger2010, Rehme2021}, such that the general sparse grids technique can be applied in a better and more flexible to many different kinds of problems.
 However, the primary focus lied on optimizing sparse grids itself and less on inspecting and adapting to the inputs $x \in \Omega$ itself.
 The basic idea that is propagated in this thesis is that instead of directly using the sparse grids to interpolate a function with $f(x) \approx \hat{f}(x), ~ \hat{f} \in V^{\text{s}}_{\ell}$, we insert another layer of flexibility into the process by introducing an input transformation function $t$ and creating the surrogate $\hat{f}$ in tandem with $t$ such that the transformed approximation $f(x) \approx \hat{f}(t(x))$ has the potential to perform better.
-This general idea and also its details can and will be expanded upon in this chapter.
+This general idea and also its details will be expanded upon in this chapter.
 
 \section{Intrinsic dimensionality}
 \label{sec:intrinsic}
@@ -763,7 +767,7 @@ Even if it holds that $r=r^\ast$, we still call it as having an intrinsic dimens
 Since we are dealing with function approximation problems in this thesis, we extend definition \cref{def:intrinsic} to also allow for approximation errors.
 
 \begin{definition}[Approximate intrinsic dimension]
-Let $f$ be $d$-dimensional function, $\varepsilon$ an error metric.
+Let $f$ be $d$-dimensional function, $\varepsilon$ an error metric from \cref{sec:errors}.
 We then define $f$ as having an approximate intrinsic dimension of $r \leq d$ with an error of $e$ if there exists a $t \colon \Omega \mapsto \Omega_r$, such that
 \begin{equation}
 e=\varepsilon\left(f(x) - f_t(t(x))\right)
@@ -967,6 +971,7 @@ Motivated by this insight, the main approach that will be used and investigated 
 This matrix $W$ is referred to as the active direction matrix, as the column vectors $w_i$ point into directions in which the function output has a high rate of change and are ordered by the level of change.
 It should hold that $w_1$ is the most active direction, while $w_d$ is the most inactive direction.
 Since all column vectors $w_i$ have to be orthogonal, they can not point into arbitrary directions and are limited by other active directions.
+The concept of active directions and also ways of computing suitable active directions will be covered in the next section about active subspaces.
 
 We then go one step further and also try to eliminate the most inactive directions of $W$, effectively performing a dimension reduction.
 After performing a change of basis with $W$ on the inputs to obtain $W^T x$, we effectively eliminate the most inactive dimensions, as inactive directions are now mapped to inactive dimensions.
@@ -984,9 +989,11 @@ W_r \coloneqq \begin{bmatrix}
 \end{equation}
 as the transformation matrix.
 \end{definition}
-
+%
 As we can see, the transformation matrix is simply obtained from a given active direction matrix $W$ and a reduced dimension $r$ by cutting off the last $d - r$ directions from $W$.
 For now, we assume that the $W$ and $r$ are given, but we will cover the process of determining those essential inputs later on in detail.
+In case no vectors $w_i$ of $W$ are cut off, we call it an orientation changing linear transformation.
+Otherwise, if $r < d$ and some vectors are cut off, we call it a dimensionality reducing linear transformation or just reducing linear transformation.
 
 \subsection{Unit hypercube projections}
 
@@ -1123,7 +1130,7 @@ y=G^{-1} p(x)=\text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p
 \label{alignment}
 \end{equation}
 Per surrogate space definition \cref{surrogate_space}, we know that $y_i \in [-1,1]$ holds.
-Once the projected inputs are represented by the new basis, it is therefore trivial to transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
+Once the projected inputs are represented by the new basis, we can transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
 \begin{equation}
 t_{W_r}(x) \coloneqq c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
 \label{linear_trans}
@@ -1513,7 +1520,7 @@ f(x)&, \text{if $x \in \Omega$}\\
 0&,\text{else}
 \end{cases}
 \end{equation}
-or evaluate the model function outside of $\Omega$ with $f'_{\text{ext}}(x)=f(x)$.
+or just extend the input domain to allow the model function to be evaluated outside of $\Omega$ with $f'_{\text{ext}}(x) \coloneqq f(x)$.
 As the transformation function is an automorphism of $\Omega$ when $r=d$, it is invertible for elements $t \in T$ and the inverse function $t^{-1} \colon T \mapsto \Omega$ can easily be constructed as $t$ is linear.
 We can extend the inverse transformation $t^{-1}$ to accept all elements $x \in \Omega$ without a problem with $t^{-1}_{\text{ext}} \colon \Omega \mapsto \mathds{R}^d$ and use it to create the function $\tilde{f}(x)=f'(t^{-1}_{\text{ext}}(x))$ that can be used for sparse grid interpolant creation.
 
@@ -1640,16 +1647,17 @@ However, we can easily see that using just one transformed surrogate for approxi
 In many cases, an iterative approach that generates a sum of multiple different transformed surrogates suits a model function better than a single one, especially if the model function is a sum of function terms itself.
 We can adapt \cref{def:intrinsic} for the intrinsic dimension, to obtain a dimension for effective intrinsic dimension:
 
-\begin{definition}[Effective intrinsic dimension]
-A $d$-dimensional function $f(x_1, \dots, x_d)$ has an effective intrinsic dimension of $r \leq d$, if there exist transformation functions $t_i \colon \Omega \mapsto \Omega_{r_i}$ and functions $f_i \colon \Omega_{r_i} \mapsto \mathds{R}$, such that
+\begin{definition}[Compounded intrinsic dimension]
+A $d$-dimensional function $f(x_1, \dots, x_d)$ has a compounded intrinsic dimension of $r \leq d$, if there exist transformation functions $t_i \colon \Omega \mapsto \Omega_{r_i}$ and functions $f_i \colon \Omega_{r_i} \mapsto \mathds{R}$, such that
 \begin{equation}
 \forall x \in \Omega \colon f(x)=\sum_{i=1}^p f_{t_i}(t_i(x))
 \end{equation}
 and $r=\max r_i$.
 \label{def:intrinsic_sum}
 \end{definition}
-
-For example, having multiple surrogates allows us to approximate model functions that consist out of multiple terms with a low effective intrinsic dimension, such as $f(x_1, x_2)=\sin(2 \pi x_1) + x_2$, which has two terms with an intrinsic dimension of $1$ and therefore also an effective intrinsic dimension of $1$.
+%
+For example, having multiple surrogates allows us to approximate model functions that consist out of multiple terms with a low effective intrinsic dimension, such as $f(x_1, x_2)=\sin(2 \pi x_1) + x_2$, which consists out of two terms with an intrinsic dimension of $1$ and therefore also a compounded intrinsic dimension of $1$.
+The notion of compounded intrinsic dimension is more powerful than normal intrinsic dimension, as it also covers any sum of function terms, and we will need for iterative transformations.
 
 \section{Projection pursuit regression}
 
@@ -1670,7 +1678,7 @@ The functions $f_k$ and projection matrices $\beta_k$ of this additive model can
 \begin{equation}
 e_k(x) \coloneqq f(x) - \sum_{i=1}^k f_k(\beta_k^T x)
 \end{equation}
-
+%
 This term can be computed using an iterative approach, as seen in \cref{alg:ppr}.
 
 \begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{projectionPursuitRegression}{$(f, k_{\text{max}})$}}]
@@ -1694,7 +1702,7 @@ This term can be computed using an iterative approach, as seen in \cref{alg:ppr}
 	\captionof{algorithm}{Pseudocode of the iterative projection pursuit regression algorithm. Parameters are the function $f$ and the maximum amount of iterations $k_{\text{max}}$.}
 	\label{alg:ppr}
 \end{mdframed}
-
+%
 Alternatively, we could also introduce an error exit condition to \cref{alg:ppr} that exits the loop if the regression error is small enough with $\varepsilon(e_i) < \varepsilon_{max}$.
 We can already spot that the function \texttt{determineBestProjection} relates to \cref{chap:c3}, where we extensively covered finding a linear transformation, and \texttt{determineBestSurrogate} relates to \cref{chap:c4}, which covered the creation of sparse grid surrogates for a given transformation.
 
@@ -1706,7 +1714,7 @@ Going from this statistical model to our function approximation problem, we can 
 \hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i)),
 \nonumber
 \end{equation}
-
+%
 where the $t_i$ are linear transformations similar to the projection with $\beta_k^T$, and the $\hat{f_{t_i}}$ are the surrogate equivalents of the $f_k$.
 The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be constructed iteratively by repeatedly executing a stepwise algorithm of first finding a transformation and then constructing a surrogate for the current error function
 
@@ -1714,7 +1722,7 @@ The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be constructed 
 e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x)).
 \nonumber
 \end{equation}
-
+%
 \Cref{alg:itappr} illustrates this iterative approach, which is similar to \cref{alg:ppr}, but has been adapted to fit our used notation.
 In the case that we use a linear transformation function, \cref{alg:itappr} is pretty much identical to \cref{alg:ppr}.
 
@@ -1724,8 +1732,8 @@ In the case that we use a linear transformation function, \cref{alg:itappr} is p
 \begin{algorithmic}[1]
     \State $e_0 = f$
     \For{$i = 1, \dots,  i_{\text{max}}$}
-    	\State $t_i \gets$ \texttt{generateBestTransformation}($f$)
-    	\State $\hat{f}_{t_i} \gets$ \texttt{generateBestSurroate}($f, t_i$)
+    	\State $t_i \gets$ \texttt{generateBestTransformation}($e_{i - 1}$)
+    	\State $\hat{f}_{t_i} \gets$ \texttt{generateBestSurroate}($e_{i - 1}, t_i$)
     	\State $e_i \gets e_{i - 1} - \hat{f}_{t_i}$
     \EndFor
     \State $\hat{f} \gets \sum_{\hat{f}_{t_i}} \hat{f}_{t_i} \circ t_i$
@@ -1751,35 +1759,33 @@ Thus, configuration parameters have to examined in every iteration again, as the
 \Cref{alg:bestsur} shows a simple implementation that uses lofi surrogates for parameter evaluation to reduce runtime.
 
 \newpage
-\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestSurroate}{$(C, t)$}}]
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestSurroate}{$(e, t)$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
     \State $c^\ast \gets \emptyset$
     \State $\varepsilon_{min} \gets \infty$
     \For{$c \in C$}
-      \State $\hat{f}_c^l$ $\gets$ \texttt{generateLofiSurroate}($t, c$)
+      \State $\hat{f}_c^l$ $\gets$ \texttt{generateLofiSurroate}($e, t, c$)
     	\State $\varepsilon \gets \varepsilon(\hat{f}_c^l)$
     	\If{$\varepsilon < \varepsilon_{min}$}
     	  \State $\varepsilon_{min}\gets \varepsilon$
     	\State $c^\ast \gets c$
     	\EndIf
     \EndFor
-    \State \Return{\texttt{generateHifiSurroate}($S, c^\ast$)}
+    \State \Return{\texttt{generateHifiSurroate}($e, t, c^\ast$)}
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. The parameters the set of possible surrogate configurations $C$ and the transformation function $t$.}
+	\captionof{algorithm}{Pseudocode of the surrogate generation algorithm. The parameters are the current error function $e$ and the transformation function $t$. The the set of possible surrogate configurations $C$ is fixed.}
 	\label{alg:bestsur}
 \end{mdframed}
-
-This algorithm determines the optimal configuration $c*$ with
-
+%
+This algorithm determines the optimal configuration $c^\ast$ with
 \begin{equation}
 c^\ast \coloneqq \argmin_{c \in C} \varepsilon(\hat{f}_c^l)
 \nonumber
 \end{equation}
-
 and works fine presuming that the low fidelity surrogates $\hat{f}_c^l$ are representative of the high fidelity ones, as already discussed in \cref{sec:lofi}.
 It is satisfactory as long as the actual approximation quality of the generated hifi surrogate is close to the optimal configuration over all parameter combinations, i.e. it should hold that
 
@@ -1798,15 +1804,15 @@ One solution would be to use the exploratory look ahead approach to find the bes
 
 \newpage
 
-\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformation}{$(r_{\text{min}} ,r_{\text{max}})$}}]
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformation}{$(e, r_{\text{min}} ,r_{\text{max}})$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
     \State $t^\ast \gets \mathds{1}$
     \State $\varepsilon_{min} \gets \infty$
     \For{$r = r_{\text{min}},\dots,r_{\text{max}}$}
-      \State $t_r$ $\gets$ \texttt{generateTransformation}(r)
-      \State $\hat{f}_{c^\ast}^h$ $\gets$ \texttt{generateBestSurroate}($C, t_r$)
+      \State $t_r$ $\gets$ \texttt{generateTransformation}(e, r)
+      \State $\hat{f}_{c^\ast}^h$ $\gets$ \texttt{generateBestSurroate}($e, t_r$)
     	\State $\varepsilon \gets \epsilon(\hat{f}_c^h)$
     	\If{$\varepsilon < \varepsilon_{min}$}
     	  \State $\varepsilon_{min}\gets \varepsilon$
@@ -1817,11 +1823,16 @@ One solution would be to use the exploratory look ahead approach to find the bes
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the minimum reduced dimension $r_{\text{min}}$ and maximum reduced dimension $r_{\text{max}}$.}
+	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the current error function $e$, the minimum reduced dimension $r_{\text{min}}$, and maximum reduced dimension $r_{\text{max}}$.}
 	\label{alg:besttrans}
 \end{mdframed}
-
+%
 The function implementation of \texttt{generateTransformation} in \cref{alg:besttrans} is usually fixed, and can use one of the transformation generation methods presented in \cref{chap:c3}, for example active subspaces or random transformations.
+
+\section{Local vs global optimization}
+
+
+
 
 \section{Visualizing the algorithm}
 
@@ -1853,8 +1864,8 @@ The amount of samples is set to $n=1000$.
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1}
-  \caption{Plot of the error function $e_0=f$ and first active subspace direction $v_1$ \darkblue.}
+  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1.png}
+  \caption{Plot of the error function $e_0=f$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \label{fig:pipeline_current_1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
@@ -1864,41 +1875,87 @@ The amount of samples is set to $n=1000$.
 \label{fig:pipeline_local_1}
 \end{subfigure}
 \delimit
-\captionof{figure}{First iteration of the iterative transformation algorithm.}
+\caption{First iteration of the iterative transformation algorithm.}
 \label{fig:pipeline_1}
 \end{figure}
 \end{mdframed}
-
+%
+As we can see in \cref{fig:pipeline_1}, the first algorithm iteration removes a big chunk of the original function $e_0=f$ to reduce the approximation error in the first step.
+It identified the most active direction mostly right and was able to create a regression surrogate for the transformed function samples.
+The regression surrogate had to employ a lot of regularization, as seen in\cref{fig:pipeline_local_1}, since there is still some function output contribution by the sinus term that will be projected onto the first active direction.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_2}
-  \caption{Plot of the error function $e_1$ and first active subspace direction $v_1$ \darkblue.}
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_current_2.png}
+  \caption{Plot of the error function $e_1$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \label{fig:pipeline_current_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/pipeline_local_2}
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_local_2}
   \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_2$ in \reddot}
 \label{fig:pipeline_local_2}
 \end{subfigure}
 \delimit
-\captionof{figure}{Second iteration of the iterative transformation algorithm.}
+\caption{Second iteration of the iterative transformation algorithm.}
 \label{fig:pipeline_2}
 \end{figure}
 \end{mdframed}
-
-TODO: More iterations
-
-As we can see in figures (\cref{fig:pipeline_current_1}, \cref{fig:pipeline_current_2}), the algorithm removes a big chunk of the current error function $e_i$ to reduce the approximation error in each step.
-The plotted function values go down in range.
-However, as evident in figures (\cref{fig:pipeline_local_1}, \cref{fig:pipeline_local_2}), the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly noise that can't be regressed.
-
-Figures ... and ... show that the error function is mainly a two dimensional term.
-In theory, an optimal method should be able to approximate $f$ without a resultung in a leftover two dimensional error function, as its effective intrinsic dimension is $1$.
+%
+In \cref{fig:pipeline_2}, we can clearly identify the remnants of the rotated sinus term that are the leftovers after the exponential term was mostly removed in the first iteration.
+However, we can also see that the term is not completely the second term as there are a few small deviations.
+In theory, an optimal method should be able to approximate $f$ without a resultung in a leftover error function after two iterations, as its compounded intrinsic dimension is $1$.
 However, as the method is not perfect and encounters small errors from various sources throughout the algorithm, it can not approximate functions in an optimal way.
+These are caused by inaccuracies inherent to the algorithm:
+\begin{enumerate}
+\item The active subspace method not finding suitable active directions, caused by the nature of the method itself
+\item The gradient inputs for the active subspace method being biased, caused by using approximation methods
+\item The regression method not producing ideal surrogates, caused by too little or too much regularization or insufficient samples at the boundaries as seen in \cref{fig:pipeline_local_1} on the left
+\end{enumerate}
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_current_3.png}
+  \caption{Plot of the error function $e_3$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_local_3}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_3$ in \reddot}
+\end{subfigure}
+\delimit
+\caption{Third iteration of the iterative transformation algorithm.}
+\label{fig:pipeline_3}
+\end{figure}
+\end{mdframed}
+%
+As evident in \cref{fig:pipeline_3}, the algorithm hits a point where it can no longer effectively reduce the approximation error by adding another one dimensional surrogate, as the transformed input data is mostly two-dimensional noise that can't be regressed.
+Even though, we can try to fit a heavily regularized surrogate to the transformed function samples, the gain is minimal.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_current_4.png}
+  \caption{Plot of the error function $e_4$ and its intersection with the first active subspace direction $v_4$ in \reddot}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_local_4}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_4$ in \reddot}
+\end{subfigure}
+\delimit
+\caption{Fourth iteration of the iterative transformation algorithm.}
+\label{fig:pipeline_4}
+\end{figure}
+\end{mdframed}
+%
+In \cref{fig:pipeline_4}, we see that we definitely hit a convergent state as the change compared to the previous iteration is minimal again.
+Therefore, the iteration stops there.
 
 \chapter{Implementation}
 \label{chap:c6}
@@ -1922,7 +1979,7 @@ This surface level description of the whole implementation will make the evaluat
 \item[Elements] {~ \begin{itemize}[\null]
 \item \textbf{Object}: An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
 \item \textbf{Function}: A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
-\item \textbf{Component}: A component is a also function, where the actual implementation can be exchanged for many different function implementations of the same interface.
+\item \textbf{Function component}: A function component is a also function, where the actual implementation can be exchanged for many different function implementations of the same interface.
 \item \textbf{Control flow + data flow}: Arrows signal control flow and also data flow if an object is shown.
 \item \textbf{Gateway}: A gateway evaluates an attached condition and decides which outgoing control flow to follow.
 \end{itemize}}
@@ -2103,8 +2160,9 @@ It can also be used with the active subspace transformation generator to try to 
 
 
 Note that this iterative approach is independent from the pipeline iterations, i.e. an iterative transformation generator executes all of its iterations during one pipeline step to determine the best transformation to be used in the one pipeline step.
-
-TODO: Lofi
+To achieve fast execution of many iterations, we choose to work on lo-fi surrogates during the iterations when interacting with transformation evaluator.
+This means that the approximation errors used to identify the best transformation do not necessarily come close to the actual hi-fi approximation errors.
+\Cref{sec:lofi} touched upon the required considerations when employing multifidelity simulations.
 
 \newpage
 \section {Evaluators}
@@ -2238,7 +2296,7 @@ We start off with the low dimensional Ishigami function \cite{Ishigami1990AnIQ}:
 f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
 \end{equation}
 %
-The function originally has been used for uncertainty quantification purposes, but has also been used to test sensitivity analysis techniques \cite{Sobol1999}
+The function originally has been used for uncertainty quantification purposes, but has also been used to test sensitivity analysis techniques \cite{Sobol1999}.
 To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function, which yields the following results:
 
 \begin{mdframed}[style=style]
@@ -2264,12 +2322,12 @@ $3$ & $(-0.841, ~+0.008, ~+0.540)^T$ & 104.77 & $8.8\%$\\
 \end{figure}
 \end{mdframed}
 %
-Based of the values in \cref{tab:ishigami_as}, we can see that the most active direction almost exactly corresponds to second input dimension, and is reponsible for a big chunk of the function value change, while the other two active directions are less important and also not axis aligned.
+Based off the values in \cref{tab:ishigami_as}, we can see that the most active direction almost exactly corresponds to second input dimension, and is reponsible for a big chunk of the average gradient change, while the other two active directions are less important and also not axis aligned.
 These two less active directions are however not neglible, as their combined eigen value share still is $18.3\%$.
 
 As we will make use of lo-fi and hi-fi simulations, we will distinguish the resulting errors by denoting them by $\varepsilon^\mathrm{l}_{\mathrm{NRMSE}}$ and $\varepsilon^\mathrm{h}_{\mathrm{NRMSE}}$ respectively.
-For the Ishigami function in the lo-fi case, we use a sparse grid surrogate generator (see ) with a modified linear basis, no refinments, and a value of \texttt{approxGridPoints}$=250$.
-For the hi-fi case, we use a sparse grid surrogate generator with a modified linear basis, $10$ refinments, 10 refined grid points per refinement, and a value of \texttt{approxGridPoints}$=1000$.
+For the Ishigami function in the lo-fi case, we use a sparse grid surrogate generator with a modified linear basis, no refinments, and a value of \texttt{approxGridPoints}$=250$.
+For the hi-fi case, we use a sparse grid surrogate generator with $10$ refinments, 10 refined grid points per refinement, and a value of \texttt{approxGridPoints}$=1000$.
 These configurations will ensure lo-fi surrogates that are fast to evaluate and hi-fi surrogates that have a sufficient amount of accuracy when performing a lot of pipeline iterations in this chapter.
 
 \subsection{Orientation changes}
@@ -2279,35 +2337,36 @@ For the orientation change, we use all computed active subspace directions from 
 As we discussed in \cref{sec:ms}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
 In this section, we are interested in answering the following questions:
 \begin{enumerate}
+\item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
 \item How big is the approximation error difference between interpolation and regression surrogates?
 \item How is the approximation error affected when transformations and regression are used together?
-\item How does the boundary grid behaviour change when using input transformations?
-\item How does the approximation error compare when applying an orientation changing transformation with $r=d$?
+\item How much difference is there between normal sparse grids and boundary grids?
 \end{enumerate}
+%
+Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
+On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
+Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/ishigami_orientation}
 \delimit
 
-\captionof{figure}{Approximation errors of transformed and untransformed sparse grid surrogates for the Ishigami function. On the left, the surrogates are regular sparse boundary grids with the hat basis. On the right, the surrogates are regular sparse grids with a modified hat basis. The transformation is constructed with active subspaces and the finite differences method.}
+\captionof{figure}{Approximation errors of transformed and untransformed sparse grid surrogates for the Ishigami function with linear boundary and modified linear basis types. The transformation is constructed with active subspaces and the finite differences method.}
 \label{fig:ishigami_errors}
 \end{figure}
 \end{mdframed}
 %
-Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal alignment of inputs.
-On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
-Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
-
 As we can see in \cref{fig:ishigami_errors}, the pure orientation change does not lead to better interpolation results.
 In this concrete example, the penalty of the unused transformation space $U_t$ evens out the gains from a more optimal orientation for sparse grid surrogates.
-As we do not perform a dimension reduction in this example, even if it would be feasible, this results in a constructed surrogate space that covers way more than the transformation space, in this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$ and the grid resolution is effectively lower and some grid points may be unused.
-Furthermore, the introduced regression penalty, compared to the interpolation method, is only slighly worse by factor of approximately $10^1$.
+As we do not perform a dimensionality reduction in this example, even if it would be feasible, this results in a constructed surrogate space that covers way more than the transformation space.
+In this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$ and the grid resolution is effectively lower and some grid points may be unused.
+Furthermore, the introduced regression penalty, compared to the interpolation method, is factor of approximately $10^1$.
 There are no significant quality differences when using modified linear basis functions instead of a linear basis with boundaries, which is why we will continue to use a modified basis for the Ishigami function for the rest of this section, as they require less grid points.
 
 Based on these results we can conclude that, even though there is no improvement with this method, there is also no significant downside, even as $\tilde{u}$ is large and regression is used.
 This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using linear transformations, approximately cancels out with the orientation improvements.
-Also, using regression only results in a slight increase of the approximation error.
+Also, the additional use of regression only results in a slight increase of the approximation error.
 As the tansformation process focuses on dimension reducing linear transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
 Therefore, dimensionality reducing transformations seem to have a much bigger potential.
 
@@ -2316,7 +2375,7 @@ Therefore, dimensionality reducing transformations seem to have a much bigger po
 Next, we look at dimensionality reducing transformations with $r < d$.
 Note that for this low-dimensional model function, there is no real need to perform a dimensionality reduction, as the curse of dimensionality does not affect sparse grid surrogates heavily for $d=3$.
 We can therefore not expect to see any gain from applying a transformation with $r < d$, as this will only happen for higher dimensions.
-We are still interested in answering some basic questions:
+Even though reducing transformations should not be able to compete with normal interpolation, we are still interested in answering some basic questions:
 \begin{enumerate}
 \item By how much does dimensionality reduction increase the approximation error?
 \item How much do the increased approximation errors correlate with the computed active subspace eigen values?
@@ -2341,7 +2400,7 @@ Since these are dimensionality reducing transformations, we can only create regr
 As we can see in \cref{fig:ishigami_red}, the dimensionality reducing transformations leads to, as expected, way worse results and does not provide usable surrogates.
 We see that the approximation error for the reduced surrogates hits the convergent state very fast and an increase in grid points does not improve the surrogate quality.
 Furthermore, the actual approximation error of the reduced surrogates does not correlate with the active subspace eigen values.
-Even though the eigen value share of the first two eigen vectors is around $90\%$, the loss of the approximation quality when cutting of the most inactive eigen vector in the $r=2$ case is way higher.
+Even though the eigen value share of the first two eigen vectors is around $90\%$, the loss of the approximation quality when cutting of the most inactive eigen vector in the $r=2$ case is very large.
 
 \subsection{Active subspace approximations}
 
@@ -2350,13 +2409,13 @@ In cases the transformation is constructed using the active subspace method, we 
 We are interested in answering the following questions:
 \begin{enumerate}
 \item How much do the approximated active subspaces differ from the true active subspaces?
-\item Which approximation method performs the best?
 \item Do the active subspace differences actually manifest themselves in the approximation error?
+\item Which approximation method performs the best?
 \end{enumerate}
 %
 To judge the quality of approximated gradients, we first have to define an error metric for them:
-\begin{definition}[Average gradient error]
-Let $S=\{(x_i, f(x_i)\}_{i=1}^n$ be a function sample, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
+\begin{definition}[Gradient approximation error]
+Let $S=\{(x_i, f(x_i)\}_{i=1}^n$ be a set of samples, and let $\widetilde{\nabla} f(x_i)$ the approximated gradient for each sample point $x_i$. We then define
 \begin{equation}
 \varepsilon_{\mathrm{grad}}(S) \coloneqq \frac{1}{n} \sum_{i=1}^n \frac{\|{\widetilde{\nabla} f(x_i) - \nabla f(x_i)}\|_2}{{\| \nabla f(x_i) \|}_2}
 \label{eq:e_grad}
@@ -2390,7 +2449,6 @@ We therefore just use the surrogate look ahead approximation error.
 As seen on the left in \cref{fig:ishigami_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\mathrm{grad}}$.
 The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
-Since the mean line segment length is $\Delta(3) \approx 0.66$, the random neighbour method chooses on average neighbours with a distance $|r| \approx 0.66$, which can explain the similarly bad quality.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2464,7 +2522,7 @@ The lo-fi transformation errors are visualized using histograms and while the er
 \begin{subfigure}[H]{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_3}
-  \captionof{figure}{Regressed transformed sparse grid surrogate with $r=3$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
+  \captionof{figure}{Regressed transformed sparse grid surrogate with $r=3$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.031$.}
 \vspace{3mm}
   \label{fig:ishigami_hist_3}
 \end{subfigure}
@@ -2485,19 +2543,19 @@ Comparing these results to the previous transformation results that were achieve
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_2}
-  \caption{Random transformation approximation error distribution for $r=2$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
+  \caption{Random transformation approximation error distribution for $r=2$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.05$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_hist_1}
-  \caption{Random transformation approximation error distribution for $r=1$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=?$.}
+  \caption{Random transformation approximation error distribution for $r=1$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.09$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_1}
 \end{subfigure}
 \delimit
-\caption{Histogram of lo-fi approximation errors for $10^5$ randomly generated transformations with $r=3$.}
+\caption{Histogram of lo-fi approximation errors for $10^4$ randomly generated dimensionality reducing transformations}
 \label{fig:ishigami_hist_12}
 \end{figure}
 \end{mdframed}
@@ -2515,33 +2573,10 @@ Therefore, we expect the active subspace method to scale better with higher dime
 \section{Wing weight function}
 
 Now that we investigated several important pipeline components with regards to a low-dimensional model function, we compare the results to a case with a high-dimensional example model function to look out for properties that can't be generalized from one low-dimensional case study.
-\begin{equation}
-f(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1
-\end{equation}
-Applying the active subspace method on this function yields the following results:
 
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\centering
-  \begin{tabular}{ l c c c}
-& $v_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
-\hline
-$1$ \vline & $(+0.005, +0.999, +0.007)^T$ & 967.93 & $81.7\%$\\
-$2$ \vline & $(+0.540, +0.003, -0.841)^T$ & 112.20 & $9.5\%$\\
-$3$ \vline & $(-0.841, +0.008, +0.540)^T$ & 104.77 & $8.8\%$\\
-\end{tabular}
+Wing weight is 10 dimensional.
 
-\delimit
-
-\captionof{figure}{Computed eigen vectors, eigen values, and eigen value shares of the active subspaces of $f$ with the Monte-Carlo method and $10^6$ samples.}
-\end{figure}
-\end{mdframed}
-
-This means that the second input dimension is reponsible for a big chunk of the function value change, while the other two  are less important, but not neglible, as their combined eigen value share still is $18.3\%$.
-
-We first observe that we can't apply orientation changing transformations on the model function as this would imply a value of $r=$, which is too high for regular sparse grids.
-We therefore skip straight to the topic of dimension reducing transformations with manageable values for $r$.
-
+TODO: Perform similator evaluations as last section, but focus on differences to low-dimensional case
 \chapter{Experiments}
 \label{chap:c8}
 
