@@ -290,7 +290,6 @@ u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i.
 
 Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform isotropic grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
 More formally, by constructing a one-dimensional mesh of level $\ell$ with equidistant points $x_{\ell,i}=i2^{-\ell}$ resulting in a mesh size $h=2^{-\ell}$, and associating appropriate basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with every grid point, we can interpolate functions very accurately.
-The basis functions are chosen to be nodal basis functions that fullfil $\phi_{\ell,i}(x_{\ell,j})=\delta_{ij}$, as they allow for a very convenient interpolation.
 Using a basic tensor product approach, we can obtain a uniform $d$-dimensional grid mesh where the grid point indices are multi-indices and the basis functions $\phi_{\ell,\underline{i}} \colon [0,1]^d \mapsto \mathds{R}$ are multivariate functions.
 The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{\ell d})$ grid points.
 Full grids therefore suffer heavily from the curse of dimensionality as the required amount of function evaluations for the grid points grows exponentially for both the level $\ell$ and dimensionality $d$.
@@ -432,11 +431,56 @@ V^{\mathrm{sb}}_{\ell} \coloneqq \mathrm{span}~ \left\{\phi_{\underline{\ell},\u
 \end{definition}
 The sparse grid construction through \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid}, as the only difference between both is that the hierarchical decomposition is realized in different stages of the sparse grid construction.
 
+\section{Sparse grid surrogates}
+\label{sec:gsc}
+
+Sparse grid surrogates that try to approximate a model function can be constructed using multiple different approaches.
+A regular sparse grid surrogate $\hat{f} \in V^{\text{s}}_{\ell}$ is a linear combination of all basis functions.
+Therefore, to represent the instance $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight $\alpha_{\underline{\ell},\underline{i}}$, also called hierarchical surplusses.
+\begin{definition}[Sparse grid surrogates]
+Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
+Furthermore, let $\alpha_{\underline{\ell},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.\\
+A grid surrogate is then the linear combination
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
+\underline{\ell},\underline{i}}(x).
+\end{equation}
+In the case of a regular sparse grid with $X=X^{\mathrm{sb}}_{\ell}$, the surrogate is equal to
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
+\underline{\ell},\underline{i}}(x).
+\end{equation}
+\end{definition}
+%
+\paragraph{Interpolation}
+The interpolation method is the most simple and common sparse grid surrogate construction scheme.
+It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses $\alpha_{\underline{\ell},\underline{i}}$.
+The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}_{\mathrm{int}}(x)$.
+As the model function has to be evaluated at every grid point, a grid interpolation surrogate requires exactly $|X|$ function evaluations at the grid points and can not be used to approximate a function from a given function sample.
+
+\paragraph{Regression}
+An alternative surrogate construction scheme is sparse grid based regression \cite{}.
+In contrast to interpolation, a regression approach does no longer require the function values at the grid points to interpolate between them.
+Instead, it uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$. with regards to the approximation error, by using train and validation samples drawn from the model function and input distribution.
+As a result, the size of the function sample, and therefore the amount of function evaluations, does no longer have to be equal to the amount of grid points.
+This provides a greater level of flexibility, as the amount of model function evaluations and the amount of grid points can vary.
+The basic approach is to solve the least squares problem for the function sample $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
+\begin{equation}
+\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2 
+\end{equation}
+and a regularization parameter $\lambda > 0$ to prevent overfitting.
+Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\lambda \in \Lambda$ and sparse grid level $\ell$ to obtain
+\begin{equation}
+\hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
+\end{equation}
+
+
 \section{Basis functions}
 
 The multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$, as defined in \cref{eq:basis_functions}, are a central aspect of sparse grids.
-Many different basis function families exist, each with various levels of complexity, capabilities, and properties.
-In this section we will take a look at all the different basis functions used in this thesis and reasons for using them.
+Many different families of basis functions exist, each with various levels of complexity, capabilities, and properties.
+We will from now on refer to a family of basis functions of the same type as a basis.
+In this section we will take a look at different elemtary basis functions used in this thesis and some reasons for using them.
 
 \paragraph{Hat basis}
 One of the most simple types of basis functions are hat functions.
@@ -464,57 +508,19 @@ where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special b
 One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
 They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
 
-\paragraph{Prewavelets}
-A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
-Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
-One of these properties is the orthogonality property with $\langle \phi_{\ell, i},\phi_{\ell, j} \rangle = 0$ for all wavelets with $i \neq j$.
-Furthermore, the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
-One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
-In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
-However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
-
-TODO: Image of basis functions
-
-\section{Sparse grid surrogates}
-\label{sec:gsc}
-
-Sparse grid surrogates that try to approximate a model function can be constructed using multiple different approaches.
-A regular sparse grid surrogate $\hat{f} \in V^{\text{s}}_{\ell}$ is a linear combination of all basis functions.
-Therefore, to represent the instance $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight $\alpha_{\underline{\ell},\underline{i}}$, also called hierarchical surplusses.
-\begin{definition}[Sparse grid surrogates]
-Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
-Furthermore, let $\alpha_{\underline{\ell},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.\\
-A grid surrogate is then the linear combination
+\begin{definition}[Fundamental property]
+A family of univariate basis functions $\phi_{\ell,i}$ fulfills the fundamental property iff
 \begin{equation}
-\hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
-\underline{\ell},\underline{i}}(x).
+\begin{split}
+&\phi_{\ell,i}(x_{\ell', j}) = 0, ~~  \ell' < \ell, j \in H_{\underline{\ell'}}\\
+&\phi_{\ell,i}(x_{\ell', j}) = \delta_{ij}, ~~  j \in H_{\underline{\ell'}}.
+\end{split}
+\nonumber
 \end{equation}
-In the case of a regular sparse grid with $X=X^{\mathrm{sb}}_{\ell}$, the surrogate is equal to
-\begin{equation}
-\hat{f}(x) \coloneqq \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
-\underline{\ell},\underline{i}}(x).
-\end{equation}
+As the used multivariate basis functions are constructed using the tensor-product approach, the fundemental property holds for a multivariate basis iff it holds for the univariate one.
 \end{definition}
 %
-The interpolation method is the most simple and common sparse grid surrogate construction scheme.
-It evaluates the model function at every grid point and performs a hierarchisation algorithm \cite{} to obtain the hierarchical surplusses $\alpha_{\underline{\ell},\underline{i}}$.
-The resulting surrogate constructred with the hierarchisation method equals the model function at all grid points, i.e. $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}_{\mathrm{int}}(x)$.
-As the model function has to be evaluated at every grid point, a grid interpolation surrogate requires exactly $|X|$ function evaluations at the grid points and can not be used to approximate a function from a given function sample.
-
-Another surrogate construction scheme is sparse grid based regression \cite{}.
-In contrast to interpolation, a regression approach does no longer require the function values at the grid points to interpolate between them.
-Instead, it uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$. with regards to the approximation error, by using train and validation samples drawn from the model function and input distribution.
-As a result, the size of the function sample, and therefore the amount of function evaluations, does no longer have to be equal to the amount of grid points.
-This provides a greater level of flexibility, as the amount of model function evaluations and the amount of grid points can vary.
-The basic approach is to solve the least squares problem for the function sample $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function
-\begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2 
-\end{equation}
-and a regularization parameter $\lambda > 0$ to prevent overfitting.
-Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\lambda \in \Lambda$ and sparse grid level $\ell$ to obtain
-\begin{equation}
-\hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
-\end{equation}
+A multivariate basis that fulfills the fundamental property can be hierarchized very efficiently through the unidirectional principle \cite{} by applying a hierarchisation operator iteratively on every dimension separately, effectively breaking down the hierarchisation process into a series of one-dimensional hierarchisations.
 
 \section{Spatially adaptive sparse grids}
 
@@ -1813,7 +1819,7 @@ One solution would be to use the exploratory look ahead approach to find the bes
     \For{$r = r_{\text{min}},\dots,r_{\text{max}}$}
       \State $t_r$ $\gets$ \texttt{generateTransformation}(e, r)
       \State $\hat{f}_{c^\ast}^h$ $\gets$ \texttt{generateBestSurroate}($e, t_r$)
-    	\State $\varepsilon \gets \epsilon(\hat{f}_c^h)$
+    	\State $\varepsilon \gets \varepsilon(\hat{f}_c^h)$
     	\If{$\varepsilon < \varepsilon_{min}$}
     	  \State $\varepsilon_{min}\gets \varepsilon$
     	\State $t^\ast \gets t_r$
@@ -1828,11 +1834,6 @@ One solution would be to use the exploratory look ahead approach to find the bes
 \end{mdframed}
 %
 The function implementation of \texttt{generateTransformation} in \cref{alg:besttrans} is usually fixed, and can use one of the transformation generation methods presented in \cref{chap:c3}, for example active subspaces or random transformations.
-
-\section{Local vs global optimization}
-
-
-
 
 \section{Visualizing the algorithm}
 
@@ -1855,7 +1856,7 @@ has an effective intrinsic dimension of $1$ and is not axis-aligned to further v
 
 For every iteration, we investigate the error function $e_i$ on the left and look at the regression problem to be solved by the surrpgate generator on the right.
 To better illustrate the surrogate construction, $r$ is always set to $1$, regardless of whether an $r=2$ would make sense or not.
-Furthermore, the regression surrogate on the right is only plotted as far as it needs to be, i.e. the plot might not cover $[0,1]$ as the amount of transformed samples in the boundary regions is very low.
+Furthermore, the regression surrogate on the right employs heavy regularization and is only plotted as far as it needs to be, i.e. the plot might not cover $[0,1]$ as the amount of transformed samples in the boundary regions is very low.
 This also illustrates how the transformed input distribution changes from the original input distribution, which in this example is uniform.
 The amount of samples is set to $n=1000$.
 
@@ -1864,13 +1865,13 @@ The amount of samples is set to $n=1000$.
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1.png}
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_current_1.png}
   \caption{Plot of the error function $e_0=f$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \label{fig:pipeline_current_1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.7\linewidth]{graphics/pipeline_local_1}
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_local_1}
   \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_1$ in \red.}
 \label{fig:pipeline_local_1}
 \end{subfigure}
@@ -1956,6 +1957,86 @@ Even though, we can try to fit a heavily regularized surrogate to the transforme
 %
 In \cref{fig:pipeline_4}, we see that we definitely hit a convergent state as the change compared to the previous iteration is minimal again.
 Therefore, the iteration stops there.
+
+\section{Local vs global optimization}
+
+The previously introduced transformation generation algorithm uses a local optimization approach to determine the optimal transformation to use.
+However, in some cases this approach can lead the algorithm down a wrong path that will result in a worse approximation error than otherwise possible.
+
+If we look at the example function from the previous section again and giving the algorithm the additional choice of not employing a lot of regularization, the algorithm might fall in to the trap of overfitting when only looking ahead one iteration:
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_current_1.png}
+  \caption{Plot of the error function $e_0=f$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+\label{fig:pipeline_bad_current_1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_local_1}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_1$ in \red.}
+\label{fig:pipeline_bad_local_1}
+\end{subfigure}
+\delimit
+\caption{First iteration of the iterative transformation algorithm.}
+\label{fig:pipeline_bad_1}
+\end{figure}
+\end{mdframed}
+%
+As we can see in \cref{fig:pipeline_bad_local_1}, the surrogate is overfitted.
+While at this stage, the approximation error is almost equal to the more regularized surrogate from \cref{fig:pipeline_local_1}, this will propagate into the next iteration:
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_current_2.png}
+  \caption{Plot of the error function $e_0=f$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+\label{fig:pipeline_bad_current_2}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_local_2.png}
+  \caption{Transformed input samples $S_t$ in \darkblue and the constructed surrogate $\hat{f}_1$ in \red.}
+\label{fig:pipeline_bad_local_2}
+\end{subfigure}
+\delimit
+\caption{First iteration of the iterative transformation algorithm.}
+\label{fig:pipeline_bad_2}
+\end{figure}
+\end{mdframed}
+%
+\Cref{fig:pipeline_bad_local_2} shows that no effective surrogate can be created as the input data is mostly just noise, because the surrogate in the previous iteration was overfitted.
+A solution would be to instead look ahead more than iteration in cases where overfitting is possible:
+
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformationLookAhead}{$(e, r_{\text{min}} ,r_{\text{max}}, i)$}}]
+\normalsize
+\vspace{5.5mm}
+\begin{algorithmic}[1]
+    \State $t^\ast \gets \mathds{1}$
+    \State $\varepsilon_{min} \gets \infty$
+    \For{$r = r_{\text{min}},\dots,r_{\text{max}}$}
+      \State $t_r$ $\gets$ \texttt{generateTransformation}(e, r)
+      \State $\hat{f}_{c^\ast}^l$ $\gets$ \texttt{transformedSurrogateSum}$(f, i)$
+    	\State $\varepsilon \gets \varepsilon(\hat{f}_c^l)$
+    	\If{$\varepsilon < \varepsilon_{min}$}
+    	  \State $\varepsilon_{min}\gets \varepsilon$
+    	\State $t^\ast \gets t_r$
+    	\EndIf
+    \EndFor
+    \State \Return{$t^\ast$}
+\end{algorithmic}
+\vspace{-1.5mm}
+\delimit
+	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the current error function $e$, the minimum reduced dimension $r_{\text{min}}$, maximum reduced dimension $r_{\text{max}}$, and the amount of look ahead iterations $i$.}
+	\label{alg:lookahead}
+\end{mdframed}
+%
+\Cref{alg:lookahead} is very similar to \cref{alg:besttrans}, with the only difference being the way how a newly generated transformation is evaluated.
+Instead of effectively performing only one look ahead iteration, we perform $i$ look ahead iterations to better gauge the quality of the produced transformation with regards to the resulting approximation error of the surrogate sum.
+To guarantee fast execution speed, we use lo-fi surrogates when looking ahead.
+Of course the actual implementation of \texttt{transformedSurrogateSum} when called from \texttt{generateBestTransformationLookAhead} can not also make use of the multiple iteration look ahead approach internally to prevent infinite loops.
 
 \chapter{Implementation}
 \label{chap:c6}
