@@ -102,19 +102,21 @@ series = {KDD '15}
     year = {2013},
     pages = {57--80},
     publisher = {Springer}
-}@inproceedings{P12,
-    address = {Berlin Heidelberg},
-    author = {Pfl{\"{u}}ger, Dirk},
-    booktitle = {Sparse Grids and Applications},
-    editor = {Garcke, Jochen and Griebel, Michael},
-    month = oct,
-    pages = {243--262},
-    publisher = {Springer},
-    series = {Lecture Notes in Computational Science and Engineering},
-    title = {Spatially Adaptive Refinement},
-    year = {2012},
-    URL = {http://www5.in.tum.de/pub/pflueger12spatially_preprint.pdf}
-}@article{S01,
+}
+@InProceedings{Pflueger2012,
+  author    = {Pfl{\"{u}}ger, Dirk},
+  booktitle = {Sparse Grids and Applications},
+  title     = {Spatially Adaptive Refinement},
+  year      = {2012},
+  address   = {Berlin Heidelberg},
+  editor    = {Garcke, Jochen and Griebel, Michael},
+  month     = oct,
+  pages     = {243--262},
+  publisher = {Springer},
+  series    = {Lecture Notes in Computational Science and Engineering},
+  url       = {http://www5.in.tum.de/pub/pflueger12spatially_preprint.pdf},
+}
+@article{S01,
  author = {Sobol\'{a}, I. M.},
  title = {Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates},
  journal = {Math. Comput. Simul.},
@@ -146,20 +148,6 @@ series = {KDD '15}
   file          = {:Valentin2019 - B Splines for Sparse Grids_ Algorithms and Application to Higher Dimensional Optimization.pdf:PDF},
   keywords      = {math.NA, cs.NA, G.1.1; G.1.6; G.4},
   primaryclass  = {math.NA},
-}
-@article{WANG2008366,
-title = {Low discrepancy sequences in high dimensions: How well are their projections distributed?},
-journal = {Journal of Computational and Applied Mathematics},
-volume = {213},
-number = {2},
-pages = {366-386},
-year = {2008},
-issn = {0377-0427},
-doi = {https://doi.org/10.1016/j.cam.2007.01.005},
-url = {https://www.sciencedirect.com/science/article/pii/S0377042707000374},
-author = {Xiaoqun Wang and Ian H. Sloan},
-keywords = {Quasi-Monte Carlo methods, Low discrepancy sequences, Discrepancy, Multivariate integration},
-abstract = {Quasi-Monte Carlo (QMC) methods have been successfully used to compute high-dimensional integrals arising in many applications, especially in finance. To understand the success and the potential limitation of QMC, this paper focuses on quality measures of point sets in high dimensions. We introduce the order-ℓ, superposition and truncation discrepancies, which measure the quality of selected projections of a point set on lower-dimensional spaces. These measures are more informative than the classical ones. We study their relationships with the integration errors and study the tractability issues. We present efficient algorithms to compute these discrepancies and perform computational investigations to compare the performance of the Sobol’ nets with that of the sets of Latin hypercube sampling and random points. Numerical results show that in high dimensions the superiority of the Sobol’ nets mainly derives from the one-dimensional projections and the projections associated with the earlier dimensions; for order-2 and higher-order projections all these point sets have similar behavior (on the average). In weighted cases with fast decaying weights, the Sobol’ nets have a better performance than the other two point sets. The investigation enables us to better understand the properties of QMC and throws new light on when and why QMC can have a better (or no better) performance than Monte Carlo for multivariate integration in high dimensions.}
 }
 
 @Article{Weisstein,
@@ -361,6 +349,126 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   school = {Universität Stuttgart},
   title  = {B-Splines on Sparse Grids forUncertainty Quantification},
   year   = {2021},
+}
+
+@Article{Feuersaenger2009,
+  author   = {Feuersänger, Christian and Griebel, Michael},
+  journal  = {Computing},
+  title    = {Principal manifold learning by sparse grids},
+  year     = {2009},
+  issn     = {1436-5057},
+  number   = {4},
+  pages    = {267--299},
+  volume   = {85},
+  abstract = {In this paper, we deal with the construction of lower-dimensional manifolds from high-dimensional data which is an important task in data mining, machine learning and statistics. Here, we consider principal manifolds as the minimum of a regularized, non-linear empirical quantization error functional. For the discretization we use a sparse grid method in latent parameter space. This approach avoids, to some extent, the curse of dimension of conventional grids like in the GTM approach. The arising non-linear problem is solved by a descent method which resembles the expectation maximization algorithm. We present our sparse grid principal manifold approach, discuss its properties and report on the results of numerical experiments for one-, two- and three-dimensional model problems.},
+  doi      = {10.1007/s00607-009-0045-8},
+  refid    = {Feuersänger2009},
+  url      = {https://doi.org/10.1007/s00607-009-0045-8},
+}
+
+@Article{Abdi2010,
+  author   = {Abdi, Hervé and Williams, Lynne J.},
+  journal  = {WIREs Computational Statistics},
+  title    = {Principal component analysis},
+  year     = {2010},
+  number   = {4},
+  pages    = {433-459},
+  volume   = {2},
+  abstract = {Abstract Principal component analysis (PCA) is a multivariate technique that analyzes a data table in which observations are described by several inter-correlated quantitative dependent variables. Its goal is to extract the important information from the table, to represent it as a set of new orthogonal variables called principal components, and to display the pattern of similarity of the observations and of the variables as points in maps. The quality of the PCA model can be evaluated using cross-validation techniques such as the bootstrap and the jackknife. PCA can be generalized as correspondence analysis (CA) in order to handle qualitative variables and as multiple factor analysis (MFA) in order to handle heterogeneous sets of variables. Mathematically, PCA depends upon the eigen-decomposition of positive semi-definite matrices and upon the singular value decomposition (SVD) of rectangular matrices. Copyright © 2010 John Wiley \& Sons, Inc. This article is categorized under: Statistical and Graphical Methods of Data Analysis > Multivariate Analysis Statistical and Graphical Methods of Data Analysis > Dimension Reduction},
+  doi      = {https://doi.org/10.1002/wics.101},
+  eprint   = {https://wires.onlinelibrary.wiley.com/doi/pdf/10.1002/wics.101},
+  keywords = {singular and eigen value decomposition, bilinear decomposition, factor scores and loadings, RESS PRESS, multiple factor analysis},
+  url      = {https://wires.onlinelibrary.wiley.com/doi/abs/10.1002/wics.101},
+}
+
+@InBook{Huo,
+  author    = {Xiaoming Huo and Xuelei (Sherry) Ni and Andrew K. Smith},
+  pages     = {691-745},
+  title     = {A Survey of Manifold-Based Learning Methods},
+  abstract  = {Abstract We review the ideas, algorithms, and numerical performance of manifold-based machine learning and dimension reduction methods. The representative methods include locally linear embedding (LLE), ISOMAP, Laplacian eigenmaps, Hessian eigenmaps, local tangent space alignment (LTSA), and charting. We describe the insights from these developments, as well as new opportunities for both researchers and practitioners. Potential applications in image and sensor data are illustrated. This chapter is based on an invited survey presentation that was delivered by Huo at the 2004 INFORMS Annual Meeting, which was held in Denver, CO, U.S.A.},
+  booktitle = {Recent Advances in Data Mining of Enterprise Data: Algorithms and Applications},
+  doi       = {10.1142/9789812779861_0015},
+  eprint    = {https://www.worldscientific.com/doi/pdf/10.1142/9789812779861_0015},
+  url       = {https://www.worldscientific.com/doi/abs/10.1142/9789812779861_0015},
+}
+
+@Article{Bennett1969,
+  author  = {Bennett, R.},
+  journal = {IEEE Transactions on Information Theory},
+  title   = {The intrinsic dimensionality of signal collections},
+  year    = {1969},
+  number  = {5},
+  pages   = {517-525},
+  volume  = {15},
+  doi     = {10.1109/TIT.1969.1054365},
+}
+
+@Book{Bellman1961,
+  author    = {Richard E. Bellman},
+  publisher = {Princeton University Press},
+  title     = {Adaptive Control Processes: A Guided Tour},
+  year      = {1961},
+  isbn      = {9781400874668},
+  doi       = {doi:10.1515/9781400874668},
+  url       = {https://doi.org/10.1515/9781400874668},
+}
+
+@Book{Stetter1973,
+  author    = {Stetter, Hans J and others},
+  publisher = {Springer},
+  title     = {Analysis of discretization methods for ordinary differential equations},
+  year      = {1973},
+  volume    = {23},
+}
+
+@Article{Zenger1991,
+  author  = {Zenger, C.},
+  journal = {Parallel Algorithms for Partial Differential Equations, Proceedings of the 6th GAMM-Seminar Kiel 1990},
+  title   = {Sparse grids},
+  year    = {1991},
+  month   = jan,
+  pages   = {241--251},
+}
+
+@InProceedings{Constantine2015,
+  author    = {P. Constantine},
+  booktitle = {SIAM spotlights},
+  title     = {Active Subspaces - Emerging Ideas for Dimension Reduction in Parameter Studies},
+  year      = {2015},
+}
+
+@PhdThesis{Balder1994,
+  author = {Balder, R.},
+  school = {Technische Universität München},
+  title  = {Adaptive Verfahren für elliptische und parabolische Differentialgleichungen auf dünnen Gittern},
+  year   = {1994},
+}
+
+@InProceedings{Khakhutskyy2016,
+  author    = {Khakhutskyy, Valeriy and Hegland, Markus},
+  booktitle = {Sparse Grids and Applications - Stuttgart 2014},
+  title     = {Spatially-Dimension-Adaptive Sparse Grids for Online Learning},
+  year      = {2016},
+  address   = {Cham},
+  editor    = {Garcke, Jochen and Pfl{\"u}ger, Dirk},
+  pages     = {133--162},
+  publisher = {Springer International Publishing},
+  abstract  = {This paper takes a new look at regression with adaptive sparse grids. Considering sparse grid refinement as an optimisation problem, we show that it is in fact an instance of submodular optimisation with a cardinality constraint. Hence, we are able to directly apply results obtained in combinatorial optimisation research concerned with submodular optimisation to the grid refinement problem. Based on these results, we derive an efficient refinement indicator that allows the selection of new grid indices with finer granularity than was previously possible. We then implement the resulting new refinement procedure using an averaged stochastic gradient descent method commonly used in online learning methods. As a result we obtain a new method for training adaptive sparse grid models. We show both for synthetic and real-life data that the resulting models exhibit lower complexity and higher predictive power compared to currently used state-of-the-art methods.},
+  isbn      = {978-3-319-28262-6},
+}
+
+@Article{Niederreiter1988,
+  author   = {Harald Niederreiter},
+  journal  = {Journal of Number Theory},
+  title    = {Low-discrepancy and low-dispersion sequences},
+  year     = {1988},
+  issn     = {0022-314X},
+  number   = {1},
+  pages    = {51-70},
+  volume   = {30},
+  abstract = {We generalize and improve earlier constructions of low-discrepancy sequences by Sobol', Faure, and the author, thus obtaining sequences in the s-dimensional unit cube with the smallest discrepancy that is currently known. The construction is based on the theory of (t, s)-sequences. It is also shown that the dispersion of the sequences constructed here has the smallest possible order of magnitude among any sequences in the s-dimensional unit cube.},
+  doi      = {https://doi.org/10.1016/0022-314X(88)90025-X},
+  url      = {https://www.sciencedirect.com/science/article/pii/0022314X8890025X},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
