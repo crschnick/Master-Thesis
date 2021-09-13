@@ -806,19 +806,19 @@ We can then investigate how their generated grid points and interpolation errors
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.65\linewidth]{graphics/grid_f1}
-  \captionof{figure}{Grid points for $f_1$}
+  \subcaption{Grid points for $f_1$}
   \label{fig:grid_f1}
 \vspace{2.5mm}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.65\linewidth]{graphics/grid_f2}
-  \captionof{figure}{Grid points for $f_2$}
+  \subcaption{Grid points for $f_2$}
   \label{fig:grid_f2}
 \vspace{2.5mm}
 \end{subfigure}
 \delimit
-\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $\ell=1$. The surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions were used.}
+\caption{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $\ell=1$. The surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions were used.}
 \label{fig:grids}
 \end{figure}
 \end{mdframed}
@@ -936,20 +936,20 @@ Without adding another layer of flexibility, sparse grids can not use their full
 
 \section{Linear hypercube transformations}
 
-As the concept of intrinsic dimensionality allows us, at least in theory, to use arbitrary transformation functions to map into the lower-dimensional input space $\Omega_r$, there are many possible general types of transformation functions to choose from.
-The previous chapter showed how a simple change of basis of the input parameters, \ie an orthogonal transformation of them, can have a huge impact on constructed sparse grid surrogates.
+The concept of intrinsic dimensionality allows us, at least in theory, to use arbitrary transformation functions to map into the lower-dimensional input space $\Omega_r$.
+However, there are many possible general types of transformation functions to choose from.
+The previous chapter showed how a simple change of basis of the input parameters, \ie an orthogonal transformation, can have a huge impact on constructed sparse grid surrogates.
+We will therefore start out with constructing an orthogonal transformation matrix $W \in \mathds{R}^{d \times d}$ to transform the inputs into a new coordinate system, prior to passing them to a sparse grid surrogate.
+A good first choice of new basis vectors would be some form of directions along which the model function has high rates of change.
+Various data analysis methods, such as PCA \cite{} or Active Subspaces \cite{} employ some form of a singular value decomposition to obtain these directions of high change.
+As the Active Subspaces method will be used later on to obtain $W$, we will refer to the new basis vectors of the matrix $W$ as active directions, which is consistent with the Active Subspaces method.
+We then refer to the matrix $W$ as the active direction matrix and assume that its basis vectors are ordered by the level of change from highest to lowest, \ie it should hold that $w_1$ is the most active direction, while $w_d$ is the most inactive direction.
 
-Motivated by this insight, the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function in the best possible way.
-This matrix $W$ is referred to as the active direction matrix, as the column vectors $w_i$ point into directions in which the function output has a high rate of change and are ordered by the level of change.
-It should hold that $w_1$ is the most active direction, while $w_d$ is the most inactive direction.
-Since all column vectors $w_i$ have to be orthogonal, they can not point into arbitrary directions and are limited by other active directions.
-The concept of active directions and also ways of computing suitable active directions will be covered in the next section about active subspaces.
+Once the inputs are transformed, we go one step further and also try to eliminate the most inactive directions of $W$, effectively performing a dimensionality reduction.
+After performing a change of basis with $W$ on the inputs, we effectively eliminate the most inactive dimensions, as all active directions are now mapped onto dimensions inthe coordinate system.
+This results in the possibility of drastically reducing the surrogate dimensionality while only suffering a small increase in the approximation error, as only the most unimportant dimensions, which should not contribute a lot to the model function, are eliminated.
 
-We then go one step further and also try to eliminate the most inactive directions of $W$, effectively performing a dimension reduction.
-After performing a change of basis with $W$ on the inputs to obtain $W^T x$, we effectively eliminate the most inactive dimensions, as inactive directions are now mapped to inactive dimensions.
-This results in the possibility of drastically reducing the amount of grid points while only suffering a small increase in error in theory, as only the most unimportant dimensions, which should not contribute a lot to the approximation error, are eliminated.
-
-\begin{definition}[Transformation matrix]
+\begin{definition}[Reduced active direction matrix]
 Let $W \in \mathds{R}^{d \times d}$ be the active direction matrix with $W^T W=I$, and let $r \leq d$ be the reduced dimension.
 We then define
 \begin{equation}
@@ -959,63 +959,59 @@ W_r \coloneqq \begin{bmatrix}
     \\
   \end{bmatrix}
 \end{equation}
-as the transformation matrix.
+as the reduced active direction matrix.
 \end{definition}
 %
-As we can see, the transformation matrix is simply obtained from a given active direction matrix $W$ and a reduced dimension $r$ by cutting off the last $d - r$ directions from $W$.
-For now, we assume that the $W$ and $r$ are given, but we will cover the process of determining those essential inputs later on in detail.
-In case no vectors $w_i$ of $W$ are cut off, we call it an orientation changing linear transformation.
-Otherwise, if $r < d$ and some vectors are cut off, we call it a dimensionality reducing linear transformation or just reducing linear transformation.
+As we can see, the reduced active direction matrix is simply obtained from a given active direction matrix $W$ and a reduced dimension $r$ by cutting off the last $d - r$ directions from $W$.
+For now, we assume that $W$ and $r$ are given, but we will cover the process of determining those essential inputs later on in detail.
+In case no vectors $w_i$ of $W$ are cut off, we call it an orientation changing transformation.
+Otherwise, if $r < d$ and some vectors are cut off, we call it a dimensionality reducing linear transformation.
 
 \subsection{Unit hypercube projections}
 
 To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ with $r < d$ for a given transformation matrix $W_r$, several adjustments have to be made in order to obtain a usable transformation function as the naive approach with $W_r^T x$ would map inputs outside of $\Omega_r$ in certain cases.
 When applying a linear transformation $W_r^T x$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
-
 \begin{definition}[Zonotope]
 Let $m$ be the dimension of the zonotope, and let $k \geq  m$ be the amount of zonotope generators.
-An $m$-dimensional zonotope
+The set
 \begin{equation}
 Z \coloneqq \left\{\sum_{i=1}^k g_i x_i \mid ~ -1 \leq x_i \leq 1\right\}
   \label{zonotope}
 \end{equation}
-with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$ corresponds a the $k$-dimensional minkowski sum.
+is then an $m$-dimensional zonotope  with $k$ generator vectors $g_1, \dots g_k \in \mathds{R}^m$.
 \end{definition}
-
 
 \begin{mdframed}[style=style]
         \centering
-\begin{minipage}{.45\textwidth}
+\begin{minipage}{.3\textwidth}
         \centering
-  \captionof{figure}{Exemplary creation of a Zonotope $Z$ with $l=2$, $k=3$, and three generators $g_1,g_2,g_3$.\\
-  The three generator vectors are drawn to the left and the zonotope $Z$ is drawn in \darkblue to the right with the origin being in \red.}
+  \captionof{figure}{Exemplary creation of a zonotope with $l=2$, $k=3$, and the three generators $g_1$, $g_2$, $g_3$.
+  The outline of the zonotope is coloured in \darkbluecomma and the origin is coloured in \reddot}
   \label{fig:zonotope}
     \end{minipage}%
-    \begin{minipage}{0.55\textwidth}
+    \begin{minipage}{0.7\textwidth}
         \centering
         \vspace{3.5mm}
   \includegraphics[width=0.8\linewidth]{graphics/zonotope}
   \hspace{-5.5mm}
     \end{minipage}
 \end{mdframed}
-
-
+%
 When applying the projection $W_r^T$ to the inputs $x \in \Omega$, we can observe that
 \begin{equation}
 \begin{split}
 W_r^T x=~W_r^T \sum_{i=1}^d x_i e_i=~\sum_{i=1}^d x_i p_i , ~~~~ p_i=W_r^T e_i,
-\nonumber
 \end{split}
 \end{equation}
 where the $p_i$ are just the projected unit vectors.
-Therefore, since for all components are in the unit interval with $x_i \in [0,1]$, we can express the transformed inputs with
+Therefore, since for all components are contained in the unit interval with $x_i \in [0,1]$, we can express the transformed inputs with
 \begin{equation}
 \{W_r^T x \mid x \in \Omega\}=\left\{\sum_{i=1}^d x_i p_i \mid x \in \Omega \right\}=\left\{ \sum_{i=1}^r x_i p_i \mid 0 \leq x_i \leq 1\right\}.
 \label{wtx}
 \end{equation}
 To get \cref{wtx} closer to the zonotope definition in \cref{zonotope}, we first center the inputs $x \in \Omega$ before applying the projection and divide the generators $p_i$ by 2.
-For this, let $c_i=(\frac{1}{2}, \dots, \frac{1}{2})^T\in \mathbb{R}^i$ be the center of the $i$-dimensional unit hypercube.
-We can express this with
+For this, we define $c_i=\underline{0.5}$ as the center of the $i$-dimensional unit hypercube.
+We can then express a centered projection using $W_r$ with
 \begin{equation}
 \begin{alignedat}{2}
 &\left\{W_r^T (x - c_d) \mid x \in \Omega\right\}&&=\left\{W_r^T \sum_{i=1}^d \left(x_i - \frac{1}{2}\right) e_i \mid x \in \Omega \right\}\\
@@ -1025,30 +1021,32 @@ We can express this with
 \label{zonotope_form}
 \end{alignedat}
 \end{equation}
-
-Therefore, defining the projection function with
+%
+Therefore, applying a projection function,
 \begin{equation}
-p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d)
+p \colon \Omega \mapsto Z, ~~ p(x)=W_r^T (x-c_d),
 \nonumber
 \end{equation}
-results in a projected input space that has the zonotope form of \cref{zonotope} with the $p_i$ are generators.
-The projected zonotope is then
+on the inputs results in a projected input space that has the zonotope form of \cref{zonotope} with the generators $p_i=\frac{1}{2} w_i$.
+The projection zonotope,
 \begin{equation}
 Z_{p} \coloneqq \left\{\sum_{i=1}^r p_i x_i , ~ -1 \leq x_i \leq 1\right\}, ~~ p_i \coloneqq \frac{1}{2} W_r^T e_i,
 \nonumber
 \end{equation}
-where according to \cref{zonotope_form}, the projected input space is exactly the zonotope with $Z_{p}=p(\Omega)$.
+is equal to the projected input space, \ie it holds that $Z_{p}=p(\Omega)$.
 
 \subsection{Surrogate space}
 
-However, since the surrogate creation process expects inputs from a hypercube and not a zonotope, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$.
+Now that we obtained a zonotope by projecting the inputs, the next step is to determine how to go from a zonotope to a hypercube, as sparse grid surrogates require a hypercube as a domain.
+To achieve this, the zonotope $Z_p$ is first encased in an $r$-dimensional hypercube called the surrogate space $S$.
 The surrogate space is then later scaled and aligned to obtain the unit hypercube $\Omega_r$.
-Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to obtain the orthogonal vectors
+Generators $q_1, \dots, q_r$ of the encasing hypercube can be calculated by applying the Gram–Schmidt process on the ordered zonotope genrators $p_i$ to obtain the orthogonal vectors,
 \begin{equation}
 q_i \coloneqq \frac{q_i'}{\| q_i' \|},~~ q_i' \coloneqq p_i - \sum_{k=1}^{i-1} \frac{\langle p_k q_k'\rangle}{\langle q_k', q_k' \rangle} q_k'.
 \label{q}
 \end{equation}
-The surrogate space $S$, which encases the zonotope $Z$, is then an $r$-dimensional hypercube with
+%
+The surrogate space $S$, which encases the zonotope $Z_p$, is then an $r$-dimensional hypercube with
 \begin{equation}
 S \coloneqq \left\{\sum_{i=1}^r s_i q_i x_i, ~ -1 \leq x_i \leq 1\right\},~~ s_i \coloneqq \sum_{k=1}^d \langle q_i, p_k\rangle.
 \label{surrogate_space}
@@ -1061,8 +1059,8 @@ The scaling
         \centering
 \begin{minipage}{.49\textwidth}
         \centering
-  \captionof{figure}{Construction of the encasing surrogate space $S$ for the zonotope $Z_p$ of \cref{fig:zonotope} according to \cref{surrogate_space}.\\
-  The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$ in dotted \darkblue, and the origin in \red.}
+  \captionof{figure}{Construction of the encasing surrogate space $S$ according to \cref{surrogate_space} for the zonotope $Z_p$ from \cref{fig:zonotope}.
+  The outline of the projected zonotope $Z_p$ is coloured in \lightbluecomma the encasing surrogate space $S$ is coloured in dotted \darkbluecomma and the origin in \red.}
   \label{fig:surrogate_space}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
@@ -1072,15 +1070,15 @@ The scaling
   \hspace{-5.5mm}
     \end{minipage}
 \end{mdframed}
-
+%
 As we only need $r$ generators for the surrogate space, but have $d$ generators of $Z_p$ available, not all $p_i$ are used in the surrogate space construction.
-In theory, the generators $p_i$ that are used to calculate the $q_i$ are not ordered by default and also don't have to be ordered.
-However, to emphasize the most important generators $p_i$, the generators $p_i$ are ordered by their magnitude w.l.og. $|p_1|\geq \dots \geq |p_d|$.
-This should result in the best possible encasement of $Z_p$.
+In theory, the generators $p_i$ that are used to calculate the $q_i$ don't have to be ordered.
+However, to emphasize the most important generators $p_i$, they are ordered by their magnitude such that $|p_1|\geq \dots \geq |p_d|$.
+This is done to achieve the best possible encasement of $Z_p$.
 
 \subsection{Reduced unit hypercube}
 
-The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$, as shown in \cref{fig:aligned}.
+The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$.
 First, we observe that the generators $g_i$ of $S$ are created using the orthogonal vectors $q_i$ and the scaling factors $s_i$ to obtain
 \begin{equation}
 G \coloneqq \begin{bmatrix}
@@ -1094,19 +1092,20 @@ Q \coloneqq \begin{bmatrix}
     \\
   \end{bmatrix}.
 \end{equation}
-
-We can perform a change of basis on every element that has been projected into $Z_p$, and therefore also $S$.
-The change of basis formula to go from projected $r$-dimensional elements $x_p=p(x)$ in the unit basis $I$ to a representation $y$ in the new basis $G$ is $x_p=Gy \Leftrightarrow G^{-1} x_p=y$ and we therefore obtain
+%
+To bring the projected inputs into a coordinate system of a unit hypercube, we perform a change of basis on every element that has been projected into $Z_p$, and therefore also $S$.
+The change of basis formula to go from projected $r$-dimensional elements $x_p=p(x)$ in the unit basis $I$ to a representation $y$ in the new basis $G$ is $x_p=Gy \Leftrightarrow G^{-1} x_p=y$, and we can therefore obtain
 \begin{equation}
-y=G^{-1} p(x)=\text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
+y=G^{-1} p(x)=\text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x),
 \label{alignment}
 \end{equation}
-Per surrogate space definition \cref{surrogate_space}, we know that $y_i \in [-1,1]$ holds.
-Once the projected inputs are represented by the new basis, we can transform the surrogate space into an $r$-dimensional unit hypercube $\Omega_r$ by first scaling it down by $2$ and then uncenter it again to finally obtain the transformation function
+where we know that, according to \cref{surrogate_space}, $y_i \in [-1,1]$ holds.
+Once the projected inputs are represented by the new basis, we then transform the surrogate space into the $r$-dimensional unit hypercube $\Omega_r$ by first scaling $S$ down by $2$ and then uncentering it again to finally obtain the transformation function,
 \begin{equation}
 t_{W_r}(x) \coloneqq c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \frac{1}{s_r}\right) ~Q^T p(x).
 \label{linear_trans}
 \end{equation}
+The transformation of $S$ into a unit hypercube is shown in \cref{fig:aligned}.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -1114,13 +1113,13 @@ t_{W_r}(x) \coloneqq c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \f
         \centering
 \begin{minipage}{.49\textwidth}
         \centering
-  \captionof{figure}{Transformation of the surrogate space $S$ from \cref{fig:surrogate_space} into the unit hypercube $\Omega_r$ according to \cref{alignment}.\\
-  The projected zonotope $Z_p$ is drawn in \lightblue, the encasing surrogate space $S$, which is now equal to $\Omega_r$ in dotted \darkblue, and the origin in \red.}
+  \caption{Visualization of transformation used to obtain the unit hypercube $\Omega_r$ according to \cref{alignment}.
+  The outline of the transformed inputs $t_{W_r}(\Omega)$ is coloured in \lightbluecomma the unit hypercube $\Omega_r$ in dotted \darkbluecomma and the origin in \reddot}
   \label{fig:aligned}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
         \centering
-   \includegraphics[width=0.8\linewidth]{graphics/surrogate_space_unit}
+   \includegraphics[width=0.7\linewidth]{graphics/surrogate_space_unit}
     \end{minipage}
 
 \end{figure}
@@ -1131,28 +1130,28 @@ t_{W_r}(x) \coloneqq c_r + \frac{1}{2} \text{diag}\left(\frac{1}{s_1}, \dots, \f
 \label{sec:vis_trans}
 
 The described transformation process can be visualized by illustrating where grid points from the lower dimensional space $\Omega_r$ would reside in the original input space $\Omega$. 
-While it is normally not required to revert the previously shown transformation process, i.e. going from $\Omega_r$ back to $\Omega$, we require it for the visualization of transformed surrogates.
+While it is normally not required to revert the previously shown transformation process, \ie going from $\Omega_r$ back to $\Omega$, we require it for the visualization of transformed surrogates.
 
 We observe that \cref{linear_trans} can be rearranged to solve for $p(x)$ to get
 \begin{equation}
 p(x)=2 G (t_{W_r}(x) - c_r)=2 Q ~ \text{diag}(s_1, \dots, s_r) ~ (t_{W_r}(x) - c_r).
 \label{proj}
 \end{equation}
-To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases, the inverse $p^{-1}(x_p)=\{x \in \Omega \mid p(x)=x_{p}\}$ function is not injective, because $|p^{-1}(x_p)| > 1$.
-Our goal is to reverse the transformation only onto certain representative elements of the equivalence classes $[x]_p=\{x \in \Omega \mid p(x)=x_{p}\}$.
-We then only consider the points
+To reverse the transformation completely, we have to deal with reversing $p(x)$ and the fact that in many cases, the inverse function $p^{-1}$ is not injective.
+Our goal is to reverse the transformation only onto certain representative elements of the equivalence classes $[x]_p \coloneqq \{x \in \Omega \mid p(x)=x_{p}\}$.
+We then only consider the points,
 \begin{equation}
-C \coloneqq \{x - c_d  \in \text{span} ~ W_r \mid x \in \Omega\},
+C \coloneqq \{(x - c_d) \in \text{span} ~ W_r \mid x \in \Omega\},
 \label{proj_rep}
 \end{equation}
-i.e. who lie in the vector subspace that is spanned by the active directions in $W_r$ and crosses the center $c_d$.
-Next, we reverse the projection $p(x)$ only onto the representative elements $x \in C$, so that we are able to map one element $x_r\in \Omega_r$ onto one element $x \in C$ to obtain $t_{W_r}^{\text{reverse}}\colon \Omega_r \mapsto C$ with
+\ie the set of points which lie in the subspace that is spanned by the active directions of $W_r$ and crosses the center $c_d$.
+Next, we reverse the projection $p(x)$ only onto the representative elements $x \in C$, so that we are able to map one element $x_r \in \Omega_r$ onto one element $x \in C$ to obtain $t_{W_r}^{\text{reverse}}\colon \Omega_r \mapsto C$ with
 \begin{equation}
 t_{W_r}^{\text{reverse}}(x_r) \coloneqq ~W_r Q ~ \text{diag}\left(2s_1, \dots, 2s_r\right) (x_r - c_r) + c_d.
 \end{equation}
-
-This function is called a reverse function, as it is not a true inverse of $t_{W_r}$.
-In \cref{fig:trans_vis} we reverse the grid points of a regular two-dimensional sparse grid lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of equation \cref{proj} and \cref{proj_rep}.
+%
+We call this function a reverse function, as it is not a true inverse of $t_{W_r}$.
+In \cref{fig:trans_vis}, we reverse the grid points of a regular two-dimensional sparse grid lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of \cref{proj} and \cref{proj_rep}.
 
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
@@ -1167,8 +1166,8 @@ In \cref{fig:trans_vis} we reverse the grid points of a regular two-dimensional 
 \end{subfigure}
 \vspace{2.5mm}
 \delimit
-\captionof{figure}{Two views of the same visualization of a transformed regular sparse grid of level $5$ that was constructed by a linear transformation with $r=2$ and $d=3$.\\
-The \darkblue cube outline represents the edges of $\Omega$, the arrows on the sparse grid the first two column vectors of $W_r$ that span the plane on which the sparse grid and $\Omega_r$ lies, and the \red edges represent the intersections of $\Omega$ and the plane of $\Omega_r$.}
+\caption{Two views of the same transformed regular sparse grid of level $5$ with $r=2$ and $d=3$.
+The \darkblue cube outline represents the edges of $\Omega$, the arrows on the sparse grid the first two column vectors of $W_r$ that span the plane on which the sparse grid lies, and the \red edges represent the intersections of $\Omega$ and the plane.}
 \label{fig:trans_vis}
 \end{figure}
 \end{mdframed}
