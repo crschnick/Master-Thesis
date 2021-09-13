@@ -710,90 +710,91 @@ as the normalized root mean squared error.
 \chapter{Input transformations}
 \label{chap:c3}
 
-A lot of work has already gone into exploring all kinds of variants and optimizations for sparse grids, which resulted in many different families of basis functions in conjunction with various grid point structures \cite{Valentin2019, Feuersaenger2010}.
-Moreover, many algorithms that work on sparse grids \cite{Gerstner1998, Garcke2001, Pflueger2010, Valentin2019, Rehme2021} have been developed, such that the general sparse grids technique can be applied in a better and more flexible way to many different kinds of problems.
-In these works, the primary focus lied on optimizing sparse grids itself and less on inspecting and adapting the inputs $x \in \Omega$ that are passed to the sparse grid methods.
-The basic idea that is propagated in this thesis is that instead of directly using the sparse grids to approximate a function with $f(x) \approx \hat{f}(x)$, we insert another layer of flexibility into the process by introducing an input transformation function $t$ and creating the surrogate $\hat{f}$ in tandem with $t$, such that a transformed sparse grid approximation $f(x) \approx \hat{f}(t(x))$ performs better.
+A lot of work has already gone into exploring all kinds of variants and optimizations for sparse grids, which resulted in many different families of basis functions and grid types \cite{Valentin2019, Feuersaenger2010}.
+Moreover, many algorithms that work on sparse grids \cite{Gerstner1998, Garcke2001, Pflueger2010, Valentin2019, Rehme2021} have also been developed, such that the general sparse grids technique can be applied in a better and more flexible way to many different kinds of problems.
+In the related sparse grid literature, the process of optimizing sparse grids itself was the primary focus most of the time.
+In contrast to this approach, we instead inspect and adapt the inputs itself before they are passed to sparse grid based methods.
+The basic idea that is propagated in this thesis is that, instead of directly using the sparse grids to approximate a function with $f(x) \approx \hat{f}(x)$, we insert another layer of flexibility into the process by introducing an input transformation function $t$ and creating the surrogate $\hat{f}$ in tandem with $t$, such that a transformed sparse grid approximation $f(x) \approx \hat{f}(t(x))$ performs better.
 This general idea and also the necessary details will be expanded upon in this chapter.
 
 \section{Intrinsic dimensionality}
 \label{sec:intrinsic}
 
-There already exist several concepts used in signal processing and data science that are related to the idea of input transformations to exploit certain characteristics of the input data, for example principal component analysis \cite{Abdi2010} or the concept of intrinsic dimensionality \cite{Bennett1969}.
+There already exist several techniques used in signal processing and data science that are related to the idea of input transformations, for example principal component analysis \cite{Abdi2010}, which tries to find and exploit certain characteristics of the input data.
+Related to PCA is the concept is intrinsic dimensionality \cite{Bennett1969}.
 The intrinsic dimensionality of a function or dataset is the minimal amount of features required to completely represent its output.
-It can be used as a guidance to determine a lower bound on the complexity of the model function and also optionally exploit the knowledge to construct a lower-dimensional surrogate and thus perform a dimension reduction.
+It can be used as a guidance to determine a lower bound on the dimensionality of the model function and also optionally exploit the knowledge to construct a lower-dimensional surrogate and thus perform a dimensionality reduction.
+
 \begin{definition}[Intrinsic dimensionality]
-A $d$-dimensional function $f(x_1, \dots, x_d)$ has intrinsic dimension $r \leq d$ if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, such that
+A $d$-dimensional function $f(x_1, \dots, x_d)$ has an intrinsic dimensionality of $r \leq d$, if there exists a transformation function $t \colon \Omega \mapsto \Omega_r$, such that
 \begin{equation}
 \forall x \in \Omega \colon f(x)=f_t(t(x)).
 \end{equation}
 \label{def:intrinsic}
+Even though we do not explicitly define $\Omega_r$, it too should be a bounded Euclidian product such that it can  transformed into the unit hypercube $\Omega_r=[0,1]^r$, similar to $\Omega$.
 \end{definition}
 %
-Even though \cref{def:intrinsic} does not explicitly define $\Omega_r$, it too should be a bounded Euclidian product such that it can w.l.o.g. transformed into the unit hypercube $\Omega_r=[0,1]^r$.
-
 We define the minimal intrinsic dimensionality of a function as the optimal intrinsic dimensionality $r^\ast$.
 However, even if we are able to find a non-optimal $r$-dimensional transformation with $r > r^\ast$ that satisfies the requirement of \cref{def:intrinsic}, we still have gained an advantage and can define that function as having an intrinsic dimensionality of at most $r$.
-Even if it holds that $r=r^\ast$, we still define it as having an intrinsic dimensionality of at most $r$, since we usually don't know the actual intrinsic dimensionality $r^\ast$ without a proof.
+Even if it holds that $r=r^\ast$, we still define it as having an intrinsic dimensionality of at most $r$, since in many cases we don't know the actual intrinsic dimensionality $r^\ast$ without a proof.
 
 Since we are dealing with function approximation problems in this thesis, we extend definition \cref{def:intrinsic} to also allow for approximation errors:
 \begin{definition}[Approximate intrinsic dimensionality]
 Let $f$ be $d$-dimensional function, $\varepsilon$ an error metric from \cref{sec:errors}.
-We then define $f$ as having an approximate intrinsic dimensionality of $r \leq d$ with an error of $e$ if there exists a $t \colon \Omega \mapsto \Omega_r$, such that
+We then define $f$ as having an approximate intrinsic dimensionality of $r \leq d$ with an error of $e$, if there exists a function $t \colon \Omega \mapsto \Omega_r$, such that
 \begin{equation}
 e=\varepsilon\left(f(x) - f_t(t(x))\right).
 \end{equation}
 \end{definition}
 %
-Similar to the optimal intrinsic dimensionality $r^\ast$, we are not concerned about the finding, also do not know, the optimal error $e^\ast= \argmin_{t, f_t} \epsilon(f(x) - f_t(t(x)))$ for a given $r$.
+Similar to the minimal intrinsic dimensionality $r^\ast$, we are not concerned about the finding, and also usually do not know, the minimal error $e^\ast= \argmin_{t, f_t} \varepsilon(f(x) - f_t(t(x)))$ for a given $r$.
 With the introduction of approximation errors into the intrinsic dimensionality definition, there is also room to determine a good tradeoff between intrinsic dimensionality and approximation error.
-The main goal of effectively making use of lower dimensional function approximations is then accomplished by finding functions $t$ and $f_t$ that provide a good tradeoff between dimensionality and approximation error.
+The main goal of making use of lower dimensional function surrogate is then accomplished by finding functions $t$ and $f_t$ that provide a good tradeoff between dimensionality and approximation error.
 
-To achieve a good convergence rate and general representativeness of a drawn set of samples, e.g. for a quadrature, it is vital to achieve low-discrepancy and cover the input space $\Omega$ more evenly.
+To achieve a good convergence rate and general representativeness of a drawn set of samples, \eg for a quadrature operation, it is vital to achieve low-discrepancy and cover the input space $\Omega$ more evenly.
 Under normal circumstances, to achieve the same discrepancy in a high-dimensional space as in a low-dimensional space,
 exponentially more samples are required.
-However, combining this requirement with the concept of intrinsic dimensionality, we observe that we effectively only need to cover $\Omega_r$ and adapt any operation that normally works on $\hat{f}$ in $\Omega$ to instead work on the lower dimensional function $\hat{f_t}$ in $\Omega_r$.
-The main advantage is that the lower amount of samples required to achieve a good coverage of the definition space of $f_t$ mainly depends on $r$ and not on $d$.
+However, combining this requirement with the concept of intrinsic dimensionality, we observe that we effectively only need to cover $\Omega_r$ and adapt any operation that normally works on $\hat{f}$ to instead work on the lower dimensional surrogate $\hat{f_t}$.
+The main advantage is that the lower amount of samples required to achieve a good coverage of the definition space of $f_t$ would depend on $r$ and not on $d$.
 
 \begin{definition}[Transformed distribution]
 Let $t^{-1}(x_{t})=\{x \in \Omega \mid t(x)=x_{t}\}$ be the inverse transformation function.
-We then define the transformed distribution as
+We then define the transformed distribution,
 \begin{equation}
 \rho_t \colon \Omega_r \to \mathds{R_+}, ~~ \rho_t(x_t)=\int_{t^{-1}(x_t)} \rho(x) \; \mathrm{d}x.
 \end{equation}
 This is also a valid probability distribution since it holds that
 \begin{equation}
-\int_{\Omega_t} \rho_r(x_t) \; \mathrm{d}x=\int_{x_t \in \Omega_r} \int_{t^{-1}(x_t)} \rho(x) \; \mathrm{d}x = \int_{\Omega} \rho(x) \; \mathrm{d}x = 1.
+\int_{\Omega_t} \rho_t(x_t) \; \mathrm{d}x=\int_{x_t \in \Omega_r} \int_{t^{-1}(x_t)} \rho(x) \; \mathrm{d}x = \int_{\Omega} \rho(x) \; \mathrm{d}x = 1.
 \end{equation}
 \end{definition}
 %
-This means that applying a transformation has the potential to change the distribution type.
-For example a uniform distribution $\rho=\mathcal{U}[0,1]^d$ could be transformed into a non-uniform distribution $\rho_t$.
-Furthermore, the quality and properties of transformed low discrepancy sequences (\cref{sec:lds}) changes compared to its original sequence \cite{Wang2008}.
-To effectively sample from $\rho_t$, it is still easier to just draw the samples $(x_1, \dots, x_n)$ from $\rho$ directly and feed them into the transformation function to obtain the transformed sequence $(t(x_1), \dots, t(x_n))$.
+As a result, applying a transformation has on the original input distribution has the potential to change the distribution type.
+For example, a uniform distribution $\rho=\mathcal{U}[0,1]^d$ could be transformed into a non-uniform distribution $\rho_t$.
+Furthermore, the quality and properties of transformed low discrepancy sequences (\cref{sec:lds}) changes compared to its original, untransformed sequence \cite{Wang2008}.
+To effectively sample from $\rho_t$, it is still easier to just draw the samples $(x_1, \dots, x_n)$ from $\rho$ directly and feed them into the transformation function to obtain the transformed sequence $(t(x_1), \dots, t(x_n))$, which is distributed according to $\rho_t$.
 
 \section{Limitations of sparse grids}
 
-All grid-based interpolation methods all share the common problem of being affected by the curse of dimensionality \cite{Bellman2015} to some degree.
-This means that as the dimension of the models grow, the amount of grid points and the model function evaluations required to generate a sparse grid grow too fast and put a limit on how many dimensions are feasible.
-Sparse grids itself are already an effective strategy to reduce the consequences the curse of dimensionality compared to full grids, as they provide a good tradeoff between the amount of grid points used and the interpolation accuracy compared to full grids, but they only weaken and delay the effects of the curse of dimensionality.
-Therefore, in higher dimensions, employing some form of dimension reduction is necessary.
-Of course, dimension reduction strategies are limited by the minimum amount of accuracy that is required for the specific use case, since reducing the amount of grid points usually reduces accuracy and is therefore a tradeoff.
-In this section we take a look at a few already established approaches to sparse grid based dimension reduction and look at their advantages and disadvantages with the help of simple example model functions.
+All grid-based interpolation methods share the common problem of being affected by the curse of dimensionality \cite{Bellman1961} to some degree.
+This means that as the model dimensionality grows, the amount of grid points and the model function evaluations required to generate a sparse grid grow too fast and put a limit on how many dimensions are feasible.
+Sparse grids itself are already a pretty effective strategy to reduce the consequences of the curse of dimensionality compared to full grids, as they provide a good tradeoff between the amount of grid points used and the interpolation accuracy, but they can only weaken and delay the effects of the curse of dimensionality.
+Therefore, in higher dimensions, employing some form of dimensionality reduction is necessary.
+Of course, the effectiveness of dimensionality reduction techniques are limited by the minimum amount of accuracy that is required for the specific use case.
+In this section we take a look at a few already established approaches to sparse grid based dimensionality reduction and look at their properties with the help of simple example model functions.
 
-The first example model function $f_1$, which is designed to investigate the properties of the presented methods, is designed to be a good fit for any grid based methods.
-It is a two-dimensional function, where only the first component and a constant term contribute to the total function value while the second component does not:
+The first example model function,
 \begin{equation}
-f_1(x_1, x_2)=\sin(2 \pi x_1) + 1
-\nonumber
+f_1(x_1, x_2)=\sin(2 \pi x_1) + 1,
 \end{equation}
-
-One can easily see that it is an intrinsically one-dimensional function according to \cref{def:intrinsic}, since we a transformation function could just cut off the second component.
-However, just by rotating the function by a few degrees, we obtain the second example model function
+ is designed to be a good fit for grid based methods.
+It is a two-dimensional function, where only the first component and a constant term contribute to the total function value, while the second component does not.
+One can easily see that it has an intrinsic dimensionality of $1$ according to \cref{def:intrinsic}, since a transformation function could just cut off the second input component.
+However, by simply rotating the function by a few degrees, we obtain the second example model function,
 \begin{equation}
 f_2(x_1,x_2)=\sin(2 \pi x_1') + 1, ~~~~~ x_1'=\cos(0.15 \pi) x_1 -\sin(0.15 \pi) x_2,
 \end{equation}
-which is also a two-dimensional function but still intrinsically one-dimensional.
+which is also a two-dimensional function but importantly still has an intrinsic dimensionality of $1$.
 
 \subsection{Spatially adaptive sparse grids}
 
@@ -801,80 +802,87 @@ Both functions can be approximated using spatially adaptive sparse grids.
 We can then investigate how their generated grid points and interpolation errors compare.
 
 \begin{mdframed}[style=style]
-\vspace{2.5mm}
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/grid_f1}
+  \includegraphics[width=.65\linewidth]{graphics/grid_f1}
   \captionof{figure}{Grid points for $f_1$}
   \label{fig:grid_f1}
+\vspace{2.5mm}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.8\linewidth]{graphics/grid_f2}
+  \includegraphics[width=.65\linewidth]{graphics/grid_f2}
   \captionof{figure}{Grid points for $f_2$}
   \label{fig:grid_f2}
-\end{subfigure}
 \vspace{2.5mm}
+\end{subfigure}
 \delimit
-\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $\ell=1$. It used the surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions.}
+\captionof{figure}{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$ that started out as a regular sparse grid with level $\ell=1$. The surplus refinement criterion, 15 refinements steps with one grid point refinement per step, and modified linear basis functions were used.}
 \label{fig:grids}
 \end{figure}
 \end{mdframed}
-
+%
 \Cref{fig:grids} shows how spatially adaptive sparse grids are affected by the different alignment of function terms.
-The spatially adaptive strategy is able to exploit the one-dimensional nature of $f_1$ by only refining along the first dimension and therefore spending the grid points where they matter.
+The spatially adaptive strategy is able to exploit the one-dimensional nature of $f_1$ by only refining along the first dimension and therefore spending the grid points only where they matter.
 However, the intrinsically one dimensional term of $f_2$ can not be exploited, as it is no longer axis-aligned.
 This can be deduced from the fact that grid points all over the grid and along both dimensions are refined.
-Note that due to the default refinement rule that add all child grid points, the upper and lower grid point rows in \cref{fig:grid_f1} are created but are not necessary.
-A tweaked refinement rule could fix this.
-This observation is reinforced by the actual approximation errors of surrogates for both functions seen in figure \cref{fig:dim_reduction_errors} on the right.
+Note that due to the default refinement rule that add all child grid points, the upper and lower grid point rows in \cref{fig:grid_f1} are created even though they are not necessary.
+A tweaked refinement rule could easily fix this however.
+This observation is reinforced by the actual approximation errors of surrogates for both functions seen in \cref{fig:grid_approx_f2}.
 
 \subsection{Radial basis functions}
 
 Radial basis functions behave differently than sparse grids when being applied to the same two functions, as their basis functions are not constructed using the tensor-product approach.
-Instead they are orientation agnostic, as only the radius relative a support point determines the basis function value.
-Therefore, as seen in figure \cref{fig:dim_reduction_errors} on the left, the approximation errors stay pretty much identical in both cases.
-However, their approximation error for $f_1$ is worse than the sparse grid surrogate error, as radial basis functions are not suited for approximating functions with a constant dimension when being compared to modified basis functions, which come with a constant component well suited for that.
+Instead they are orientation agnostic, as only the radius relative to a support point determines the basis function value.
+Therefore, as seen in \cref{fig:grid_approx_f1}, the approximation errors stay pretty much identical in both cases.
+However, the approximation error for $f_1$ is worse than the sparse grid surrogate error, as radial basis functions are not suited for approximating functions with a constant dimension when being compared to modified basis functions, which come with a constant component well suited for that.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{graphics/dim_reduction}
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=\linewidth]{graphics/grid_approx_f1}
+  \subcaption{RBF surrogates created with Gaussian basis functions, Euclidean distance measure, and shape parameter $\epsilon=0.5$.}
+  \label{fig:grid_approx_f1}
+\vspace{2.5mm}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=\linewidth]{graphics/grid_approx_f2}
+  \subcaption{Spatially adaptive sparse grids with $\ell=1$, surplus refinement criterion, 280 single refinement steps, and mod. linear basis functions.}
+  \label{fig:grid_approx_f2}
+\vspace{2.5mm}
+\end{subfigure}
   \delimit
-\captionof{figure}{
-Comparision of the approximation errors for both example functions $f_1$ and $f_2$ using spatially adaptive sparse grids and radial basis functions.\\
-The RBF surrogates were created with Gaussian basis functions, euclidean distance measure, and shape parameter $\epsilon=0.5$.\\
-The sparse grid surrogates started out as a regular sparse grid with level $\ell=1$, used the surplus refinement criterion, 280 refinements steps with one grid point refinement per step, and modified linear basis functions.
-}
+\caption{
+Approximation error comparision for both example functions $f_1$ and $f_2$ using spatially adaptive sparse grids and radial basis functions.}
   \label{fig:dim_reduction_errors}
 \end{figure}
 \end{mdframed}
 
-\subsection{ANOVA}
+\subsection{Variance-based sensitivity analysis}
 
-Functional Analysis of Variance (ANOVA)  is a well established method in statistics to identify important inputs of a model.
-It is based on variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01}, which determines the importance of individual model inputs.
-Given a set of dimension indices $D=\{1,\dots,d\}$, we define the set of ANOVA-components $C \coloneqq \mathcal{P}(D)$, where an ANOVA-component $c \in C$ that contains a specific dimension index $i \in D$ indicates that the function term is non-constant in the $i$-th dimension.
-We can then decompose a model function into a componentwise sum with
+The method of variance-based sensitivity analysis, a form of global sensitivity analysis introduced by Sobol \cite{S01},  is a well established method in statistics to determine the importance of model input parameters.
+Given a set of dimension indices $D=\{1,\dots,d\}$, we define the set of ANOVA-components $C \coloneqq \mathcal{P}(D)$, where an ANOVA-component $c \in C$ that contains a specific dimension index $i \in D$ indicates that a function term is varying along the $i$-th dimension.
+We can then decompose a model function into the componentwise sum,
 \begin{equation}
-f(x)=\sum_{c \in \mathcal{P}(D)} f_{c}(x).
+f(x)=\sum_{c \in \mathcal{P}(D)} f_{c}(x),
 \label{anovaComp}
 \end{equation}
-%
-A decomposition of a high dimensional function $f$ into $2^d$ lower dimensional function terms allows for an examination of individual terms with the goal identifying the terms that contribute the least amount of variance to the total function variance.
+also called the ANOVA decomposition of $f$.
+
+A decomposition of a high dimensional function $f$ into $|\mathcal{P}(D)|=2^d$ lower dimensional function terms allows for an examination of individual terms with the goal identifying terms that contribute the least amount of variance to the total function variance.
 This decomposition can also be employed on sparse grids \cite{F10} by using special semi-orthogonal basis functions, for example a wavelet basis, to represent the $f_c$.
-Since the terms $f_i$ are semi-orthogonal, we can define a variance function
+Since the terms $f_i$ are required to be semi-orthogonal, we can define a variance function,
 \begin{equation}
-\sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c)
+\sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c),
 \end{equation}
 in an additive manner.
 For every ANOVA component $c \in C$, we can then calculate the variance share, also called Sobol index,
 \begin{equation}
 S_{c} \coloneqq \frac{\sigma^2(f_{\underline{c}} )}{\sigma^2(f)}, ~~ \sum_{c \in \mathcal{P}(D)} S_{c} = 1.
-\nonumber
 \end{equation}
-Computing the Sobol indices of all terms for both example functions gives insight into the structure of the function and also allows us to understand, why spatial adaptivity succeeds only for one of them.
+Computing the Sobol indices of all terms for both example functions gives insight into the structure of the function and tells us what share of the function we are able to represent with axis-aligned terms of varying dimension.
+It helps us to understand, why spatial adaptivity succeeds only for one of them.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -885,8 +893,8 @@ Computing the Sobol indices of all terms for both example functions gives insigh
 \hline \hline
 & $2 \notin c~$ & $2 \in c$ \\
 \hline
-$1 \notin c$ & ? & 0.0\\
-$1 \in c$ & ? & 0.0\\
+$1 \notin c$ & 0.667 & 0.0\\
+$1 \in c$ & 0.333 & 0.0\\
 \end{tabular}
 \delimit
   \captionof{table}{Sobol indices of all ANOVA components for $f_1$.}
@@ -899,8 +907,8 @@ $1 \in c$ & ? & 0.0\\
 \hline \hline
 & $2 \notin c~$ & $2 \in c$ \\
 \hline
-$1 \notin c$ & ? & ?\\
-$1 \in c$ & ? & ?\\
+$1 \notin c$ & 0.636 & 0.001\\
+$1 \in c$ & 0.163 & 0.199\\
 \end{tabular}
 \delimit
   \captionof{table}{Sobol indices of all ANOVA components for $f_2$.}
@@ -911,55 +919,25 @@ $1 \in c$ & ? & ?\\
 %
 The ANOVA method decomposes the two-dimensional functions into four terms.
 A constant term $f_\emptyset$, two one-dimensional terms $f_{\{1\}}$ and $f_{\{2\}}$, and a two dimensional term $f_{\{1,2\}}$.
-As we can see in \cref{tab:anova_f1}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0$ and $\sigma^2(f_{\{1\}})=? > 0$.
-Therefore the other terms can be dropped and the function can be completely represented using only a one-dimensional function.
-However, we can that the ANOVA method also fails to identify that the function $f_2$ is still intrinsically one-dimensional, as seen in \cref{tab:anova_f2}, since for all ANOVA components it holds that $\sigma^2(f_{c}) > 0$ and the ANOVA method would report that no dimension reduction can be applied.
-The ANOVA method also only works on axis-aligned terms and therefore has the same limitations as spatially adaptive sparse grids.
+
+As we can see in \cref{tab:anova_f1}, at least for the function $f_1$, the method correctly identifies that only the terms $f_\emptyset$ and $f_{\{1\}}$ have some output variance with $\sigma^2(f_\emptyset)=? > 0.667$ and $\sigma^2(f_{\{1\}})=? > 0.333$.
+Therefore, the other terms can be dropped and the function can be completely represented using only one-dimensional function terms.
+
+However, we can see in \cref{tab:anova_f2} that the ANOVA method attributes a share of output variance to all terms, since for all ANOVA components it holds that $\sigma^2(f_{c}) > 0.199$.
+In this case, the ANOVA method shows us that no dimensionality reduction can be applied, as the term $f_{\{1,2\}}$ has some variance contribution.
+Note that if the constant term $f_\emptyset$ is excluded from the analysis, as is often done, the effects of the changed alignment of $f_2$ on the Sobol indices would be even greater.
 
 \subsection{Summary}
 
-A fundamental property of any axis-aligned mesh-based method that uses basis functions created by using the tensor product approach is that their quality depends on whether the model function primarily also consists out of axis-aligned terms.
-In contrast, other basis functions like radial basis functions do not depend on the alignment of the function terms they are trying to approximate, i.e. they can be seen as orientation agnostic.
-In turn this means that an effective dimension reduction with conventional sparse grids based methods is highly dependent on the alignment of the model function.
-Without adding another layer of flexibility with an input transformation function, sparse grids can not use their full potential in many cases, as we have seen with function $f_2$.
-
-Therefore, adaptive sparse grids can not exploit model functions with non axis-aligned function terms with a low intrinsic dimension and the sparse grid surrogate has to cover $d$ dimensions, as the dimension reduction techniques are failing.
-Thus, in case a high-dimensional model function is not suitable for sparse grids, the sparse grid is subject the curse of dimensionality with the original model dimension $d$.
-To put the grid limitations into more concrete range, we can say that regular full grids already become infeasible for such  models with dimension of $d=4$, while regular sparse grids can hold out longer and reach their end of feasible dimensions at around $d=8$.
-The presented technique of transformed sparse grids has the goal of moving the surrogate dimension closer to the intrinsic dimension of a model through input transformations and is, at least in theory, not limited by the original model dimension even in cases where the function terms are not axis-aligned.
-
-\newpage
-\begin{mdframed}[style=style]
-
-\vspace{2.5mm}
-\begin{figure}[H]
-
-\centering
-\begin{tikzpicture}
-\node[] at (9.2,0) {$d$};
-\draw[->,ultra thick,charcoal] (0,0)--(9,0);
-\foreach \x/\xtext in {0/$1$,1/$2$,2/$3$,3/$4$,4/$5$,5/$6$,6/$7$,7/$8$,8/$9$}
-    \draw(\x,5pt)--(\x,-5pt) node[below] {\xtext};
-    
-\draw[decorate, decoration={brace}, thick, yshift=6.8ex]  (0,0) -- node[above=0.4ex] {full grids}  (3,0);
-\draw[decorate, decoration={brace, mirror}, thick, yshift=2.5ex]  (7,0) -- node[above=0.4ex] {sparse grids}  (0,0);
-\draw[decorate, decoration={brace, mirror}, thick, yshift=-5ex]  (0,0) -- node[below=0.6ex] {transformed sparse grids}
- (10,0);
-\filldraw[white,thick] (9.9,-0.7) rectangle (11,-1.1);
- \draw[->,thick] (9.8,-0.91)--(11,-0.91);
-\end{tikzpicture}
-
-\vspace{2.5mm}
-\delimit
-\captionof{figure}{Approximate suitable input dimensions of different grid based techniques for model approximations in cases where axis-aligned dimension reduction techniques fail.}
-\label{fig:dim_ranges}
-\end{figure}
-\end{mdframed}
+To summarize, we saw that a fundamental property of any approximation method that uses basis functions created by using the tensor product approach is that the approximation quality depends on whether the model function primarily also consists out of axis-aligned terms or not.
+In contrast to this behaviour, other basis functions, \eg radial basis functions, do not depend on the alignment of the function terms they are trying to approximate, \ie they can be seen as orientation agnostic.
+In turn this means that an effective dimension reduction with conventional sparse grid based methods is highly dependent on the alignment of the model function.
+Without adding another layer of flexibility, sparse grids can not use their full potential in many cases, as we have seen the with model function $f_2$.
 
 \section{Linear hypercube transformations}
 
-As the concept of intrinsic dimension makes it possible to, at least in theory, use arbitrary transformation functions, there are many possible general types of transformation functions to choose from.
-The previous chapter showed how a simple change of basis of the function inputs, i.e. an orthogonal transformation, can have a huge impact on the sparse grid surrogate construction.
+As the concept of intrinsic dimensionality allows us, at least in theory, to use arbitrary transformation functions to map into the lower-dimensional input space $\Omega_r$, there are many possible general types of transformation functions to choose from.
+The previous chapter showed how a simple change of basis of the input parameters, \ie an orthogonal transformation of them, can have a huge impact on constructed sparse grid surrogates.
 
 Motivated by this insight, the main approach that will be used and investigated in this thesis starts out with finding an orthonormal matrix $W \in \mathds{R}^{d \times d}$ that is aligned along the active directions of the model function in the best possible way.
 This matrix $W$ is referred to as the active direction matrix, as the column vectors $w_i$ point into directions in which the function output has a high rate of change and are ordered by the level of change.
