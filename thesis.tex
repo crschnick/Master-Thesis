@@ -1262,20 +1262,20 @@ Using $m \in \mathds{N}$ neighbours $y_i \in S \setminus \{x\}, ~ i \in \{1, \do
     y_1 - x\\
     \vdots \\
     y_m - x
-  \end{bmatrix}  \nabla f(x) =\begin{bmatrix}
+  \end{bmatrix}  \widetilde{\nabla} f(x) =\begin{bmatrix}
     f(y_1) - f(x) \\ \vdots \\  f(y_m) - f(x)
     \\
   \end{bmatrix}.
   \label{eq:dd_sle}
 \end{equation}
-Solving this system of linear equations for a residual minimizing value for $\nabla f(x)$ only provides a very rough approximation of the actual gradient.
+Solving this system of linear equations for a residual minimizing value for $\widetilde{\nabla} f(x)$ only provides a very rough approximation of the actual gradient.
 Furthermore, the linear nature of the approximation, especially when estimating gradients of a non-linear function, can lead to biased gradients.
 The choice of the neighbours $y_i$ also influences the result as well as the amount of neighbours $m$, and the next sections will introduce two different ways of choosing the neighbours $y_i$.
 
 In the context of active subspaces, the approximation error of the gradients is however not the relevant metric to evaluate the active subspace approximation quality.
 Instead, the primary focus should be the resulting surrogate approximation error, as it is the only metric that matters in the end.
-Even though the active subspaces computation is based entirely on the average outer product of the gradients, there is not necessarily a strong link between $\varepsilon_{\text{grad}}$ and the quality of the resulting active subspace.
-Therefore, the evaluation of the active subspace approximations will be done later on when the surrogate quality is investigated.
+Even though the active subspaces computation is based entirely on the average outer product of the gradients, there is not necessarily a strong link between the gradient approximation errors and the quality of the resulting active subspace.
+Therefore, the evaluation of the active subspace approximations will be done later on when the surrogate quality in general is investigated.
 
 \paragraph{Random neighbour approximation}
 The random neighbour approximation method takes a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$ as input.
@@ -1305,19 +1305,22 @@ The parameters $n'$ and $m$ also have to be chosen carefully, as a unsuitable co
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_rn}
-  \subcaption{Random neighbour method picks with $m=4$}
+  \subcaption{Random neighbour method picks with $m=4$.}
+  \vspace{2mm}
   \label{fig:as_rn}
 \end{subfigure}%
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_nn}
-  \subcaption{Nearest neighbour method picks with $n'=7$ and $m=4$}
+  \subcaption{Nearest neighbour method picks with $n'=7$ and $m=4$.}
+  \vspace{2mm}
   \label{fig:as_nn}
 \end{subfigure}
 \delimit
-\caption{Differences in sample selection between the two neighbour approximation methods for examples with $|S|=10$.
-The \darkblue dots are the available samples $S \setminus \{x\}$. A filled dot signals that it is considered when looking for neighbours.
-The completely \red circle represents the sample point $x$ and other sample points circled in \red indicate that they were chosen as a neighbour of $x$.}
+\caption{Differences in the sample selection between the two neighbour approximation methods for a sample with $|S|=10$.
+The \darkblue points are the available samples $S \setminus \{x\}$.
+A hollow point signals that the sample is not considered when looking for neighbours.
+The \red point represents the sample $x$, and other points circled in \red are samples that were chosen as a neighbour of $x$ by the method.}
 \label{fig:as_approx}
 \end{figure}
 \end{mdframed}
@@ -1339,18 +1342,18 @@ However, as the average squared directional derivative along the second dimensio
 A positive aspect of the active subspace neighbour approximation methods is that they introduce a regularization through discretization \cite{Kress1999}, \ie as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
 In certain cases, this can lead to more suitable active subspaces approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences.
 
-\section{Random linear transformations}
+\section{Random active directions}
 \label{sec:rt}
 
-A completely different approach to finding a transformation function is just generating a random one.
-A random transformation generator is easy to implement, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
-It can also serve as a reference for comparision as one would expect that the Active Subspace method should always output better transformation.
+A completely different approach to finding active directions $w_i$ to construct a transformation is just generating random ones.
+This approach is easy to implement, can generate new transformation functions almost instantly, and offers a purely exploratory way of finding the best transformation.
+It can also serve as a reference for comparision, as one would expect that the active subspace method should always output better active directions.
 
-A simple generation algorithm would first generate random matrices $R \in \mathds{R}^{d \times d}$ until all column vectors are significantly linear independent, and then orthonormalizing $R$ using the Gram-Schmidt method on the column vectors $r_i$ of $R$ to obtain the column vectors
+A simple generation algorithm would first generate random matrices $R \in \mathds{R}^{d \times d}$ until all column vectors are linear independent, and then orthonormalize $R$ using the Gram-Schmidt method to obtain the column vectors
 \begin{equation}
-w_i=\frac{w_i'}{\| w_i' \|},~~ w_i'=r_i - \sum_{k=1}^{i-1} \frac{\langle r_k,  w_k' \rangle}{\langle w_k', w_k' \rangle} w_k'
+w_i=\frac{w_i'}{\| w_i' \|},~~ w_i'=r_i - \sum_{k=1}^{i-1} \frac{\langle r_k,  w_k' \rangle}{\langle w_k', w_k' \rangle} w_k',
 \end{equation}
-and therefore the orthonormal matrix
+and therefore the orthonormal active direction matrix
 \begin{equation}
 W = \begin{bmatrix}
   \\
@@ -1358,7 +1361,8 @@ W = \begin{bmatrix}
     \\
   \end{bmatrix}.
 \end{equation}
-The final step would randomly roll a value for $1 \leq r \leq d$ and cut off the last $d-r$ column vectors of $W$ to obtain the transformation matrix
+%
+The final step would randomly roll a reduced dimensionality value $r$ with $1 \leq r \leq d$ and cut off the last $d-r$ column vectors of $W$ to obtain the reduced active direction matrix
 \begin{equation}
 W_r = \begin{bmatrix}
   \\
@@ -1366,32 +1370,32 @@ W_r = \begin{bmatrix}
     \\
   \end{bmatrix}.
 \end{equation}
-Note that although the generated random orthonormal matrices are perfectly uniformly distributed in the orthogonal group $O(d)$ and we would need a different algorithm to achieve a true uniform distribution \cite{Wang2008}, they are still perfectly usable for the purpose of input transformations.
+%
+Note that the generated random orthonormal matrices are not perfectly uniformly distributed in the orthogonal group $O(d)$, and we would need a different algorithm to achieve a true uniform distribution \cite{Wang2008}.
+The simple Gram-Schmidt based approach is however perfectly usable for the purpose of generating input transformations.
 
 \section{Alternative transformations}
 
-Until now, the focus lied primarily on deterministic linear transformations, because they are relatively easy to use and construct with the help of active subspaces.
-However, in theory we can construct and use arbitrary transformation functions.
-This section will briefly cover a few alternative types of transformations that are not the primary focus of this thesis, but do show some potential that could be investigated further.
+Until now, the focus lied primarily on active directions to construct transformations from, because they are relatively easy to use and construct with the help of active subspaces.
+However, in theory we can construct and use arbitrary transformation functions to improve the model approximation.
+This section will briefly cover a few alternative types of transformations that will not be covered in this thesis, but do show some potential that could be investigated further.
 
 \subsection{Periodic transformations}
 
-Another possible use case for transformations are periodic functions.
-If the model function $f$ is for example approximately periodic along one dimension $i$ with the period $p_i$, i.e. it holds that $f(x_1,\dots,x_i,\dots,x_d) \approx f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation function
+A possible use case for alternative transformations are periodic functions.
+If the model function is for example periodic along one dimension $i$ with the period $p_i$, \ie it holds that $f(x_1,\dots,x_i,\dots,x_d) \approx f(x_1,\dots,x_i + p_i, \dots,x_d)$, we can easiliy define a transformation function $t_{\text{periodic}} \colon \Omega \mapsto \Omega$,
 \begin{equation}
-t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d) \coloneqq (x_1,\dots, \frac{x_i\text{ mod } p_i}{p_i}, \dots,x_d)^T
+t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d) = (x_1,\dots, \frac{x_i\text{ mod } p_i}{p_i}, \dots,x_d)^T
 \label{eq:per}
 \end{equation}
-and create a normal surrogate $\hat{f}$ on $\Omega$ with $f(x) \approx \hat{f}(t(x))$.
-This way, the function can be interpolated better by sparse grids because there are effectively $1 / p_i$ times more grid points spent along the $i$-th dimension.
-However, no dimension reduction is taking place.
-Of course this can concept can be expanded upon with handling multiple periodic dimensions at once, antiperiodic functions, offsets and combination with linear transformations.
+and create a normal surrogate $\hat{f}$ on $\Omega$ with $f(x) \approx \hat{f}(t_{\text{periodic}}(x))$.
+This way, the function can be interpolated better by sparse grids, because there are effectively $1 / p_i$ times more grid points spent along the $i$-th dimension.
+In theory, this concept can be also expanded upon with handling multiple periodic dimensions at once, antiperiodic functions, offsets and combination with other transformations.
 
-A simple example would be the periodic function $f_p(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
-This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$ as shown in \cref{eq:per} by using the transformation
+A simple example would be the periodic function $f_{\text{periodic}}(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
+This can be exploited by constructing a periodic transformation with $p=p_1=p_2=\frac{1}{8}$, as shown in \cref{eq:per}, to obtain
 \begin{equation}
-t_p(x_1,x_2) \coloneqq \left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \left(x_2 \text{ mod } p\right)\right]^T.
-\nonumber
+t(x_1,x_2) = \left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{1}{p} \left(x_2 \text{ mod } p\right)\right]^T.
 \end{equation}
 
 \begin{mdframed}[style=style]
@@ -1400,53 +1404,51 @@ t_p(x_1,x_2) \coloneqq \left[\frac{1}{p} \left(x_1 \text{ mod } p\right), \frac{
         \centering
 \begin{minipage}{.4\textwidth}
         \centering
-  \captionof{figure}{Approximation errors of various periodic transformations $t_p$ and sparse grid surrogates of level $\ell \in \{1, \dots, 11\}$, modified linear hat basis, and periods $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ for the example function $f$.\\
-  The sparse grid surrogates were constructed using the normal interpolation approach.}
+  \captionof{figure}{
+  Approximation errors of various periodic transformations with periods $p \in \{\frac{1}{8}, \frac{1}{4}, \frac{1}{2}, 1\}$ in combination with sparse grid surrogates of level $\ell \in \{1, \dots, 11\}$ and modified linear hat basis functions for the example function $f_{\text{periodic}}$.}
+\label{fig:periodic}
     \end{minipage}%
     \begin{minipage}{0.6\textwidth}
         \centering
 \includegraphics[width=0.85\textwidth]{graphics/periodic}
     \end{minipage}
-\label{fig:periodic}
 \end{figure}
 \end{mdframed}
-
-To illustrate the improvement in multiple smaller steps, we investigate periodic transformations with several configurations in \cref{fig:periodic}.
-As we can see, a smaller value for $p$ results in a notable improvement, and going from $p=1$ (no transformation) to $p=0.125$ (best periodic transformation) improves the approximation error by around $10^2$, which is a huge improvement after all.
+%
+To illustrate the improvement of the approximation quality in multiple smaller steps, we investigate periodic a transformation with several periods in \cref{fig:periodic}.
+As we can see, a smaller value for $p$ results in a notable improvement, and going from $p=1$ (no transformation) to $p=0.125$ (best periodic transformation) improves the approximation error by around $10^2$.
 
 \subsection{Manifolds}
 
-Another approach to create more flexible transformations that can, at least in theory, also exploit nonlinear structures are manifold-based methods:
+Manifold-based methods for dimensionality reduction aim to identify nonlinear subspaces in the inputs that are suitable for a dimensionaliy reduction, similar to active subspaces.
+They have the potential to create more flexible transformations compared to linear methods but are also harder to implement and make use of.
 
 \paragraph{Active Manifolds}
-Inspired from active subspaces, which are purely linear in their nature, one can extend the concept to identifying a one-dimensional curve in the domain $\Omega$ along the flow of most active change, which is called an active manifold \cite{Bridges2019}.
-Compared to Active Subspaces, calculating the Active Manifold is more complex and resource intensive.
-Furthermore, defining a transformation function that maps from $\Omega$ onto the local one-dimensional space of the curve is way more complex and can be constructed in many ways.
-Also they are currently limited to one dimension, for which the surrogate construction method becomes pretty irrelevant.
+Inspired from active subspaces, which are purely linear in their nature, we can extend the concept to identifying a one-dimensional curve in the domain $\Omega$ along the flow of most active change, which is called an active manifold \cite{Bridges2019}.
+Compared to active subspaces, calculating the active manifold is more complex and resource intensive.
+Furthermore, defining a transformation function that maps from $\Omega$ onto the local one-dimensional space of the curve is way more complex and can be constructed in possibly many different ways.
+They are currently limited to one dimension, for which the used surrogate construction method becomes pretty irrelevant.
 
 \paragraph{Principal Manifolds}
 A similar concept to active manifolds are principal manifolds \cite{Huo}.
 They are an extension to the principal component analysis \cite{Abdi2010}, which can only compute linear principal components.
 These are able to construct nonlinear multi-dimensional manifolds and are therefore more powerful than active manifolds.
-The inputs that are then projected onto the principal manifold such that a surrogate can be created for the projected inputs, similar to the presented linear transformation approach in this thesis.
-Such an approach has already been investigated in \cite{Feuersaenger2009}.
-
-\paragraph{}
-The foreseeable main limitation of the application of nonlinear manifolds in conjunction with sparse grids is that the axis-aligned nature can no longer be adjusted to the model function.
-The transformation of inputs based on an orthonormal matrix preserves angles and allows to orientate the inputs more optimal 
+The inputs that are also projected onto the principal manifold such that a surrogate can be created for the projected inputs.
+Such an approach has already been investigated in conjunction with sparse grids in \cite{Feuersaenger2009}.
 
 \chapter{Transformed surrogates}
 \label{chap:c4}
 
-Once a transformation function $t(x)$ has been created, the next step is creating a surrogate in the reduced input space $\Omega_r$.
-As we will see in this chapter, this is not trivial to do with sparse grids and requires special care as there are several challenges that come with the usage of input transformations.
+Once a transformation function has been created, the next step is creating a surrogate in the reduced input space $\Omega_r$.
+As we will see in this chapter, this is not a trivial thing to do with sparse grids and requires special care as there are several hurdles that come with the usage of input transformations.
 Some of these are specific to sparse grids, while others are independent of the used surrogate type.
 
 \section{Transformed input space}
 \label{sec:tis}
 
-All transformed inputs form the transformed input space, which is a part of the reduced surrogate space $\Omega_r$.
-The transformation function was constructed in the last chapter in such a way that every transformed inputs lies in $\Omega_r$, while also applying scaling to use as much space of $\Omega_r$ as possible.
+All transformed inputs form the transformed input space, which is a part of the reduced input space $\Omega_r$.
+In the last chapter, the transformation was constructed in such a way that every transformed input lies in $\Omega_r$, while also applying appropriate scaling to still use as much space of $\Omega_r$ as possible.
+
 \begin{definition}[Transformed input space]
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function.
 We define the transformed input space as
@@ -1454,30 +1456,32 @@ We define the transformed input space as
 T \coloneqq \{t(x) \mid x \in\Omega\}, ~~ T \subseteq \Omega_r.
 \end{equation}
 \end{definition}
+%
 The main difference between $T$ and $\Omega_r$ is that $\Omega_r$ is a unit hypercube, while $T$ might not be one.
-As we will show later, in many cases $T$ is not a unit hypercube and it holds that $T \subset \Omega_r$.
+As we will see later on, $T$ is not a unit hypercube in in many cases.
 We should strive to have $T$ cover $\Omega_r$ as much as possible to not make a portion of $\Omega_r$ go unused when constructing the surrogate.
+
 \begin{definition}[Unusued reduced surrogate inputs]
 Let $t \colon \Omega \mapsto \Omega_r$ be transformation function, and let $U_t=T \setminus \Omega_r$ be the unused reduced surrogate space.
 Then
 \begin{equation}
 \tilde{u}_t \coloneqq \frac{|U_t|}{|\Omega_r|}
 \end{equation}
-is the share of unused inputs of the reduced surrogate space.
+is the share of unused space in the reduced input space.
 \end{definition}
-
-The greater $U_t$ and therefore the unused input share $\tilde{u}_t$, the more grid points can potentially be generated outside of $T$, if sparse grids are created in a regular way instead of employing adaptivity.
+%
+The greater $U_t$ and therefore the unused input share $\tilde{u}_t$, the more grid points of a sparse grid can potentially be generated outside of $T$.
 Note that even if a grid point lies outside of $T$, it can still contribute to some degree to the approximation error of the surrogate if the support of the basis function $\phi$ intersects with $T$.
 Thus, grid points are only completely unused if their basis function support does not intersect with $T$.
-Other surrogate types do not have the same issue, as radial basis functions for example can freely choose their support points and therefore automatically adapt to $T$.
+Other surrogate types do not have the same issue, as radial basis functions for example can freely choose their support points and therefore automatically adapt to the shape of $T$ in relation to $\Omega_r$.
 
 \section{Method selection}
 \label{sec:ms}
 
-Usually, the standard sparse grid technique makes use of the sparse grid interpolation method, which is able to generate an accurate interpolant quickly as described in \cref{sec:gsc}.
-However, as we will show in this section, sparse grid interpolation is not suitable for many scenarios with transformed sparse grids and we will therefore differentiate between two cases.
-If it holds that $r=d$, i.e. we do not perform a dimension reduction, the transformation can be seen as orientation changing only.
-In that case, if a linear transformation is created according to the rules of the previous chapter s.t. all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective and it maps from $\Omega$ into $T \subseteq \Omega$.
+Usually, the standard sparse grid technique makes use of the sparse grid interpolation method (see \cref{sec:gsc}), which is able to generate an accurate interpolant quickly.
+However, as we will show in this section, sparse grid interpolation is not suitable for many scenarios involving transformations and we will therefore differentiate between two cases.
+If it holds that $r=d$, \ie we do not perform a dimensionality reduction, the transformation can be seen as orientation changing only.
+In that case, if an active direction transformation is created according to the rules of the previous chapter such that all inputs are transformed into a unit hypercube with equal dimension, the transformation function is injective and it maps from $\Omega$ into $T \subseteq \Omega$.
 \Cref{fig:aligned_grid} illustrates this case.
 
 \begin{mdframed}[style=style]
@@ -1485,7 +1489,7 @@ In that case, if a linear transformation is created according to the rules of th
         \centering
 \begin{minipage}{.49\textwidth}
         \centering
-  \captionof{figure}{Illustration of a possible case with $r=d=2$. The \beige square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$. The \grey square in top right corner represents the support of the grid point in its center.}
+  \captionof{figure}{Examplary case with $r=d=2$. The \beige square represents $\Omega=\Omega_r$, the black dots are the grid points of a sparse grid surrogate, and the rotated \lightblue square is $T$. The \grey square in top right corner represents the support of the basis function for the grid point in its center.}
 \label{fig:aligned_grid}
     \end{minipage}%
     \begin{minipage}{0.49\textwidth}
@@ -1494,12 +1498,16 @@ In that case, if a linear transformation is created according to the rules of th
     \end{minipage}
 \end{figure}
 \end{mdframed}
-
-It is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we define how to treat function evaluations for grid points outside of $\Omega$.
-For that we can either define a rule on how to treat these function evaluations, or ensure that grid points outside of $T$ never are created.
+%
+It is possible to use normal sparse grid interpolation to create a surrogate for the transformation, if we define how to treat grid points outside of $T$.
+For that we can either ensure that grid points outside of $T$ never are created or define a rule on how to treat these function evaluations.
 Restricting grid point creation in $U_t$ is difficult as the grid point hierarchy, which dictates that every grid point has a parent, should be kept intact to work effectively with a sparse grid.
 Thus, restricting grid point creation in $U_t$ can prevent large areas in $\Omega$ not being covered by grid points as a basic parent grid point might lie outside of $T$.
-Note that even if there are many grid points that were generated outside of $T$, as seen in figure \cref{fig:aligned_grid}, no grid point is actually completely unused, as the support of every grid point basis function intersects at least barely with $T$ and contributes to the approximation error.
+Note that even if there are many grid points that were generated outside of $T$, as seen in figure \cref{fig:aligned_grid}, very few grid point are actually completely unused, as the support of many grid point basis functions intersects at least barely with $T$ and contributes to the approximation.
+
+To evaluate the model function at a grid point for a transformed sparse grid, we need to inverse the transformation.
+As in the case of $r=d$ the transformation is injective, this can be done easily.
+When inversing a grid point that lies outside of $T$, it
 
 The alternative approach would first require to create a modified model function $f' \colon \mathds{R}^d \mapsto \mathds{R}$ that can be evaluated outside of $\Omega$.
 We can either set all values outside $\Omega$ to 0 with
