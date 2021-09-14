@@ -1078,7 +1078,7 @@ This is done to achieve the best possible encasement of $Z_p$.
 
 \subsection{Reduced unit hypercube}
 
-The surrogate space $S$, which is already a hypercube, can then be easiliy transformed into the unit hypercube $\Omega_R$.
+The surrogate space $S$, which is already a hypercube, can then in the last step be easiliy transformed into the unit hypercube $\Omega_R$.
 First, we observe that the generators $g_i$ of $S$ are created using the orthogonal vectors $q_i$ and the scaling factors $s_i$ to obtain
 \begin{equation}
 G \coloneqq \begin{bmatrix}
@@ -1175,123 +1175,129 @@ The \darkblue cube outline represents the edges of $\Omega$, the arrows on the s
 \section{Active Subspaces}
 \label{sec:as}
 
-The method of active subspaces \cite{CG15} aims to identify the most influential directions in the parameter space to construct a lower-dimensional subspace of $\Omega$ that covers most of a models output variance to conduct parameter studies with a reduced amount of dimensions.
-In constrast to conducting parameter studies, we will use the so-called active directions of a computed active subspace to construct the transformation matrix $W_r$.
-Let
+One way to construct the matrix $W_r$, which is the foundation of the linear transformation function $t_{W_r}$, is through the method of active subspaces \cite{Constantine2015a}.
+This dimensionality reduction technique conducts parameter studies to identify the most influential directions in the input space to construct a lower-dimensional \textit{active} subspace of $\Omega$ that covers most of a models output variance and drop the leftover part, also \ie the \textit{inactive} subspace.
+To obtain the orthonormal active directions, the technique performs a singular value decomposition on the average of the outer product of the gradients,
 \begin{equation}
-C \coloneqq \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ dx
+C \coloneqq \int_{\Omega} (\nabla f) (\nabla f)^T \rho ~ \mathrm{d}x,
 \label{eq:as_c}
 \end{equation}
-
-be the average outer product of the gradient, a $(d \times d)$ matrix.
-Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $v_i$ and their corresponding real eigenvalues $\lambda_i$ with
+a $(d \times d)$ matrix.
+Since $C$ is a positive semi-definite matrix, it is possible to decompose it into its eigenvectors $w_i$ and their corresponding real eigenvalues $\lambda_i$ with
 \begin{equation}
-C = V \Lambda V^T, ~~ \Lambda \coloneqq diag(\lambda_1, \dots, \lambda_d), ~~ V \coloneqq
+C = W \Lambda W^T, ~~ \Lambda \coloneqq diag(\lambda_1, \dots, \lambda_d), ~~ W =
   \begin{bmatrix}
   \\
-    v_1 ~ v_2 ~ \dots ~ v_{d-1} ~ v_d\\
+    w_1 ~ w_2 ~ \dots ~ w_{d-1} ~ w_d\\
     \\
   \end{bmatrix}.
-\nonumber
 \end{equation}
-
-We furthermore assume that the eigenvectors in this decomposition are ordered, i.e. $\lambda_1 \geq \dots \geq \lambda_d$.
-A larger eigenvalue indicates a higher rate of change along the direction, more precisely it is the average squared directional derivative of f with respect to its eigenvector $v_i$ \cite{CG14} with
+%
+We furthermore assume that the eigenvectors in this decomposition are ordered, \ie $\lambda_1 \geq \dots \geq \lambda_d$ should hold.
+A larger eigenvalue indicates a higher rate of change along the direction.
+More precisely, it is the average squared directional derivative of the function with respect to the eigenvector $w_i$ \cite{CG14} with
 \begin{equation}
-\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]
+\lambda_i=\mathds{E}\left[\left(\left(\nabla f\right)^T v_i\right)^2\right].
 \label{eigenvalues}
 \end{equation}
-
-Therefore, the column vectors of the matrix $V$ are ordered from most the active direction $v_1$ to least the active direction $v_d$.
-By keeping only a specific amount of the most active directions $r \leq d$ we obtain the transformation matrix
+%
+Therefore, the column vectors of the matrix $W$ are ordered from most the active direction $w_1$ to least the active direction $w_d$.
+By keeping only a specific amount of the most active directions $r \leq d$ we obtain the active direction matrix
 \begin{equation}
 W_r=\begin{bmatrix}
   \\
     v_1 ~ v_2 ~ \dots ~ v_{i-1} ~ v_r\\
     \\
-  \end{bmatrix}
+  \end{bmatrix}.
 \label{basis}
 \end{equation}
+%
+The active subspace method itself usually determines $r$ by looking at the largest gaps between the eigenvalues to determine suitable cutoff points.
+However, we deviate from this approach and we will cover the process of determining $r$ later on, as the eigenvalue gap approach is not the most optimal choice in the context of this thesis.
 
-In the context of this thesis, the given input sample $\{x_1, \dots, x_n\}$ is used to derive the matrix $C$ from \cref{eq:as_c} using a classical Monte-Carlo approach from \cite{}.
-The matrix $C$ can then be approximated with
+To actually compute the active directions, an input sample $S \coloneqq \{x_i\}_{i=1}^n$ randomly drawn from $\rho$ is used to derive the matrix $C$ from \cref{eq:as_c} using a classical Monte-Carlo approach from \cite{Constantine2014}.
+The matrix $C$ can be approximated by computing
 \begin{equation}
-C \approx \frac{1}{n} \sum_{i=1}^n  (\nabla f(x_i)) (\nabla f(x_i))^T
+C \approx \frac{1}{n} \sum_{i=1}^n  \left(\nabla f(x_i)\right) \left(\nabla f(x_i)\right)^T.
 \label{eq:as_c_approx}
 \end{equation}
 
 \subsection{Estimating gradients for active subspaces}
 \label{sec:as_est}
 
-One superficial downside of the active subspace method is that gradients are required to approximate the matrix $C$ in \cref{eq:as_c_approx}.
-In cases where the gradient function is not known and can not be easily computed, this would seem like a limiting factor is the feasability of active subspaces.
-However, as this section will show, the gradients can be approximated in various ways from the available input data in ways that allows for a acceptable active subspace approximation.
-The approximated gradients are then used as inputs for equation c\cref{eq:as_c_approx} to obtain the approximated active subspace matrix.
-There are various different methods of achieving that, where each method has its advantages and disadvantages.
+One potential downside of the active subspace method is that gradients for all input samples are required to approximate the matrix $C$ in \cref{eq:as_c_approx}.
+In cases where the gradient function is not known and can not be easily computed, this would seem like a roadblock limiting the general feasability of the active subspace method.
+However, as this section will show, the gradients can be approximated in various ways from the available input data such that they can be used to obtain an acceptable active subspace approximation.
+There are various different methods of achieving that, where each one has its advantages and disadvantages.
 
 \subsection{Finite differences}
 
-The most common approach to estimate the gradients are finite differences.
-In this thesis, an adaptive mix of forward and backward differences with a fixed distance $h$ are used, where the range of possible spacing is constrained by $0 < h \leq 0.5$:
-
+The most common approach to estimate gradients of a function are finite differences.
+In this thesis, an adaptive mix of forward and backward differences with a fixed distance $h$ are used, where the range of possible spacing is constrained by $0 < h \leq 0.5$.
+We can then simply approximate $\nabla f(x)$ with
 \begin{equation}
 \frac{\partial f(x)}{\partial x_i} \approx
 \begin{cases}
     \dfrac{f(x_1, \dots, x_i + h, \dots, x_d) - f(x)}{h}, & x_i + h \leq 1 \\[1.5em]
     \dfrac{f(x_1, \dots, x_i - h, \dots, x_d) - f(x)}{h}, & \text{else}
-\end{cases}
+\end{cases}.
 \end{equation}
-
-The downside in the context of the sample-based approach is the requirement to additionally evaluate the model function at $d$ other inputs to determine the gradient at one sample point.
-For high $d$ and a large amount of samples $n$, $dn$ function evaluations for finite differences may become too costly.
+%
+The downside in the context of a sample-based approach is the requirement to additionally evaluate the model function $d$ times to approximate the gradient at one sample point $x_i$.
+For high values of $d$ and a large amount of samples $n$, additional $dn$ function evaluations for finite differences may become too costly.
 
 \subsection{Directional derivatives}
 
 In cases where finite differences are not suitable, the gradients can be determined using a different approach that only works on a given input sample and does not require further function evaluations.
-The approach is to roughly approximate the gradient by looking at neighboring points in the same sample and using directional derivatives to create a system of linear equations for the gradient at a certain input.
-Given two inputs $x, y \in \Omega, x \neq y$, we define the distance between the two inputs as $r=y-x$.
-By extrapolating the gradient along the direction in a linear fashion, we can define an approximation rule with
-
+The approach is to roughly approximate the gradient by looking at neighbouring points in the sample and using directional derivatives to create a system of linear equations for the gradient at a certain sample.
+Given two inputs $x, y \in \Omega, x \neq y$, we define the distance vector between the two inputs as $t=y-x$.
+We define an approximation rule
 \begin{equation}
-r \nabla_x f \approx f(y) - f(x)
+t ~ \nabla f(x) \approx f(y) - f(x),
 \end{equation}
-
-Using $m \in \mathds{N}$ neighbours of a sample point $x \in \Omega$ with $y_i \in \Omega \setminus \{x\}, ~ i \in \{1, \dots, m\}$, we can create a system of linear equations with
-
+which just extrapolates the gradient along the direction $t$ in a linear fashion.
+Using $m \in \mathds{N}$ neighbours $y_i \in S \setminus \{x\}, ~ i \in \{1, \dots, m\}$ of a sample point $x \in S$, we can create a system of linear equations with the same approach to obtain
 \begin{equation}
 \begin{bmatrix}
     y_1 - x\\
     \vdots \\
     y_m - x
-  \end{bmatrix}  \nabla_x f =\begin{bmatrix}
+  \end{bmatrix}  \nabla f(x) =\begin{bmatrix}
     f(y_1) - f(x) \\ \vdots \\  f(y_m) - f(x)
     \\
-  \end{bmatrix}
+  \end{bmatrix}.
   \label{eq:dd_sle}
 \end{equation}
+Solving this system of linear equations for a residual minimizing value for $\nabla f(x)$ only provides a very rough approximation of the actual gradient.
+Furthermore, the linear nature of the approximation, especially when estimating gradients of a non-linear function, can lead to biased gradients.
+The choice of the neighbours $y_i$ also influences the result as well as the amount of neighbours $m$, and the next sections will introduce two different ways of choosing the neighbours $y_i$.
 
-One limitation of this calculation is the linear nature of the computed gradients, i.e. estimating gradients of a non-linear function can lead to biased gradients.
-Furthermore, the choice of the $y_i$ heavily influences the result as well as the size of $m$.
-The next sections introduce different ways of choosing the neighbours $y_i$ and also evaluate the results.
-
+In the context of active subspaces, the approximation error of the gradients is however not the relevant metric to evaluate the active subspace approximation quality.
+Instead, the primary focus should be the resulting surrogate approximation error, as it is the only metric that matters in the end.
+Even though the active subspaces computation is based entirely on the average outer product of the gradients, there is not necessarily a strong link between $\varepsilon_{\text{grad}}$ and the quality of the resulting active subspace.
+Therefore, the evaluation of the active subspace approximations will be done later on when the surrogate quality is investigated.
 
 \paragraph{Random neighbour approximation}
-The random neighbour approximation method takes as an input a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$.
-The set $S_{\text{rn}}=\{y_1, \dots, y_{m}\}$ is called a random neighbour set of $x$.
-This random neighbour set is then used as an input for equation \cref{eq:dd_sle} to approximate the gradient $\nabla_x f$.
+The random neighbour approximation method takes a subsample $S_{\text{rn}} \subseteq S \setminus \{x\}$ with $|S_{\text{rn}}|=m < n$ as input.
+The set $S_{\text{rn}}=\{y_i\}_{i=1}^m$ is then called a random neighbour set of $x$.
+This random neighbour set is used as an input for equation \cref{eq:dd_sle} to approximate the gradient $\nabla f(x)$.
+Choosing $m < n$ can be useful in many cases where a lot more samples are available than are necessary for the system of linear equations.
 
 For $n,m \to \infty$, the approximated gradient does not converge to the actual gradients, since the expected distance to the neighbours in a random neighbour set does not go to zero.
 The problem of determining average neighbour distance is related to finding the mean line segment length $\Delta (d)$ in a d-dimensional unit hypercube \cite{Bailey2007}.
-There is no closed form solution for $\Delta (d)$, but several approximations have been made for various dimensions \cite{Weisstein}, e.g. $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
+There is no closed form solution for $\Delta (d)$, but several approximations have been made for various dimensions \cite{Weisstein}, \eg $\Delta (1)=\frac{1}{3}$, $\Delta (2)=0.52$, $\Delta (3)=0.66$.
 
 \paragraph{Nearest neighbour approximation}
-The nearest neighbour variant picks a subset $S' \subseteq S \setminus \{x\}$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $S_{\text{nn}}=\{y_1,\dots,y_m\} \subseteq S'$ of the point $x$ with $\|(y_1-x)\|_2 < \|(y_2-x)\|_2< \dots<\|(y_{m-1}-x)\|_2 < \|(y_{m}-x)\|_2$.
+The nearest neighbour variant picks a subset $S' \subseteq S \setminus \{x\}$ with a manageable size $n'=|S'|$ similar the the random neighbour method and then calculates the $m \leq n'$ nearest neighbours $S_{\text{nn}}=\{y_i\}_{i=1}^m \subseteq S'$ of $x$ with
+\begin{equation}
+{\|(y_1-x)\|}_2 < {\|(y_2-x)\|}_2 < \dots < {\|(y_{m-1}-x)\|}_2 < {\|(y_{m}-x)\|}_2.
+\end{equation}
+The obvious advantage is that the used neighbours lie way closer to $x$ than with the random neighbour method, as can be seen in \cref{fig:as_approx}.
 
-Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
+Compared to the random neighbour approximation, for $n,n',m \to \infty$, the approximated gradient also does converge to the actual gradient, since the expected distance to the neighbours does go to zero.
 However, this property comes at the cost of having to sort the available $n'$ neighbours by distance to pick the $m$ closest ones.
 The parameters $n'$ and $m$ also have to be chosen carefully, as a unsuitable comination of $n'$ and $m$ would increase the average distance to the neighbours again so that the effect of chosing the nearest neighbours would diminish.
 
-\newpage
 \begin{mdframed}[style=style]
 \vspace{2mm}
 \begin{figure}[H]
@@ -1299,17 +1305,17 @@ The parameters $n'$ and $m$ also have to be chosen carefully, as a unsuitable co
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_rn}
-  \captionof{figure}{Random neighbour method picks with $m=4$}
+  \subcaption{Random neighbour method picks with $m=4$}
   \label{fig:as_rn}
 \end{subfigure}%
 \begin{subfigure}{.45\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/as_nn}
-  \captionof{figure}{Nearest neighbour method picks with $n'=7$ and $m=4$}
+  \subcaption{Nearest neighbour method picks with $n'=7$ and $m=4$}
   \label{fig:as_nn}
 \end{subfigure}
 \delimit
-\captionof{figure}{Differences in sample selection between the two neighbour approximation methods for examples with $|S|=10$.
+\caption{Differences in sample selection between the two neighbour approximation methods for examples with $|S|=10$.
 The \darkblue dots are the available samples $S \setminus \{x\}$. A filled dot signals that it is considered when looking for neighbours.
 The completely \red circle represents the sample point $x$ and other sample points circled in \red indicate that they were chosen as a neighbour of $x$.}
 \label{fig:as_approx}
@@ -1320,18 +1326,18 @@ The completely \red circle represents the sample point $x$ and other sample poin
 \label{sec:asl}
 
 Active subspaces are however not a perfect indicator on which active directions are suitable for a linear transformation construction, since they can be misled.
-A larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector $v_i$ with $\lambda_i=\mathds{E}[((\nabla f)^T v_i)^2]$ \cite{CG14}.
-However, a high rate of average squared change does not necessarily indicate that a direction $v_i$ is worth keeping.
+According to \cref{eigenvalues}, a larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector.
+However, a large average squared directional derivative does not necessarily indicate that a direction $v_i$ is worth keeping.
 For example, we can create the simple function
 \begin{equation}
 f(x_1, x_2)=10x_1 + \frac{1}{10} \sin(100 \pi x_2)
 \end{equation}
 that illustrates the limitations of active subspaces.
-The optimal active direction worth keeping would be the first component only, as the second term can be seen as a highly changing noise term that does not effect the approximation error a lot if removed, as the amplitude of the sinus is small.
+The optimal active direction worth keeping would be the first dimension only, as the second term can be seen as a highly changing noise term that does not affect the approximation error a lot if removed, as the amplitude of the sinus is small.
 However, as the average squared directional derivative along the second dimension $(0,1)^T$ is way higher than along the first $(1,0)^T$, the calculated active subspace is biased heavily along the second dimension.
 
-A positive aspect of the active subspace approximation methods is that they introduce a regularization through discretization \cite{Kress1999}, i.e. as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
-In certain cases, like the example function presented in this section, this will lead to better function approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences.
+A positive aspect of the active subspace neighbour approximation methods is that they introduce a regularization through discretization \cite{Kress1999}, \ie as the distances between neighbours are comparatively high, they discard noise terms with high frequencies such as the one shown in the previous example.
+In certain cases, this can lead to more suitable active subspaces approximations for neighbour approximation methods compared to alternatives such as given gradients and finite differences.
 
 \section{Random linear transformations}
 \label{sec:rt}
