@@ -210,7 +210,7 @@ We start off in \cref{chap:c2} by covering all the basics needed to understand a
 Furthermore, we will also take a look at other components needed for function approximation like sampling techniques and used error metrics.
 
 Next, we extensively introduce input transformations, the central focus of this thesis, in \cref{chap:c3} through a motivational example function that causes various established sparse grid based methods to underperform, but can easily be corrected with an input transformation to fix the occuring  problems.
-Following that, we define various concrete types of input transformations, with main focus lying on linear transformations generated with the active subspace method.
+Following that, we define various concrete types of input transformations, with main focus lying on transformations generated with the active subspace method.
 
 Over the course of \cref{chap:c4}, we look at the process of generating transformed sparse grid surrogates for a given input transformation to obtain the name-giving transformed sparse grids.
 We focus on the differences compared to the normal sparse grid workflow and its resulting surrogates.
@@ -246,7 +246,6 @@ Of course, the surrogate has to preserve an required amount of accuracy, such th
 In other words, we are trying to construct an approximating function $\hat{f}$ that fulfills the following condition:
 \begin{equation}
 \forall x \in \Omega \colon f(x) \approx \hat{f}(x)
-\nonumber
 \end{equation}
 %
 Moreover, by constructing surrogates of a certain type, other additional useful properties can be provided for free, even if they were not available for the original model function.
@@ -270,17 +269,14 @@ Let $v \in \mathds{R}^d$ be a $d$-dimensional vector.
 We make use of the $\ell_1$ norm
 \begin{equation}
 |v|_1 \coloneqq \sum_{i=1}^d |v_i| ~,
-\nonumber
 \end{equation}
 the Euclidean norm
 \begin{equation}
 |v|_2 \coloneqq \sqrt{\sum_{i=1}^d v_i^2} ~,
-\nonumber
 \end{equation}
 and the maximum norm
 \begin{equation}
 |v|_\infty \coloneqq \max_{1 \leq i \leq d} v_i ~.
-\nonumber
 \end{equation}
 \end{definition}
 %
@@ -289,7 +285,6 @@ Let $u, v \in \mathds{R}^d$ be $d$-dimensional vectors.
 We define the vector comparision operator
 \begin{equation}
 u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i
-\nonumber
 \end{equation}
 as a component-wise comparision.
 \end{definition}
@@ -312,7 +307,6 @@ H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathds{N}^d_0 \mid
     i_t=1,3\dots,2^{\ell_k} - 3, 2^{\ell_k} - 1, & \ell_k \geq 1 \\
     i_t=0,1, & \ell_k = 0
 \end{cases} \right\}.
-\nonumber
 \end{equation}
 \end{definition}
 %
@@ -327,12 +321,10 @@ x_{\underline{\ell},\underline{i}} \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_d,i
 be a $d$-dimensional grid point. The set of grid points of a regular full grid with boundary is then given by
 \begin{equation}
 X^{\mathrm{fb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\},
-\nonumber
 \end{equation}
 and the set of grid points of regular full grid without boundary by
 \begin{equation}
 X^{\mathrm{f}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{1} \leq \ell',  \underline{i} \in H_{\underline{\ell}}\}.
-\nonumber
 \end{equation}
 \end{definition}
 %
@@ -357,7 +349,6 @@ V^{\mathrm{fb}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underl
 is defined as a regular full boundary grid of level $\ell$ and the span over all regular non-boundary full grid points,
 \begin{equation}
 V^{\mathrm{f}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{f}}_{\ell}\},
-\nonumber
 \end{equation}
 is defined as a regular full grid of level $\ell$.
 \label{def:full_grid}
@@ -517,7 +508,6 @@ It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by def
 \phi^{\mathrm{right}}_{\ell}(x)&, \ell>1, i=2^\ell - 1\\
 \phi_{\ell,i}(x)&, \text{else}
 \end{cases},
-\nonumber
 \end{equation}
 where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special boundary extrapolation functions that are usually are similar with regards to their construction compared to the normal basis functions $\phi_{\ell,i}$.
 
@@ -532,7 +522,6 @@ A family of univariate basis functions $\phi_{\ell,i}$ fulfills the fundamental 
 &\phi_{\ell,i}(x_{\ell', j}) = 0, ~~  \ell' < \ell, j \in H_{\underline{\ell'}},\\
 &\phi_{\ell,i}(x_{\ell', j}) = \delta_{ij}, ~~  j \in H_{\underline{\ell'}}.
 \end{split}
-\nonumber
 \end{equation}
 As the used multivariate basis functions are constructed using the tensor-product approach, the fundemental property holds for a multivariate basis if it holds for the univariate one.
 \end{definition}
@@ -611,6 +600,7 @@ In a dimensionality reduction focused setting this behaviour is not optimal, sin
 Spatially dimension adaptive sparse grids provide a solution by only selectively adding child grid points along a certain dimension.
 
 \section{Radial basis functions}
+\label{sec:rbf}
 
 Radial basis function interpolation \cite{Broomhead1988} is another technique for function interpolation that utilizes radial basis functions to construct a surrogate.
 A radial basis function $\varphi' \colon \Omega \mapsto \mathds{R}$ is a function whose value solely depends on the distance between its input and its center point $c \in \Omega$, \ie it holds that $\varphi$ is a radial function of the form $\varphi'(x)=\varphi(\|x - c\|)$.
@@ -871,7 +861,7 @@ f(x)=\sum_{c \in \mathcal{P}(D)} f_{c}(x),
 also called the ANOVA decomposition of $f$.
 
 A decomposition of a high dimensional function $f$ into $|\mathcal{P}(D)|=2^d$ lower dimensional function terms allows for an examination of individual terms with the goal identifying terms that contribute the least amount of variance to the total function variance.
-This decomposition can also be employed on sparse grids \cite{F10} by using special semi-orthogonal basis functions, for example a wavelet basis, to represent the $f_c$.
+This decomposition can also be employed on sparse grids \cite{Feuersaenger2010} by using special semi-orthogonal basis functions, for example a wavelet basis, to represent the $f_c$.
 Since the terms $f_i$ are required to be semi-orthogonal, we can define a variance function,
 \begin{equation}
 \sigma^2(f) \coloneqq \int_{\Omega} f(x)^2 \rho(x) ~ \text{d} x=\sum_{c \in \mathcal{P}(D)} \sigma^2(f_c),
@@ -934,14 +924,14 @@ In contrast to this behaviour, other basis functions, \eg radial basis functions
 In turn this means that an effective dimension reduction with conventional sparse grid based methods is highly dependent on the alignment of the model function.
 Without adding another layer of flexibility, sparse grids can not use their full potential in many cases, as we have seen the with model function $f_2$.
 
-\section{Linear hypercube transformations}
+\section{Active direction transformations}
 
 The concept of intrinsic dimensionality allows us, at least in theory, to use arbitrary transformation functions to map into the lower-dimensional input space $\Omega_r$.
 However, there are many possible general types of transformation functions to choose from.
 The previous chapter showed how a simple change of basis of the input parameters, \ie an orthogonal transformation, can have a huge impact on constructed sparse grid surrogates.
 We will therefore start out with constructing an orthogonal transformation matrix $W \in \mathds{R}^{d \times d}$ to transform the inputs into a new coordinate system, prior to passing them to a sparse grid surrogate.
 A good first choice of new basis vectors would be some form of directions along which the model function has high rates of change.
-Various data analysis methods, such as PCA \cite{} or Active Subspaces \cite{} employ some form of a singular value decomposition to obtain these directions of high change.
+Various data analysis methods, such as PCA \cite{Abdi2010} or Active Subspaces \cite{Constantine2015} employ some form of a singular value decomposition to obtain these directions of high change.
 As the Active Subspaces method will be used later on to obtain $W$, we will refer to the new basis vectors of the matrix $W$ as active directions, which is consistent with the Active Subspaces method.
 We then refer to the matrix $W$ as the active direction matrix and assume that its basis vectors are ordered by the level of change from highest to lowest, \ie it should hold that $w_1$ is the most active direction, while $w_d$ is the most inactive direction.
 
@@ -965,12 +955,12 @@ as the reduced active direction matrix.
 As we can see, the reduced active direction matrix is simply obtained from a given active direction matrix $W$ and a reduced dimension $r$ by cutting off the last $d - r$ directions from $W$.
 For now, we assume that $W$ and $r$ are given, but we will cover the process of determining those essential inputs later on in detail.
 In case no vectors $w_i$ of $W$ are cut off, we call it an orientation changing transformation.
-Otherwise, if $r < d$ and some vectors are cut off, we call it a dimensionality reducing linear transformation.
+Otherwise, if $r < d$ and some vectors are cut off, we call it a dimensionality reducing transformation.
 
 \subsection{Unit hypercube projections}
 
 To construct a transformation function $t$ that maps from the $d$-dimensional unit hypercube $\Omega=[0,1]^d$ to the $r$-dimensional unit hypercube $\Omega_r=[0,1]^r$ with $r < d$ for a given transformation matrix $W_r$, several adjustments have to be made in order to obtain a usable transformation function as the naive approach with $W_r^T x$ would map inputs outside of $\Omega_r$ in certain cases.
-When applying a linear transformation $W_r^T x$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
+When applying a transformation $W_r^T x$ on the elements of a hypercube $x \in \Omega$, the result can be described with the help of zonotopes:
 \begin{definition}[Zonotope]
 Let $m$ be the dimension of the zonotope, and let $k \geq  m$ be the amount of zonotope generators.
 The set
@@ -1031,7 +1021,6 @@ on the inputs results in a projected input space that has the zonotope form of \
 The projection zonotope,
 \begin{equation}
 Z_{p} \coloneqq \left\{\sum_{i=1}^r p_i x_i , ~ -1 \leq x_i \leq 1\right\}, ~~ p_i \coloneqq \frac{1}{2} W_r^T e_i,
-\nonumber
 \end{equation}
 is equal to the projected input space, \ie it holds that $Z_{p}=p(\Omega)$.
 
@@ -1153,6 +1142,7 @@ t_{W_r}^{\text{reverse}}(x_r) \coloneqq ~W_r Q ~ \text{diag}\left(2s_1, \dots, 2
 We call this function a reverse function, as it is not a true inverse of $t_{W_r}$.
 In \cref{fig:trans_vis}, we reverse the grid points of a regular two-dimensional sparse grid lying in $\Omega_r$ onto a plane in the original three dimensional space $\Omega$ with the help of \cref{proj} and \cref{proj_rep}.
 
+\newpage
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
 \begin{figure}[H]
@@ -1172,10 +1162,10 @@ The \darkblue cube outline represents the edges of $\Omega$, the arrows on the s
 \end{figure}
 \end{mdframed}
 
-\section{Active Subspaces}
+\section{Active subspaces}
 \label{sec:as}
 
-One way to construct the matrix $W_r$, which is the foundation of the linear transformation function $t_{W_r}$, is through the method of active subspaces \cite{Constantine2015a}.
+One way to construct the matrix $W_r$, which is the foundation of the active direction transformation function $t_{W_r}$, is through the method of active subspaces \cite{Constantine2015}.
 This dimensionality reduction technique conducts parameter studies to identify the most influential directions in the input space to construct a lower-dimensional \textit{active} subspace of $\Omega$ that covers most of a models output variance and drop the leftover part, also \ie the \textit{inactive} subspace.
 To obtain the orthonormal active directions, the technique performs a singular value decomposition on the average of the outer product of the gradients,
 \begin{equation}
@@ -1195,7 +1185,7 @@ C = W \Lambda W^T, ~~ \Lambda \coloneqq diag(\lambda_1, \dots, \lambda_d), ~~ W 
 %
 We furthermore assume that the eigenvectors in this decomposition are ordered, \ie $\lambda_1 \geq \dots \geq \lambda_d$ should hold.
 A larger eigenvalue indicates a higher rate of change along the direction.
-More precisely, it is the average squared directional derivative of the function with respect to the eigenvector $w_i$ \cite{CG14} with
+More precisely, it is the average squared directional derivative of the function with respect to the eigenvector $w_i$ \cite{Constantine2014} with
 \begin{equation}
 \lambda_i=\mathds{E}\left[\left(\left(\nabla f\right)^T v_i\right)^2\right].
 \label{eigenvalues}
@@ -1328,7 +1318,7 @@ The \red point represents the sample $x$, and other points circled in \red are s
 \subsection{Limitations}
 \label{sec:asl}
 
-Active subspaces are however not a perfect indicator on which active directions are suitable for a linear transformation construction, since they can be misled.
+Active subspaces are however not a perfect indicator on which active directions are suitable for a active direction transformation construction, since they can be misled.
 According to \cref{eigenvalues}, a larger eigenvalue indicates a higher rate of change along the direction, more precisely it represents the average squared directional derivative of $f$ with respect to its eigenvector.
 However, a large average squared directional derivative does not necessarily indicate that a direction $v_i$ is worth keeping.
 For example, we can create the simple function
@@ -1686,14 +1676,12 @@ We can already spot that the function \texttt{determineBestProjection} relates t
 Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by removing the constant term $\beta_0$ and the residuals $\varepsilon_i$ from \cref{eq:ppr} to get
 \begin{equation}
 \hat{f}(x)=\sum_{i=1}^m \hat{f_{t_i}}(t_i(x_i)),
-\nonumber
 \end{equation}
 %
 where the $t_i$ are active direction transformations similar to the projection with $\beta_k^T$, and the $\hat{f_{t_i}}$ are the surrogate equivalents of the $f_k$.
 The functions $\hat{f_{t_i}}$ and transformations $t_i$ can then be constructed iteratively by repeatedly executing a stepwise algorithm of first finding a transformation and then constructing a surrogate for the current error function,
 \begin{equation}
 e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x)).
-\nonumber
 \end{equation}
 %
 \Cref{alg:itappr} illustrates this iterative approach, which is similar to \cref{alg:ppr}, but has been adapted to fit our notation.
@@ -1758,7 +1746,6 @@ Thus, configuration parameters have to examined in every iteration again, as the
 This algorithm determines the optimal configuration
 \begin{equation}
 c^\ast \coloneqq \argmin_{c \in C} \varepsilon(\hat{f}_c^l)
-\nonumber
 \end{equation}
 and works fine presuming that the low fidelity surrogates $\hat{f}_c^l$ are representative of the high-fidelity ones, as already discussed in \cref{sec:lofi}.
 It is satisfactory as long as the actual approximation quality of the generated high-fidelity surrogate is close to the optimal configuration over all parameter combinations, \ie it should hold that
@@ -1768,6 +1755,7 @@ It is satisfactory as long as the actual approximation quality of the generated 
 where $c^\ast$ was determined with low-fidelity surrogates.
 
 \section{Generating the best transformation}
+\label{sec:trans_gen}
 
 Until now, we assumed that the reduced dimensionality value $r$ was given and did not cover ways on how to determine the optimal reduced dimensionality $r^\ast$ for each iteration step.
 When covering active subspaces in \cref{sec:as}, we saw that, even though the active subspace method provides a suggested criterion to determine the optimal cutoff dimension $r^\ast$ by looking for the largest gap in the sequence of eigenvalues, this criterion was not always optimal and could be influenced by various factors.
@@ -1890,7 +1878,7 @@ These are caused by inaccuracies inherent to the algorithm:
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.85\linewidth]{graphics/pipeline_current_3.png}
-  \caption{Error function $e_3$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_2$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -1908,7 +1896,7 @@ These are caused by inaccuracies inherent to the algorithm:
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.85\linewidth]{graphics/pipeline_current_4.png}
-  \caption{Error function $e_4$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_3$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -1929,7 +1917,7 @@ Even though, we can try to fit a heavily regularized surrogate to the transforme
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.85\linewidth]{graphics/pipeline_current_5.png}
-  \caption{Error function $e_5$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_4$ and its intersection with the first active subspace direction $v_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -1951,6 +1939,7 @@ The previously introduced transformation generation algorithm uses a local optim
 However, in some cases this approach can lead the algorithm down a wrong path that will result in a worse approximation error in the end than otherwise possible.
 
 If we look at the example function from the previous section again and giving the algorithm the additional choice of not employing a lot of regularization, the algorithm might fall in to the trap of overfitting when only looking ahead one iteration:
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
@@ -1972,7 +1961,7 @@ If we look at the example function from the previous section again and giving th
 \end{mdframed}
 %
 As we can see in \cref{fig:pipeline_bad_local_1}, the surrogate is overfitted.
-While at this stage, the approximation error is almost equal to the more regularized surrogate from \cref{fig:pipeline_local_1}, this will propagate into the next iteration:
+While at this stage, the approximation error is almost equal to the more regularized surrogate from \cref{fig:pipeline_local_1}, this will propagate into the next iteration.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -1985,7 +1974,7 @@ While at this stage, the approximation error is almost equal to the more regular
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_local_2.png}
-  \caption{Transformed input samples $S_t$ in \darkblue and the surrogate $\hat{f}_1$ in \red.}
+  \caption{Transformed input samples $S_t$ in \darkblue and the surrogate $\hat{f}_2$ in \red.}
 \label{fig:pipeline_bad_local_2}
 \end{subfigure}
 \delimit
@@ -1995,18 +1984,18 @@ While at this stage, the approximation error is almost equal to the more regular
 \end{mdframed}
 %
 \Cref{fig:pipeline_bad_local_2} shows that no effective surrogate can be created as the input data is mostly just noise, because the surrogate in the previous iteration was overfitted.
-This propagated the additinal noise generated from overfitting to the next iteration.
 A solution would be to instead look ahead more than iteration in cases where overfitting is possible.
 Instead of effectively performing only one look ahead iteration, we perform $i$ look ahead iterations to better gauge the quality of the produced transformation with regards to the resulting approximation error of the surrogate sum.
-To guarantee fast execution speed, we use low-fidelity surrogates when looking ahead.
+To guarantee fast execution speed, we have to use low-fidelity surrogates when looking ahead.
 
 \chapter{Implementation}
 \label{chap:c6}
 
-This chapter will cover the practical implementation of the iterative algorithm of \cref{chap:c5}.
-We model the general structure of various parts of the implementation as components and use component diagrams to described their general internal structure and possible configuration parameters.
-The notation of these component diagrams is shown in \cref{fig:defs}.
-This surface level description of the whole implementation will make the evaluation results presented later as transparent as possible, as it will list and explain possible algorithm configuration parameters that will impact the end result.
+Finally, we are now able to take a look at the actual implementation\footnote{The source code is publicly available at \href{https://github.com/crschnick/tsgpp}{https://github.com/crschnick/tsgpp}.}, as all required theoretical aspects have been covered.
+In this chapter, we will cover the practical implementation of the iterative algorithm of \cref{chap:c5}.
+We model the general structure of various components of the implementation and use component diagrams to describe their general structure and possible configuration parameters.
+Such a description of the whole implementation will make the experiment results presented later as transparent as possible, as it will list and explain possible algorithm configuration parameters that will impact the end result.
+The used notation for these component diagrams is shown in \cref{fig:defs}.
 
 \begin{mdframed}[style=style,frametitle={Notation}]
 \begin{figure}[H]
@@ -2021,7 +2010,7 @@ This surface level description of the whole implementation will make the evaluat
 \begin{description}
 \item[Elements] {~ \begin{itemize}[\null]
 \item \textbf{Object}: An object can represent any kind of data, for example a model function, a function sample, a transformation function, a surrogate, and more.
-\item \textbf{Function}: A function takes optional inputs in the form of objects, performs some kind of operation, and outputs an object.
+\item \textbf{Function}: A function basically takes some inputs in the form of objects, performs some kind of operation on them, and outputs an object.
 \item \textbf{Function component}: A function component is a also function, where the actual implementation can be exchanged for many different function implementations of the same interface.
 \item \textbf{Control flow + data flow}: Arrows signal control flow and also data flow if an object is shown.
 \item \textbf{Gateway}: A gateway evaluates an attached condition and decides which outgoing control flow to follow.
@@ -2040,10 +2029,10 @@ This surface level description of the whole implementation will make the evaluat
 \section{Transformation pipeline}
 \label{sec:tp}
 
-The complete transformation process is modeled and implemented as an iterative pipeline that is made up of different components to allow for maximum flexibility.
-Every pipeline iteration has the goal of adding another transformed surrogate to the current sum of surrogates to further improve the approximation.
-Many pipeline components can be exchanged for many different implementation types, where instances of these types can also be customized by passing configuration parameters.
+The complete transformation process is modeled and implemented as pipeline that is made up of different components to allow for maximum flexibility.
 The pipeline structure is visualized in figure \cref{fig:tp}.
+Every pipeline iteration has the goal of adding another transformed surrogate to the current sum of surrogates to further improve the model approximation.
+Many pipeline function components can be exchanged for various different implementation types, where instances of these types can also be customized by passing configuration parameters.
 
 \begin{mdframed}[style=style,frametitle={Transformation Pipeline}]
 \begin{figure}[H]
@@ -2055,7 +2044,7 @@ The pipeline structure is visualized in figure \cref{fig:tp}.
 
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can be using a variety of conditions such as a maximum iteration count or a maximum approximation error.
+\item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can make use of a variety of conditions, such as a maximum iteration count or a maximum approximation error.
 \item \texttt{\textbf{sampleCount}}: The amount of function samples $n$ used during pipeline execution. These samples are used for a variety of operations and split into train, validate, and test datasets in each iteration.
 \end{itemize}}
 \end{description}
@@ -2066,10 +2055,10 @@ The pipeline structure is visualized in figure \cref{fig:tp}.
 \label{fig:tp}
 \end{figure}
 \end{mdframed}
-
-The most important component of the transformation pipeline wrt. achieving good approximation results is the transformation generator \cref{sec:tg}, as the quality of a transformation will be passed down the line in each iteration.
-The generated transformation is then fed into a surrogate generator \cref{sec:sg}, which will generate the transformed surrogate.
-Note that in the abstract pipeline, any type of surrogate like sparse grids and RBFs can be generated in theory.
+%
+The most important component of the transformation pipeline with regards to achieving good approximation results is the transformation generator component \cref{sec:tg}, as the quality of a single transformation will affect all later iterations.
+The generated transformation is fed into a surrogate generator component \cref{sec:sg}, which will generate the transformed surrogate.
+Using the appropriate surrogate generator, basically any type of surrogate, such as sparse grids or RBFs, can be generated.
 The newly generated surrogate is then added to the sum of previously generated surrogates to obtain the new transformed surrogate sum.
 At the end of each iteration, we decide whether to exit the pipeline or continue.
 
@@ -2079,32 +2068,32 @@ At the end of each iteration, we decide whether to exit the pipeline or continue
 \label{sec:tg}
 
 The transformation generator component has the responsibility of finding a good transformation function to use for a pipeline iteration.
-We covered the creation of input transformation extensively in chapter \cref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods, with the goal to provide a uniform interface.
+We covered the creation of input transformation extensively in \cref{chap:c4}, and transformation generators are a straightforward implementation of the covered methods.
 
-\subsection {Transformation stream generator}
+\subsection {Stream-based transformation generator}
 \label{sec:tsg}
 
-We saw previsouly that we can generate a whole family of transformations for every calculated active subspace matrix or random orthogonal basis, which is usually accomplished by using different values for the reduced dimension $r$, i.e. cutting less or more dimensions off.
+We saw previsouly that we can generate a whole family of transformations for every generated active direction matrix, which is usually accomplished by using different values for the reduced dimensionality $r$, \ie cutting off less or more dimensions.
 To apply this concept and to couple it with other components introduced later on, such as transformation evaluators, this implementation makes use of so-called transformation stream generators.
+A transformation stream generator will generate as much different transformations as it can, where the range of generated transformations is usually defined by a minimum and maximum value for $r$.
+Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
+The stream-based transformation generator component structure, which makes use of the transformation streams, can be seen in \cref{fig:tsg}.
 
 \begin{mdframed}[style=style,frametitle={Transformation generator (stream-based)}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
 \delimit
-
 \captionof{figure}{Component structure of a stream-based transformation generator.}
+\label{fig:tsg}
 \end{figure}
 \end{mdframed}
 
-A transformation stream generator will generate as much different transformations as it can, where the range of possible transformations is defined by multiple parameters.
-Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
-
-\newpage
-
 \subsection{Active Subpsace stream generator}
 
-Transformation generation with the active subspace method as covered in \cref{sec:as} is implemented as a transformation stream generator component, since there are multiple different cutoff possibilities with $r$.
-The exact range of the cutoff dimensions can be customized using various parameters as seen in figure \cref{fig:astsg}.
+Transformation generation with the active subspace method, as covered in \cref{sec:as}, is implemented as a transformation stream generator component, since there are multiple different cutoff possibilities.
+The exact range of the cutoff dimensions can be customized using various parameters, as seen in figure \cref{fig:astsg}.
+
+\newpage
 
 \begin{mdframed}[style=style,frametitle={Transformation stream generator (active subspaces)}]
 \begin{figure}[H]
@@ -2116,9 +2105,8 @@ The exact range of the cutoff dimensions can be customized using various paramet
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
 \item \texttt{\textbf{maxSampleCount}}: The maximum amount of samples used to create a gradient sample.
-\item \texttt{\textbf{minDimensions}}: The minimum amount of used eigenvectors, i.e. the lower bound for $r$.
-\item \texttt{\textbf{maxDimensions}}: The maximum amount of used eigenvectors, i.e. the upper bound for $r$.
-\item \texttt{\textbf{minEigenValueShare (= 0)}}: Imposes a lower bound on the possible values of $r$ by requiring that it holds that $\sum_{i=1}^r \lambda_i / \sum_{i=1}^d \lambda_i \geq \texttt{minEigenValueShare}$.
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used directions, \ie the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used directions, \ie the upper bound for $r$.
 \end{itemize}}
 \end{description}
 \delimit
@@ -2126,24 +2114,18 @@ The exact range of the cutoff dimensions can be customized using various paramet
 \label{fig:astsg}
 \end{figure}
 \end{mdframed}
-
-Setting a \texttt{minEigenValueShare} value allows us to flexibly adjust the upper bound of $r$ such that we do not consider the last few eigenvectors with way smaller eigenvalues compared to the first few.
-A common values used is $\texttt{minEigenValueShare=0.95}$.
-
+%
 The Monte-Carlo based active subspace method requires gradient samples as inputs.
 These are generated by a gradient sample generator component.
-Possible implementations for gradient computation that we already covered in section \cref{sec:as} are available to choose from, as seen in \cref{fig:gg}.
-
-
-\newpage
+Possible implementations for gradient approximation, which we already covered in section \cref{sec:as_est}, are available to choose from, as seen in \cref{fig:gg}.
 
 \begin{mdframed}[style=style,frametitle={Gradient sample generator}]
 \begin{figure}[H]
 \begin{description}
 \item[\texttt{\textbf{givenGradient()}}:] If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward by just evaluating the gradient function at the sample points.
 \item[\texttt{\textbf{finiteDifferences($h$)}}:] Alternatively, the sample gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
-\item[\texttt{\textbf{randomNeighbour($n'$)}}] Random neighbour approximation.
-\item[\texttt{\textbf{nearestNeighbour($n', m$)}}] Nearest neighbour approximation.
+\item[\texttt{\textbf{randomNeighbour($n'$)}}] Random neighbour approximation using $n'$ random neighbours.
+\item[\texttt{\textbf{nearestNeighbour($n', m$)}}] Nearest neighbour approximation that selects the $m$ nearest neighbours out of $n'$ possible ones.
 \end{description}
 \delimit
 \captionof{figure}{List of available gradient sample generator implementations.}
@@ -2154,20 +2136,19 @@ Possible implementations for gradient computation that we already covered in sec
 \subsection {Random stream generator}
 \label{sec:rtg}
 
-An alternative approach to finding a transformation function is just generating a random orthonormal basis, as covered in \cref{sec:rt}.
-This random transformation generator is easy to implement, as shown in \cref{fig:rtsg}, can generate new transformation functions almost instantly and offers a purely exploratory approach to finding the best transformation.
+An alternative approach to finding an active direction transformation is just generating a random one, as covered in \cref{sec:rt}.
+This random transformation generator is easy to implement, as shown in \cref{fig:rtsg}, can generate new transformation functions almost instantly, and offers a purely exploratory approach to finding the best transformation.
 
 \begin{mdframed}[style=style,frametitle={Transformation stream generator (random)}]
 \begin{figure}[H]
 
 \vspace{5px}
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
-
 \delimit
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{minDimensions}}: The minimum amount of used basis vectors, i.e. the lower bound for $r$.
-\item \texttt{\textbf{maxDimensions}}: The maximum amount of used basis vectors, i.e. the upper bound for $r$.
+\item \texttt{\textbf{minDimensions}}: The minimum amount of used directions, \ie the lower bound for $r$.
+\item \texttt{\textbf{maxDimensions}}: The maximum amount of used directions, \ie the upper bound for $r$.
 \end{itemize}}
 \end{description}
 \delimit
@@ -2180,8 +2161,8 @@ This random transformation generator is easy to implement, as shown in \cref{fig
 
 \subsection {Iterative transformation generator}
 
-In some cases, especially when dealing with a random transformation generation as shown in \cref{sec:rtg}, the probability of finding a good transformation in one try is very low, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component, e.g. a stream-based one.
-It can also be used with the active subspace transformation generator to try to find the best transformation out of several active subspace calculations with different input samples.
+In some cases, especially when dealing with a random transformation generation, the probability of finding a good transformation in one try is very low.
+Therefore, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component, \eg a stream-based one.
 
 \begin{mdframed}[style=style,frametitle={Transformation generator (iterative)}]
 \begin{figure}[H]
@@ -2200,55 +2181,32 @@ It can also be used with the active subspace transformation generator to try to 
 \label{fig:itg}
 \end{figure}
 \end{mdframed}
-
-
-Note that this iterative approach is independent from the pipeline iterations, i.e. an iterative transformation generator executes all of its iterations during one pipeline step to determine the best transformation to be used in the one pipeline step.
-To achieve fast execution of many iterations, we choose to work on lo-fi surrogates during the iterations when interacting with transformation evaluator.
-This means that the approximation errors used to identify the best transformation do not necessarily come close to the actual hi-fi approximation errors.
-\Cref{sec:lofi} touched upon the required considerations when employing multifidelity simulations.
+%
+Note that this iterative approach is independent from the pipeline iterations, \ie an iterative transformation generator executes all of its iterations during one pipeline step to determine the best transformation that should be used in the current pipeline step.
+To achieve fast execution of many iterations, we choose to work on low-fidelity surrogates during the iterations when interacting with transformation evaluator.
+This means that the approximation errors used to identify the best transformation do not necessarily come close to the actual high-fidelity approximation errors.
 
 \newpage
 \section {Evaluators}
 
+To judge the quality of transformations and surrogates, we introduce evaluators.
+Evaluator components simple take a transformation or surrogate as an input and output a real number that represent the quality.
+They are usually implemented through basic error metrics (see \cref{sec:errors}).
+
 \subsection {Surrogate evaluator}
 \label{sec:se}
 
-The role of a transformation evaluator is to take a newly constructed transformation $t(x)$, evaluate its quality and make it comparable to other transformations.
-This is used for iterative and stream-based transformation generators and by the pipeline.
-While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules and error metric.
-
-\begin{mdframed}[style=style,frametitle={Surrogate evaluator}]
-\begin{figure}[H]
-\includegraphics[width=\textwidth]{graphics/SurrogateEval.pdf}
-\vspace{-4.5mm}
-
-\delimit
-
-\begin{description}
-\item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{errorMetric}}: The amount of iterations that should be executed.
-\end{itemize}}
-\end{description}
-
-\delimit
-
-\captionof{figure}{Component structure of a surrogate evaluator and the associated possible configuration parameters.}
-\label{fig:se}
-\end{figure}
-\end{mdframed}
-
-Common error metrics used in this thesis include MSE, RMSE, and NRMSE.
-If we want to steer the transformation generation process into a certain direction, like preferring lower-dimensional transformations, we can introduce a few modifications, such as a penalty term that grows with the amount of reduced dimensions of the transformation.
+A surrogate evaluator is a simple component that computes the surrogate approximation error by using randomly drawn samples and an error metric to compute the Monto-Carlo approximation error.
+Common error metrics that will be used later on are MSE, RMSE, and NRMSE.
 
 \subsection {Transformation evaluator}
 \label{sec:te}
 
-The role of a transformation evaluator is to take a newly constructed transformation and evaluate its quality by assigning it a certain value to make it comparable to other transformations.
-As mentioned in \cref{sec:te}, evaluating the true quality of a transformation is only really possible by creating a surrogate from it.
-We therefore first generate a surrogate with a surrogate generator \cref{sec:sg} and then make use of a surrogate evaluator \cref{sec:se} to return the evaluation result.
-While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules, for example by using a lofi surrogate generator to speed up the evaluation.
+The role of a transformation evaluator is to take a newly constructed transformation, evaluate its quality, and make it comparable to other transformations.
+As discussed in \cref{sec:trans_gen}, evaluating the true quality of a transformation is only really possible by creating a transformed surrogate with it.
+We therefore generate a surrogate first and then make use of a surrogate evaluator to return the evaluation result.
+While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules, for example by using a low-fidelity surrogate generator to speed up the evaluation.
 
-\newpage
 \begin{mdframed}[style=style,frametitle={Transformation evaluator (forward looking)}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
@@ -2258,23 +2216,26 @@ While this is a pretty straightforward process, it can still be customized by ch
 \label{fig:te}
 \end{figure}
 \end{mdframed}
+%
+If we want to steer the transformation generation process into a certain direction, like preferring lower-dimensional transformations, we can introduce a few modifications, such as a penalty term that grows with the reduced dimensionality $r$ of the transformation.
+
+\newpage
 
 \section {Surrogate generators}
 \label{sec:sg}
 
-The last component needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
+The last components needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
 \begin{equation}
-S_t=\{(t(x_1), f(x_1), \dots, (t(x_n), f(x_n))\} \subseteq T \times \mathds{R}
+S_t=\left\{(t(x_i), f(x_i))\right\}_{i=1}^n \subseteq T \times \mathds{R}.
 \end{equation}
-Their implementation is straightforward, as the construction of sparse grid surrogates and also RBF surrogates was covered in detail and the surrogate generators closely match that.
-
+The implementation is straightforward and closely matches the theoretic construction of sparse grid surrogates (see \cref{chap:c4}) and RBF surrogates (see \cref{sec:rbf}).
 
 \subsection {Sparse Grid surrogate generator}
 
-The sparse grid generation implementation is realized with SGpp \cite{Pflueger2010} library.
-In the case of Sparse Grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
-Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimension, as a surrogate generator should be decoupled from the used dimension $r$. 
-This means that instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the approapriate level from there as it varies greatly for different values of $r$.
+The sparse grid generation implementation is realized with the $\mathrm{SG}^{++}$ library \cite{Pflueger2010}.
+In the case of sparse grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
+Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimensionalities, as a the grid point amount should be decoupled from the used dimension $r$. 
+This means that instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the most appropriate level from there, as it varies greatly for different values of $r$.
 Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint}, to automatically link the amount of grid points and used training samples together.
 
 \subsection {RBF surrogate generator}
@@ -2288,18 +2249,19 @@ RBF surrogates can be created with the interpolation approach, as they can inter
 
 To give an example on how an actual transformation pipeline instance could look like, we will construct a simple one here.
 As many components are designed in a way to be forward looking, we can think of the transformation pipeline as a collection of different subpipelines.
-The high fidelity subpipeline is responsible for finding the the best and most expensive possible hi-fi surrogate for each iteration.
-It does so by usually evaluating the quality of multiple transformations from one family of possible transformations, such as the computed active subspaces $W$, using a look-ahead approach, i.e. executing a low fidedily subpipeline that evaluates the transformation quality by effectively performing a whole iteration with lower fidelity surrogates.
-This lo-fi subpipeline has to be quick to execute, as it is runs multiple times for all possible values of $r$.
+The high-fidelity subpipeline is responsible for finding the the best and most expensive possible surrogate that will be retuned afer each iteration.
+It does so by usually evaluating the quality of multiple transformations from one family of possible transformations using a look-ahead approach, \ie executing a low-fidelity subpipeline that evaluates the transformation quality by effectively performing a whole iteration with low-fidelity surrogates.
+This low-fidelity subpipeline has to be quick to execute, as it gets executed for all possible values of $r$.
 The structure of an example pipeline can be seen in \cref{fig:tpex}.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/PipelineExample.pdf}
 \delimit
 
 \captionof{figure}{Structure and control flow of an examplary transformation pipeline.\\
-The \red box identifies the hi-fi subpipeline components, and the \green box identifies the lo-fi subpipeline components.}
+The \red box identifies the high-fidelity subpipeline components and the \green box identifies the low-fidelity subpipeline components.}
 \label{fig:tpex}
 \end{figure}
 \end{mdframed}
@@ -2307,22 +2269,17 @@ The \red box identifies the hi-fi subpipeline components, and the \green box ide
 
 \section{Sample budgeting}
 
-A central aspect of the transformation is pipeline is the handling of input samples
-\begin{equation}
-S_t=\left\{(t(x_i), f(x_i))\right\}_{i=1}^n,
-\nonumber
-\end{equation}
-as they are used in almost every pipeline component.
-With the heavy use of the same samples across various stages, special care has to be taken to prevent overfitting.
-For example, the transformation generator, surrogate generator, and surrogate evaluator should all work with different samples such that no overtting can possibly take place.
+A central aspect of the transformation is pipeline is the handling of input samples, as they are used in almost every pipeline component.
+With the heavy use of the same samples across various stages, special care has to be taken to prevent all kinds of overfitting that can occur.
+For example, the generator components and evaluator components should all work with different samples such that no overtting can possibly take place.
 
-Also, components that only work together, such as the surrogate generator and surrogate evaluator, are designed to coordinate their sample use with each other.
-For example, a cross validated surrogate evaluator partitions the input samples multiple times and each time passes the train partition to the surrogate generator to generate a surrogate and then evaluates the quality using the associated validate partition.
+Furthermore, components that only work together, such as the surrogate generator and surrogate evaluator, are internally designed to coordinate their sample use with each other.
+For example, a cross validated surrogate evaluator partitions the input samples multiple times and passes the train partition to the surrogate generator and then evaluates the quality using the associated validate partition.
 Therefore, the actual implementation control flow is not as simple as shown in \cref{fig:tpex}.
-The sample subset, that is passed down by each component to the next ones is also shuffled, such that partioning them into train and validation samples is not deterministic when performing multiple pipeline iterations with the sample input samples.
+The sample subset, that is passed down by each component to the next ones is also randomly shuffled, such that partioning them into train and validation samples is not deterministic when performing multiple pipeline iterations with the sample input samples.
 
-The pipeline works for any amount of input samples, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work efficiently, which makes it very flexible.
-This is an advantage compared to any interpolation based approaches.
+The pipeline works for any amount of input samples, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work, if an appropriate transformation generator is chosen.
+This is an advantage compared to any interpolation based approach and makes the transformed surrogate technique very flexible.
 
 \chapter{Experiments}
 \label{chap:c7}
@@ -2375,7 +2332,7 @@ These configurations will ensure lo-fi surrogates that are fast to evaluate and 
 
 \subsection{Orientation changes}
 
-While the main focus lies on dimension reducing transformations with $r < d$, we still take a short look at the quality of simple dimension preserving linear transformations with $r=d$, which are effectively only changing the orientation of the function inputs.
+While the main focus lies on dimension reducing transformations with $r < d$, we still take a short look at the quality of simple dimensionality preserving active direction transformations with $r=d$, which are effectively only changing the orientation of the function inputs.
 For the orientation change, we use all computed active subspace directions from \cref{tab:ishigami_as}, or in other words apply the transformation $t_{W_3}$ on the inputs.
 As we discussed in \cref{sec:ms}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
 In this section, we are interested in answering the following questions:
@@ -2390,6 +2347,7 @@ Compared the non transformed interpolation approach, the approximation error sho
 On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the resolution of the sparse grid surrogate and may make some grid points obsolete.
 Furthermore, the necessary model function evaluations outside of $\Omega$ might worsen the approximation quality if they deviate sharply from function values inside $\Omega$ and might create steep value differences at the boundaries of $T$.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/ishigami_orientation}
@@ -2408,7 +2366,7 @@ Furthermore, the introduced regression penalty, compared to the interpolation me
 There are no significant quality differences when using modified linear basis functions instead of a linear basis with boundaries, which is why we will continue to use a modified basis for the Ishigami function for the rest of this section, as they require less grid points.
 
 Based on these results we can conclude that, even though there is no improvement with this method, there is also no significant downside, even as $\tilde{u}$ is large and regression is used.
-This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using linear transformations, approximately cancels out with the orientation improvements.
+This can be seen as a positive insight, as it means that having a lot of unused space, which is not to avoid when using active direction transformations, approximately cancels out with the orientation improvements.
 Also, the additional use of regression only results in a slight increase of the approximation error.
 As the tansformation process focuses on dimension reducing linear transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimension reduction process.
 Therefore, dimensionality reducing transformations seem to have a much bigger potential.
@@ -2493,6 +2451,7 @@ As seen on the left in \cref{fig:ishigami_as_grad}, the finite differences appro
 Furthermore, the nearest neighbour method does deliver better results than the random neighbour method wrt. $\varepsilon_{\mathrm{grad}}$.
 The random neighbour methods gradient errors all lie in a range that is even worse compared to the finite differences approximation with a very big step size of $h=5$.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
@@ -2500,7 +2459,7 @@ The random neighbour methods gradient errors all lie in a range that is even wor
    \includegraphics[width=\linewidth]{graphics/ishigami_as_3_inter}
 	\caption{Interpolated surrogates with $r=3$.}
 	\label{fig:ishigami_as_3_inter}
-\end{subfigure}%
+\end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ishigami_as_3}
@@ -2553,6 +2512,7 @@ We are interested in answering the following questions:
 Once the algorithm has determined the random transformation with the lowest error based on the lofi surrogates, we construct an actual hifi surrogate and calculate the error again, s.t. we come closer to the approximation real error.
 The lo-fi transformation errors are visualized using histograms and while the errors do not come close to the actual hi-fi errors, the distribution of lo-fi errors can provide valuable insight into the actual approximation error distribution, as the lo-fi surrogates should still be comparatively representative.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
@@ -2579,6 +2539,7 @@ The lo-fi transformation errors are visualized using histograms and while the er
 As these histogram errors are calculated using lo-fi surrogates, they are not equal to the hi-fi errors, which are listed in the figure captions.
 Comparing these results to the previous transformation results that were achieved with active subspaces, we see that random transformations delivered competitive results.
 
+\newpage
 \begin{mdframed}[style=style]
 \vspace{2mm}
 \begin{figure}[H]
@@ -2744,76 +2705,6 @@ be the boundary...
 \nonumber
 \end{equation}
 \end{definition}
-
-
-\subsection{Modified basis functions}
-
-One method of removing the need of using boundary grid points at least to some degree are modified basis functions.
-These basis functions do not require grid points at the boundary.
-Instead at every grid level, they extrapolate the values at the boundaries from the grid points closest to the boundaries using a special kind of basis function.
-Therefore, it is possible to modify any non-boundary basis $\phi_{l,i}$ by defining the modified basis as follows:
-\begin{equation}
-\phi^{\text{mod}}_{l,i}(x) \coloneqq
-\begin{cases}
-1 &, l=1\\
-\phi^{\text{left}}_{l}(x)&, l>1, i=1\\
-\phi^{\text{right}}_{l}(x)&, l>1, i=2^l - 1\\
-\phi_{l,i}(x)&, \text{else}
-\end{cases}
-\nonumber
-\end{equation}
-where $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are the special boundary extrapolation functions.
-Usually $\phi^{\text{left}}_{l}$ and $\phi^{\text{right}}_{l}$ are similar with regards to their structure of the normal basis functions $\phi_{l,i}$, e.g. a hat basis is usually modified with special hat functions.
-
-
-
-
-
-
-\subsection{Prewavelets}
-
-A wavelet is a function that has wavelike properties usually with some kind of oscillation around zero.
-Many types of wavelet functions are used for signal processing applications because they inhibit some advantageous properties.
-One of these properties is the orthogonality property with $\langle \phi_{i},\phi_{j} \rangle = 0$ for all wavelets with $i \neq j$.
-Furthermore,  the wavelets are usually discretisized, because it is not possible to analyze a signal using an infinite amount of wavelets.
-One wavelet basis that is already used with sparse grids is the so-called mexican hat basis presented in \cite{}, which does not fullfil any orthogonality property.
-In fact, using a completely orthogonal basis is quite constraining, i.e. it is not easy to construct a usable orthogonal basis for the context of sparse grids.
-However, in the context of sparse grid based ANOVA we can also work with a semi-orthogonal wavelet basis, also called a prewavelet basis.
-
-\begin{definition}[Semi-Orthogonality]
-Let $m,n \in \mathds{N}_0, m \neq n$ be two different levels and $\phi_{l,i}$ a basis.
-We then call this basis semi-orthogonal if
-\begin{align}
-\begin{split}
-&\langle \phi_{m,i},\phi_{n,j} \rangle = 0
-\nonumber
-\end{split}
-\end{align}
-\end{definition}
-
-The basis functions that are used in this thesis are prewavelets with boundary support \cite{GO95,HP17}, which are linear combinations of the hierarchical hat functions $\phi_{l,i}^h(x)$ and have the desirable property of being semi-orthogonal.
-
-\begin{definition}[Boundary prewavelet basis]
-The first basis functions are defined as
-\begin{equation}
-\phi^p_{0,0} = 1\\
-\phi^p_{0, 1} = -\phi_{0,0} + \phi_{0,1}\\
-\phi^p_{1, 1} = -\phi_{1,0} + \phi_{1,1} -\phi_{1,2}
-\end{equation}
-For $l \geq 2$ the basis function are defined as 
-\begin{equation}
-\phi^p_{l,i} = \frac{1}{10} \phi_{l,i-2} - \frac{6}{10} \phi_{l,i-1} + \frac{10}{10} \phi_{l,i} - \frac{6}{10} \phi_{l,i+1} + \frac{1}{10} \phi_{l,i+2}
-\label{prewavelet_def}
-\end{equation}
-with the special boundary cases
-\begin{equation}
-\phi^p_{l,1} = -\frac{12}{10} \phi_{l,0} + \frac{11}{10} \phi_{l,1} - \frac{6}{10} \phi_{l,2} + \frac{1}{10} \phi_{l,3}\\ \phi^p_{l,2^l-1}(x)=\phi^p_{l,1}(1-x)
-\end{equation}
-\end{definition}
-The multivariate basis functions $\phi^p_{\underline{l},\underline{i}}$ are obtained by applying the tensor-product approach to the univariate basis functions $\phi^p_{l,i}$ to get $\phi^p_{\underline{l},\underline{i}} \coloneqq \prod_{t=1}^{d} \phi^p_{l_t,i_t}$.
-These also fullfil the semi-orthogonality with $\langle \phi^p_{\underline{l},\underline{i}},\phi^p_{\underline{l'},\underline{i'}} \rangle = 0$ for $\underline{l} \neq \underline{l'}$.
-
-Test
 
 \newpage
 \printbibliography
