@@ -1672,6 +1672,7 @@ Alternatively, we could also introduce an error exit condition to \cref{alg:ppr}
 We can already spot that the function \texttt{determineBestProjection} relates to \cref{chap:c3}, where we extensively covered finding an active direction transformation, and that \texttt{constructBestSurrogate} relates to \cref{chap:c4}, which covered the creation of sparse grid surrogates for a given transformation.
 
 \section{An iterative approach}
+\label{sec:it}
 
 Going from this statistical model to our function approximation problem, we can formulate the same concept using the notation used in this thesis by removing the constant term $\beta_0$ and the residuals $\varepsilon_i$ from \cref{eq:ppr} to get
 \begin{equation}
@@ -1686,24 +1687,30 @@ e_k(x)=f(x) - \sum_{i=1}^k \hat{f_{t_i}}(t_i(x)).
 %
 \Cref{alg:itappr} illustrates this iterative approach, which is similar to \cref{alg:ppr}, but has been adapted to fit our notation.
 
-\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{transformedSurrogateSum}{$(f, i_{\text{max}})$}}]
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{transformedSurrogateSum}{$(f)$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
     \State $e_0 = f$
-    \For{$i = 1, \dots,  i_{\text{max}}$}
+    \For{$i = 1, \dots,  \infty$}
     	\State $t_i \gets$ \texttt{generateBestTransformation}($e_{i - 1}$)
     	\State $\hat{f}_{t_i} \gets$ \texttt{generateBestSurroate}($e_{i - 1}, t_i$)
     	\State $e_i \gets e_{i - 1} - \hat{f}_{t_i}$
+    	\If{\texttt{shouldExit}$(e_i)$}
+    		\State  \texttt{break}
+    	\EndIf
     \EndFor
     \State $\hat{f} \gets \sum_{\hat{f}_{t_i}} \hat{f}_{t_i} \circ t_i$
     \State \Return{$\hat{f}$}
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the iterative transformed surrogate sum algorithm. Parameters are the model function $f$ and the maximum amount of iterations $i_{\text{max}}$.}
+	\captionof{algorithm}{Pseudocode of the iterative transformed surrogate sum algorithm. Parameters are the model function $f$.}
 	\label{alg:itappr}
 \end{mdframed}
+%
+Furthermore, the algorithm also includes a flexible exit condition in the form of the function \texttt{shouldExit()}.
+We usually either use a fixed amount of iterations exit condition or a relative convergence condition, which exits the loop if the new approximation error has not improved by a certain amount compared to the last iteration, \ie it quits if $\varepsilon(e_i) > (1 - \eta) \varepsilon(e_{i - 1})$ for some $\eta \in [0,1]$. 
 
 \section{Generating the best surrogate}
 \label{sec:gs}
@@ -1766,7 +1773,7 @@ In \cref{alg:besttrans} we can see a simple implementation to generate the best 
 
 \newpage
 
-\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformation}{$(e, r_{\text{min}} ,r_{\text{max}})$}}]
+\begin{mdframed}[style=algstyle,frametitle={\textbf{function} \texttt{generateBestTransformation}{$(e, r_{\text{min}} ,r_{\text{max}}, \gamma)$}}]
 \normalsize
 \vspace{5.5mm}
 \begin{algorithmic}[1]
@@ -1775,7 +1782,7 @@ In \cref{alg:besttrans} we can see a simple implementation to generate the best 
     \For{$r = r_{\text{min}},\dots,r_{\text{max}}$}
       \State $t_r$ $\gets$ \texttt{generateTransformation}(e, r)
       \State $\hat{f}_{c^\ast}^h$ $\gets$ \texttt{generateBestSurroate}($e, t_r$)
-    	\State $\varepsilon \gets \varepsilon(\hat{f}_c^h)$
+    	\State $\varepsilon \gets \varepsilon(\hat{f}_c^h) r^\gamma$
     	\If{$\varepsilon < \varepsilon_{min}$}
     	  \State $\varepsilon_{min}\gets \varepsilon$
     	\State $t^\ast \gets t_r$
@@ -1785,11 +1792,14 @@ In \cref{alg:besttrans} we can see a simple implementation to generate the best 
 \end{algorithmic}
 \vspace{-1.5mm}
 \delimit
-	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the current error function $e$, the minimum reduced dimension $r_{\text{min}}$, and maximum reduced dimension $r_{\text{max}}$.}
+	\captionof{algorithm}{Pseudocode of the transformation generation algorithm. Parameters are the current error function $e$, the minimum reduced dimensionality $r_{\text{min}}$, the maximum reduced dimensionality $r_{\text{max}}$, and the penalty exponent $\gamma \geq 0$.}
 	\label{alg:besttrans}
 \end{mdframed}
 %
 The actual implementation of the function \texttt{generateTransformation} is usually fixed, and can use any of the transformation generation methods presented in \cref{chap:c3}, for example random active direction transformations.
+
+Furthermore, if we want to steer the transformation generation process into a certain direction, like preferring lower-dimensional transformations, we can make use of the penalty factor $r^\gamma$ that grows with the reduced dimensionality $r$ and a choice of $\gamma > 0$.
+The higher the $\gamma$, the more impact does the penalty factor have for higher dimensionalities $r$.
 
 \section{Visualizing the algorithm}
 
@@ -1934,6 +1944,7 @@ In \cref{fig:pipeline_5}, we see that we definitely hit a convergent state as th
 Therefore, we will stop after this iteration.
 
 \section{Local vs global optimization}
+\label{sec:lvsg}
 
 The previously introduced transformation generation algorithm uses a local optimization approach to determine the optimal transformation to use.
 However, in some cases this approach can lead the algorithm down a wrong path that will result in a worse approximation error in the end than otherwise possible.
@@ -2044,7 +2055,7 @@ Many pipeline function components can be exchanged for various different impleme
 
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can make use of a variety of conditions, such as a maximum iteration count or a maximum approximation error.
+\item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can make use of a variety of conditions, such as a fixed iteration amount with \texttt{maxIterations($i_{\mathrm{max}}$)} or a relative convergence condition \texttt{relativeConvergence($\eta$)} from \cref{sec:it}.
 \item \texttt{\textbf{sampleCount}}: The amount of function samples $n$ used during pipeline execution. These samples are used for a variety of operations and split into train, validate, and test datasets in each iteration.
 \end{itemize}}
 \end{description}
@@ -2211,13 +2222,17 @@ While this is a pretty straightforward process, it can still be customized by ch
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
 \delimit
-
+\begin{description}
+\item[Parameters] {~ \begin{itemize}[\indent{}]
+\item \texttt{\textbf{lookAheadIterations}}: The amount of iterations to perform when looking forward to obtain a transformation quality value (see \cref{sec:lvsg}). Default value is $1$.
+\item \texttt{\textbf{$\gamma$}}: The penality exponent for additional dimensionalities (see \cref{sec:trans_gen}). Default value is $0.0$, \ie no penalty at all.
+\end{itemize}}
+\end{description}
+\delimit
 \captionof{figure}{Component structure of a forward looking transformation evaluator.}
 \label{fig:te}
 \end{figure}
 \end{mdframed}
-%
-If we want to steer the transformation generation process into a certain direction, like preferring lower-dimensional transformations, we can introduce a few modifications, such as a penalty term that grows with the reduced dimensionality $r$ of the transformation.
 
 \newpage
 
@@ -2583,6 +2598,62 @@ Now that we investigated several important pipeline components with regards to a
 Wing weight is 10 dimensional.
 
 TODO: Perform similator evaluations as last section, but focus on differences to low-dimensional case
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+
+\bgroup
+\def\arraystretch{1.2}% 
+  \begin{tabular}{ l | c c c}
+$i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
+\hline
+$1$  & 28318.959 & $97.1\%$\\
+$2$   & 478.48 & $1.6\%$\\
+$3$  & 200.70 & $0.7\%$\\
+$4 \dots 10$  & < 71.0 & $< 0.02\%$\\
+\end{tabular}
+\egroup
+\vspace{0.5em}
+
+\delimit
+
+\captionof{table}{Computed eigen values, and eigen value shares of the active subspaces for the wing weight function using the Monte-Carlo method and $10^5$ samples.}
+\label{tab:ww_as}
+\end{figure}
+\end{mdframed}
+%
+Based off the values in \cref{tab:ww_as}, we can see that there exists one dominant active direction that takes up the majority of the eigen value shares.
+Furthermore, there are some 
+, and is reponsible for a big chunk of the average gradient change, while the other two active directions are less important and also not axis aligned.
+These two less active directions are however not neglible, as their combined eigen value share still is $18.3\%$.
+
+
+\subsection{Transformation pipeline}
+
+To start off, we first investigate the general quality of reducing transformations with active subspaces and $1 \leq r \leq 6$ to get an idea of the model functions properties with regards to its approximate compounded intrinsic dimensionality.
+We limit $r$ to a maximum of $6$, as the transformed sparse grid surrogates are already affected by the curse of dimensionality for $6 < r \leq 10$.
+Furthermore, we use finite differences for now, draw $n=10^5$ samples for the active subspace calculation, and use the relative convergence criterion with $\eta=0$, \ie we will perform iterations until the approximation error does not improve anymore.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/wingweight_fixed}
+\delimit
+
+\captionof{figure}{Approximation errors of various transformed surrogate sum approximations for the wing weight function.}
+\label{fig:wwf}
+\end{figure}
+\end{mdframed}
+
+On the left, we can see surrogate sum approximations using a coarse level and on the right we see the fine level equivalents.
+Every marker of a graph represents the result of a new iteration with the approximation error of the new surrogate sum and the grid point amount of all surrogate sum elements combined.
+The range between coarse and fine level surrogate sums for the same reduced dimensionality $r$ gives insight into what part of the approximation error is based on the compounded intrinsic dimensionality property and what part is based on the surrogate qualities/fidelities itself.
+For example, we see that for $r=1$ and $r=2$ the range between low-level and high-level surrogates is relatively small.
+This means that the main limiting factor here is that the model function can not be approximated well with $r=1$ and $r=2$.
+For $5 \leq r \leq 6$, we see that the potential to improve the approximation with higher levels is used in a better way.
+Moreover, we see that in most cases, the most improvements can be achieved within the first three or less iterations, as all graphs basically converge after the at most third iteration.
+
+
 \chapter{Practical applications}
 \label{chap:c8}
 
