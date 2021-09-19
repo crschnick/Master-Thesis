@@ -1761,6 +1761,10 @@ It is satisfactory as long as the actual approximation quality of the generated 
 \end{equation}
 where $c^\ast$ was determined with low-fidelity surrogates.
 
+Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimensionalities, as a the grid point amount should be decoupled from the used dimensionality $r$, especially when comparing surrogates of differing dimensionalities.
+This means that instead of passing a fixed level $\ell$ as a parameter, we instead have to specify a fixed grid point amount to control how much grid points the surrogate should approximately have and determine the most appropriate level and refinements from there, such that we can always get reasonably close to a specific amount of grid points even for higher dimensionalities.
+
+
 \section{Generating the best transformation}
 \label{sec:trans_gen}
 
@@ -2224,7 +2228,6 @@ While this is a pretty straightforward process, it can still be customized by ch
 \delimit
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{lookAheadIterations}}: The amount of iterations to perform when looking forward to obtain a transformation quality value (see \cref{sec:lvsg}). Default value is $1$.
 \item \texttt{\textbf{$\gamma$}}: The penality exponent for additional dimensionalities (see \cref{sec:trans_gen}). Default value is $0.0$, \ie no penalty at all.
 \end{itemize}}
 \end{description}
@@ -2249,8 +2252,7 @@ The implementation is straightforward and closely matches the theoretic construc
 
 The sparse grid generation implementation is realized with the $\mathrm{SG}^{++}$ library \cite{Pflueger2010}.
 In the case of sparse grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
-Some sparse grid parameters, like the level, also have to be adapted to handle arbitrary surrogate dimensionalities, as a the grid point amount should be decoupled from the used dimension $r$. 
-This means that instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the most appropriate level from there, as it varies greatly for different values of $r$.
+Instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the most appropriate level and refinement amounts from there, as it varies greatly for different values of $r$.
 Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint}, to automatically link the amount of grid points and used training samples together.
 
 \subsection {RBF surrogate generator}
@@ -2593,11 +2595,16 @@ Therefore, we expect the active subspace method to scale better with higher dime
 
 \section{Wing weight function}
 
-Now that we investigated several important pipeline components with regards to a low-dimensional model function, we compare the results to a case with a high-dimensional example model function to look out for properties that can't be generalized from one low-dimensional case study.
-
-Wing weight is 10 dimensional.
-
-TODO: Perform similator evaluations as last section, but focus on differences to low-dimensional case
+Now that we investigated several important pipeline components with regards to their properties when being applied to a low-dimensional model function, we compare the results to a case with a high-dimensional model function to look out for properties that can't be generalized from one low-dimensional case study.
+The model function covered in this section is the wing weight function \cite{Forrester2008},
+\begin{equation}
+f(x)=0.036 \, S_w^{0.758} \, W_{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_c}{\cos(\Lambda)} \right)^{-0.3} (N_z W_{dg})^{0.49} + S_w W_p
+\end{equation}
+, which models the weight of a wing for a light aircraft based on ten inputs.
+It has also been already studied in the context of sensitivity analysis in \cite{Moon2012}.
+Details about what the inputs represent and their possible ranges are not listed as they are not important.
+The only detail that matters is that they are all uniformly distributed.
+To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function as well, which yields the following results:
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2624,34 +2631,101 @@ $4 \dots 10$  & < 71.0 & $< 0.02\%$\\
 \end{mdframed}
 %
 Based off the values in \cref{tab:ww_as}, we can see that there exists one dominant active direction that takes up the majority of the eigen value shares.
-Furthermore, there are some 
-, and is reponsible for a big chunk of the average gradient change, while the other two active directions are less important and also not axis aligned.
-These two less active directions are however not neglible, as their combined eigen value share still is $18.3\%$.
+Furthermore, there are two less important active directions as well.
+The seven other directions only make up a very small share of the total eigen value sum.
+However, as we learned for the Ishigami function, these eigen values should only be used as rough indicators and not as reliable sources about the suitability for transformed sparse grids.
 
+\subsection{Static pipeline}
 
-\subsection{Transformation pipeline}
-
-To start off, we first investigate the general quality of reducing transformations with active subspaces and $1 \leq r \leq 6$ to get an idea of the model functions properties with regards to its approximate compounded intrinsic dimensionality.
-We limit $r$ to a maximum of $6$, as the transformed sparse grid surrogates are already affected by the curse of dimensionality for $6 < r \leq 10$.
-Furthermore, we use finite differences for now, draw $n=10^5$ samples for the active subspace calculation, and use the relative convergence criterion with $\eta=0$, \ie we will perform iterations until the approximation error does not improve anymore.
+To start off, we first investigate the general quality of reducing transformations with active subspaces and $1 \leq r \leq 7$ to get an idea of the model function properties with regards to its approximate compounded intrinsic dimensionality.
+We limit $r$ to a maximum of $7$, as the transformed sparse grid surrogates are already affected by the curse of dimensionality for $r > 7$.
+Furthermore, we use active subspaces with a finite differences gradient generator for now, draw $n=10^5$ samples for the active subspace calculation, and use the relative convergence criterion with $\eta=0$, \ie we will perform iterations until the approximation error does not improve anymore.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/wingweight_fixed}
 \delimit
-
 \captionof{figure}{Approximation errors of various transformed surrogate sum approximations for the wing weight function.}
 \label{fig:wwf}
 \end{figure}
 \end{mdframed}
-
-On the left, we can see surrogate sum approximations using a coarse level and on the right we see the fine level equivalents.
+%
+On the left side, we can see surrogate sum approximations using a coarse level and on the right we see the fine level equivalents.
 Every marker of a graph represents the result of a new iteration with the approximation error of the new surrogate sum and the grid point amount of all surrogate sum elements combined.
-The range between coarse and fine level surrogate sums for the same reduced dimensionality $r$ gives insight into what part of the approximation error is based on the compounded intrinsic dimensionality property and what part is based on the surrogate qualities/fidelities itself.
-For example, we see that for $r=1$ and $r=2$ the range between low-level and high-level surrogates is relatively small.
-This means that the main limiting factor here is that the model function can not be approximated well with $r=1$ and $r=2$.
-For $5 \leq r \leq 6$, we see that the potential to improve the approximation with higher levels is used in a better way.
-Moreover, we see that in most cases, the most improvements can be achieved within the first three or less iterations, as all graphs basically converge after the at most third iteration.
+The range between coarse and fine level surrogate sums for the same reduced dimensionality $r$ gives insight into what part of the approximation error is based on the compounded intrinsic dimensionality of the model function and what part is based on the surrogate qualities/fidelities itself.
+For example, we see that for $r=1, \dots, 3$, the approximation error improvement from low-level to high-level surrogates is relatively small.
+This means that the main limiting factor here is that the model function can not be approximated well with such low dimensional surrogates.
+For $r > 3$, we see that the potential to improve the approximation with higher levels is used in a better way.
+Moreover, we see that in most cases, the majority of approximation improvements can be achieved within the first three iterations, as most graphs basically converge after the third iteration.
+
+All in all, we see that higher reduced dimensionalities in combination with a lower sparse grid level provides the best approximation error tradeoff.
+This does not correlate at all with the active subspace results from \cref{tab:ww_as} and reinforces the evidence that we should not rely on the active subspace eigen values.
+The higher difference between low-fidelity and high-fidelity surrogates for larger values of $r$ means that applying transformation generators that require a lot of low-fidelity surrogates, such as the random active direction generators, will take up more runtime as the amount of grid points for low-fidelity surrogates has to be increased to produce representative surrogates.
+
+\subsection{Dynamic pipeline}
+
+After we looked at the results of a mostly static pipeline, in the sense that $r$ was fixed, we can now continue with a more dynamic pipeline approach.
+The goal is to dynamically choose a suitable reduced dimensionality $r_i$ for each iteration such that we can obtain better results than with a static pipeline.
+For this, we now investigate dimensionalty penalty exponent $\gamma$ (see \cref{sec}), which can steer the dimensionality selection into different directions.
+In case $\gamma=0$, we simply chose the transformation that minimizes the look-ahead error.
+If $\gamma > 0$, we will prefer lower dimensionalities $r_i$ during each iteration.
+We can also choose $\gamma < 0$ to prefer higher dimensionalities.
+The intuition behind this parameter is that constructing surrogates of a certain dimensionalty can propagate good or bad features to the succeeding pipeline iterations, as we saw in sec when looking at overfitting.
+
+\subsection{Random active directions}
+
+Similar to the first model function, we try to find good active directions randomly again.
+This time however, this should become much harder as finding good active directions in ten dimensions should be difficult.
+As we saw in the last sections, the wing weight function can already be approximated pretty well with only one transformed surrogate and further iterations do not massively increase the approximation quality.
+Therefore, we can already assess whether random active directions are viable by only performing one pipeline iteration to compare errors.
+
+\begin{mdframed}[style=style]
+\vspace{2mm}
+\begin{figure}[H]
+  \centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_5}
+  \caption{Distribution for $r=5$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.035$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_2}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_6}
+  \caption{Distribution for $r=6$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.036$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_1}
+\end{subfigure}
+\delimit
+\caption{Histogram of lo-fi approximation errors for $10^4$ randomly generated dimensionality reducing transformations}
+\label{fig:ishigami_hist_12}
+\end{figure}
+\end{mdframed}
+
+
+\subsection{Summary}
+
+To summarise our findings, we can say that the active subspace method performs better than random active direction generation for this high-dimensional model function.
+This is likely caused by the sheer amount of possible active direction matrices and might be improved somewhat if more random generation iterations were used.
+However, for even higher dimensional models this would also not solve the issue, as the random active direction matrix would also be affected heavily by the curse of dimensionality.
+Active subspaces are therefore the way to go in higher dimensions.
+
+In terms of determining the optimal reduced dimensionalities $r_i$, we saw that there are huge differences in the tradeoff between approximation error and grid points for various values of $r_i$.
+Some values of $r_i$ just perform objectively worse than others and there is no quick heuristic, such as inspecting the active subspace eigen values, to gauge their expected quality.
+We therefore employ the look-ahead approach, which will also work with low-fidelity surrogates, as the quality differences for different $r_i$ are already evident at pretty low grid levels.
+
+The results for a baseline amount of grid points are visualized in \cref{fig:ww_comp}.
+From there it is pretty evident that random active directions are uncompetitive and ...
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/wingweight_fixed}
+\delimit
+\captionof{figure}{Comparision of approximation errors for transformed sparse grids constructed in various different ways.}
+\label{fig:ww_comp}
+\end{figure}
+\end{mdframed}
 
 
 \chapter{Practical applications}
