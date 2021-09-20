@@ -1,0 +1,13 @@
+Computerexperimente ermöglichen es, Phänomene der realen Welt zu untersuchen.
+Um so mehr Informationen der Simulation zur Verfügung gestellt werden können, umso genauer kann diese dann die Realität darstellen.
+Viele komplexe Simulationen leiden jedoch unter dem Fluch der Dimensionalität, wodurch eine genaue Simulation schwierig wird und die Verwendung eines Modelsurrogats erforderlich ist.
+In vielen Fällen zeigt sich, dass eine Simulation hauptsächlich nur von einer Teilmenge der Eingabeparameter abhängt, was sie zu einem möglichen Ziel für Dimensionsreduktionstechniken macht.
+Diese Techniken zielen darauf ab, solche Parameterstrukturen zu identifizieren und versuchen die Simulation entsprechend anzupassen, beispielsweise durch die Konstruktion eines niedrigerdimensionalen Modellsurrogats.
+Ein Ansatz dieser Art kann den Fluch der Dimensionalität mildern und gleichzeitig ein erforderliches Maß an Genauigkeit während der Simulation beibehalten.
+
+Im Kontext von Dünnen Gittern existieren bereits verschiedene Ansätze zur Dimensionsreduktion, wie zum Beispiel adaptive Dünne Gitter oder Gitter-basierte Varianzanalysen, die das Ziel haben, weniger wichtige Dimensionen einer Modellfunktion gezielt zu vernachlässigen oder zu eliminieren.
+Active Subspaces sind eine weitere Dimensionalitätsreduktionstechnik, die, im Gegensatz zu Gitter-basierten Verfahren, Eingabeparameter durch Linearkombinationen ersetzen kann und somit flexibler ist.
+
+In dieser Arbeit wird die Active-Subspace-Methode in Kombination mit Dünnen Gittern angewendet, um die namensgebenden transformierten Dünnen Gitter zu konstruieren und damit eine flexiblere Dimensionsreduktionstechnik zu schaffen, die das Beste beider Methoden ausnutzen kann.
+Dieser kombinierte Ansatz betrachtet das Modell aus einer Black-Box-Perspektive und kann daher auf eine Vielzahl von hochdimensionalen Modellen angewendet werden.
+Um die Qualität und Eigenschaften der erzeugten transformierten Dünnen Gitter in verschiedenen Kontexten zu bewerten, führen wir auch eine Reihe von Experimenten an einer Vielzahl von hochdimensionalen Modellen durch.

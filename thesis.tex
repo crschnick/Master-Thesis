@@ -2683,26 +2683,66 @@ Therefore, we can already assess whether random active directions are viable by 
 \vspace{2mm}
 \begin{figure}[H]
   \centering
+    \begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_1}
+  \caption{Distribution for $r=1$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.040$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_2}
+  \caption{Distribution for $r=2$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.060$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_2}
+\end{subfigure}%
+\vspace{3mm}
+  \begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_3}
+  \caption{Distribution for $r=3$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.061$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_2}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=\linewidth]{graphics/ww_hist_4}
+  \caption{Distribution for $r=4$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.046$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_3}
+\end{subfigure}%
+\vspace{3mm}
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_hist_5}
-  \caption{Distribution for $r=5$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.035$.}
+  \caption{Distribution for $r=5$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.041$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_hist_6}
-  \caption{Distribution for $r=6$. The resulting hi-fi error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.036$.}
+  \caption{Distribution for $r=6$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.035$.}
 \vspace{3mm}
 \label{fig:ishigami_hist_1}
 \end{subfigure}
 \delimit
 \caption{Histogram of lo-fi approximation errors for $10^4$ randomly generated dimensionality reducing transformations}
-\label{fig:ishigami_hist_12}
+\label{fig:ww_hist_all}
 \end{figure}
 \end{mdframed}
 
+\Cref{fig:ww_hist_all} shows the low-fidelity approximation error distribution for random active direction generators.
+When looking at the progression from lower dimensions to higher dimensions, we see that the distribution shape changes from having long tails and a negative skew to a more balanced bell shape.
+Histograms for $r > 6$ are omitted as they are very similar with regards to their shape and also approximation errors compared to the histogram for $r=6$.
+
+Moreover, we see that the low-fidelity and high-fidelity errors of the best one-dimensional generation result are better than the best ones for $r=2, \dots, 5$.
+We therefore come closer to a good active direction matrix for $r=1$ than we do for higher dimensionalities.
+This behaviour can be explained by the fact that higher dimensions require even more random generation runs to find a good transformation.
+This is caused by the sheer amount of possible active direction matrices and might be improved somewhat if more random generation iterations were used.
+
+In general however, the approximation errors do not come close the active subspace generation results, which means that in this case the random generation is not suitable.
 
 \subsection{Summary}
 
@@ -2732,6 +2772,24 @@ From there it is pretty evident that random active directions are uncompetitive 
 \label{chap:c8}
 
 \section{Borehole function}
+
+The initial practical application
+The model function covered in this section is the wing weight function \cite{Forrester2008},
+\begin{equation}
+f(x)=0.036 \, S_w^{0.758} \, W_{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_c}{\cos(\Lambda)} \right)^{-0.3} (N_z W_{dg})^{0.49} + S_w W_p
+\end{equation}
+, which models the weight of a wing for a light aircraft based on ten inputs.
+It has also been already studied in the context of sensitivity analysis in \cite{Moon2012}.
+Details about what the inputs represent and their possible ranges are not listed as they are not important.
+The only detail that matters is that they are all uniformly distributed.
+To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function as well, which yields the following results:
+
+We can deduce that the transformed sparse grid technique comparatively performs much better than various untransformed sparse grid interpolation techniques for a very low amount of grid points.
+However, the interpolation techniques reach a crossover point at which they are able to continously improve the approximation and overtake the transformation technique, which reaches a convergent state pretty early on.
+In this case with $d=8$, the crossover point is reached too early such that the transformed surrogate technique is not viable, as it is easy enough to still create an accurate interpolation surrogate.
+
+Furthermore, as the transformed technique internally uses regression, we are comparing an interpolation based approach with regression, which is inherently weaker as it can not evaluate the model function at the most optimal points.
+
 \section{High-dimensional function}
 \section{High-dimensional regression}
 
