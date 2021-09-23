@@ -2039,10 +2039,11 @@ The used notation for these component diagrams is shown in \cref{fig:defs}.
 \end{figure}
 \end{mdframed}
 
-
 \newpage
 \section{Transformation pipeline}
 \label{sec:tp}
+
+The general implementation is not as straightforward as it could be, due to intrinsic limitations
 
 The complete transformation process is modeled and implemented as pipeline that is made up of different components to allow for maximum flexibility.
 The pipeline structure is visualized in figure \cref{fig:tp}.
@@ -2598,12 +2599,38 @@ Therefore, we expect the active subspace method to scale better with higher dime
 Now that we investigated several important pipeline components with regards to their properties when being applied to a low-dimensional model function, we compare the results to a case with a high-dimensional model function to look out for properties that can't be generalized from one low-dimensional case study.
 The model function covered in this section is the wing weight function \cite{Forrester2008},
 \begin{equation}
-f(x)=0.036 \, S_w^{0.758} \, W_{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_c}{\cos(\Lambda)} \right)^{-0.3} (N_z W_{dg})^{0.49} + S_w W_p
+w=0.036 \, S_w^{0.758} \, W_{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_c}{\cos(\Lambda)} \right)^{-0.3} (N_z W_{dg})^{0.49} + S_w W_p,
 \end{equation}
-, which models the weight of a wing for a light aircraft based on ten inputs.
-It has also been already studied in the context of sensitivity analysis in \cite{Moon2012}.
-Details about what the inputs represent and their possible ranges are not listed as they are not important.
-The only detail that matters is that they are all uniformly distributed.
+which models the weight of a wing for a light aircraft based on ten inputs that are defined in \cref{tab:ww_params}.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+\bgroup
+\def\arraystretch{1.2}% 
+  \begin{tabular}{ l l l l}
+Variable & Description & Distribution\\
+\hline
+$S_{\mathrm{w}}$ & wing area (ft$^2$) & $\mathcal{U}(150,\, 200)$\\
+$W_{\mathrm{fw}}$ & weight of fuel in the wing (lb) & $\mathcal{U}(220,\, 300)$\\
+$A$ & aspect ratio & $\mathcal{U}(6,\, 10)$\\
+$\Lambda$ & quarter-chord sweep (degrees) & $\mathcal{U}(-10 ,\,  10)$\\
+$q$ & dynamic pressure at cruise (lb/ft$^2$) & $\mathcal{U}(16,\, 45)$\\
+$\lambda$ & taper ratio & $\mathcal{U}(0.5, \, 1)$\\
+$t_\mathrm{c}$ & aerofoil thickness to chord ratio & $\mathcal{U}(0.08\, 0.18)$\\
+$N_\mathrm{z}$ & ultimate load factor & $\mathcal{U}(2.5\, 6)$\\
+$W_\mathrm{dg}$ & flight design gross weight (lb)& $\mathcal{U}(1700\, 2500)$\\
+$W_\mathrm{p}$ & paint weight (lb/ft$^2$) & $\mathcal{U}(0.025,\, 0.08)$\\
+\end{tabular}
+\egroup\\
+\vspace{0.5em}
+\delimit
+\captionof{table}{Input parameters for the wing weight model.}
+\label{tab:ww_params}
+\end{figure}
+\end{mdframed}
+%
+The model has also been already studied in the context of sensitivity analysis in \cite{Moon2012}.
 To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function as well, which yields the following results:
 
 \begin{mdframed}[style=style]
@@ -2771,24 +2798,94 @@ From there it is pretty evident that random active directions are uncompetitive 
 \chapter{Practical applications}
 \label{chap:c8}
 
+Having investigated the properties of the transformed sparse grid technique in detail, we are now aiming to leverage this knowledge to perform competetive function approximations, especially when being compared to other techniques.
+In this chapter, we will apply the transformed sparse grid technique on established models such that we can, at least to some degree, compare the approximation quality to other techniques.
+Of course, these comparisions are limited in their nature, as it is difficult to control for every property unique to an approximation technique across others.
+
 \section{Borehole function}
 
-The initial practical application
-The model function covered in this section is the wing weight function \cite{Forrester2008},
+The initial practical application that we will investigate is a function modeling the water flow through a borehole that was drilled through aquifiers above and below a nuclear waste repository.
+It has 8 input parameters, as defined in \cref{tab:borehole_params}, and was first studied in the context of sensitivity analysis in \cite{Harper1983}.
+The resulting output $Q$, which represents the flow in m$^3$/year, is then given by
 \begin{equation}
-f(x)=0.036 \, S_w^{0.758} \, W_{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_c}{\cos(\Lambda)} \right)^{-0.3} (N_z W_{dg})^{0.49} + S_w W_p
+Q=\frac{2 \pi T_u(H_u - H_t)}{\text{ln}(r / r_w) \left( 1 + \frac{2L T_u}{\text{ln}(r / r_w) r_w^2 K_w} + \frac{T_u}{T_l} \right)}.
 \end{equation}
-, which models the weight of a wing for a light aircraft based on ten inputs.
-It has also been already studied in the context of sensitivity analysis in \cite{Moon2012}.
-Details about what the inputs represent and their possible ranges are not listed as they are not important.
-The only detail that matters is that they are all uniformly distributed.
-To get an idea of the general structure and importance of the inputs, we apply the active subspace method on this function as well, which yields the following results:
 
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\centering
+\bgroup
+\def\arraystretch{1.2}% 
+  \begin{tabular}{ l l l l}
+Variable & Description & Distribution\\
+\hline
+$r_w$ & borehole radius (m) & $\mathcal{N}(\mu=0.1, ~\sigma=0.0161812)$\\
+$r$ & influence radius (m) & ln $\mathcal{N}(\mu=7.71, ~\sigma=1.0056)$\\
+$T_u$ & upper aquifer transmissivity (m$^2$/year) & $\mathcal{U}(63070,\, 115600)$\\
+$H_u$ & upper aquifer potentiometric head (m) & $\mathcal{U}(990,\,  1110)$\\
+$T_l$ & lower aquifer transmissivity (m$^2$/year) & $\mathcal{U}(63.1,\, 116)$\\
+$H_l$ & lower aquifer potentiometric head (m) & $\mathcal{U}(700, \, 820)$\\
+$L$ & borehole length (m) & $\mathcal{U}(1120, 1680)$\\
+$K_w$ & borehole hydraulic conductivity (m/year) & $\mathcal{U}(9855, \, 12045)$\\
+\end{tabular}
+\egroup\\
+\vspace{0.5em}
+\delimit
+\captionof{table}{Input parameters for the borehole model.}
+\label{tab:borehole_params}
+\end{figure}
+\end{mdframed}
+
+The borehole function has been throroughly investigated in the context of sparse grid interpolation in \cite{} using B-Spline basis function variants.
+B-Splines are a solution to eliminating the discontinuities of the standard hat basis functions functions and are piecewise polynomials.
+Not-a-knot B-Splines (NAK B-Splines) on spatially adaptive sparse grids were shown to be very competetive compared to various other approximation techniques and serve as a good benchmark.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/borehole}
+\delimit
+\captionof{figure}{Approximation errors for transformed sparse grids constructed with various grid sizes per iteration and for various NAK B-Splines.}
+\label{fig:borehole_comp}
+\end{figure}
+\end{mdframed}
+
+\Cref{fig:borehole_comp} presents the approximation errors of both NAK B-Splines and transformed sparse grids.
+We see that in the early stages, transformed sparse grids provide a better tradeoff between grid points and approximation quality.
+However, as more grid points are added to the surrogates, their quality improvement decays very fast and they soon reach a convergent state, which is consistent with previous results.
+In contrast, the sparse grid interpolation surrogates outshine them as the grid point amount rises and are able to continously improve the approximation error.
+This crossover point is reached early on, which results in transformed sparse grids not being a viable alternative to sparse grid interpolation for the borehole function.
+
+\subsection{Summary}
 We can deduce that the transformed sparse grid technique comparatively performs much better than various untransformed sparse grid interpolation techniques for a very low amount of grid points.
 However, the interpolation techniques reach a crossover point at which they are able to continously improve the approximation and overtake the transformation technique, which reaches a convergent state pretty early on.
 In this case with $d=8$, the crossover point is reached too early such that the transformed surrogate technique is not viable, as it is easy enough to still create an accurate interpolation surrogate.
+This crossover point should be continously pushed back as the model dimensionalities grow, since untransformed sparse grids will be more heavily affected by the curse of dimensionality, while the transformed sparse grids will only be affected by the best choice for $r$, which is usually smaller than $d$.
+\Cref{fig:trend} summarizes this hypothesis in a simple way.
 
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+        \centering
+\begin{minipage}{0.49\textwidth}
+        \centering
+\captionof{figure}{Illustration of the approximation quality behaviour. The \red plot represents the approximation errors of standard interpolation approaches, the \green plot represents transformed sparse grid approaches, and the \lightblue star represents the crossover point.}
+\label{fig:trend}
+    \end{minipage}%
+    \begin{minipage}{0.49\textwidth}
+        \centering
+   \includegraphics[width=0.7\linewidth]{graphics/trend}
+   \vspace{2mm}
+    \end{minipage}
+\end{figure}
+\end{mdframed}
+%
 Furthermore, as the transformed technique internally uses regression, we are comparing an interpolation based approach with regression, which is inherently weaker as it can not evaluate the model function at the most optimal points.
+When being compared to normal sparse grid interpolation, the method can significantly outperform it.
+
+Therefore, the best applications for transformed sparse grids should be pure, high-dimensional regression problems, with optionally only a small number of instances.
+
+
+
 
 \section{High-dimensional function}
 \section{High-dimensional regression}
