@@ -182,99 +182,102 @@
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-Computer simulations for complex models are in many cases very computationally expensive and are therefore limited in the feasible amount of simulation runs.
-Because of this limitation, a common approach is to construct a model function surrogate and adapt the simulation to work on the surrogate instead.
-Done properly, this will reduce the required resources, such as runtime and memory, to perform the simulation.
-Discretization methods \cite{Stetter1973} are one such way of constructing a surrogate by discretisizing the continuous model domain and approximating the solution, while trying to keep the introduced discretization error to a minimum.
-Full grids, a simple discretimzation scheme for functions on hypercubes, heavily suffer from the curse of dimensionality \cite{Bellman1961}, as the amount of grid points required to generate a uniform grid grows exponentially with the dimensionality of the model.
-As a result, the model function evaluations for a full grid construction also grow exponentially, severely limiting the feasible model dimensionality for full grids.
+Computer simulations for complex models are in many cases very computationally expensive and are therefore limited in the feasible amount of simulation runs given the available computing power.
+Because of this limitation, a common approach is to construct a surrogate model and adapt the simulation to work on the surrogate instead.
+Done properly, this can massively reduce the required resources, such as runtime and memory, to perform a simulation run.
+Discretization methods \cite{Stetter1973} are one such way of constructing a surrogate by discretisizing the continuous model domain and approximating the output, while trying to keep the introduced discretization error to a minimum.
+Full grids, a simple discretimzation scheme for functions on hypercubes, suffer from the curse of dimensionality \cite{Bellman1961}, as the amount of grid points required to generate a uniform grid grows exponentially with the model dimensionality.
+As a result, the amount of simulation runs needed for a full grid construction also grow exponentially, severely limiting the viable model dimensionality when making use of full grids.
 
-While all grid-based methods all share the common problem of being affected by the curse of dimensionality to some degree, the later introduced sparse grids technique \cite{Zenger1991} manages to reduce the impact of the curse of dimensionality and therefore delay the point at which they become infeasible to use compared to full grids.
-To decouple the model dimensionality from the actual sparse grid dimensionality, at least to some degree, various sparse grid based methods can be used for dimensionality reduction.
-One example are various kinds of adaptive sparse grids, which are able to eliminate or neglect certain dimensions of the model and can also adapt the constructed surrogate to the model.
-These grid based techniques in general are however limited in their effectiveness, as the grid structures and associated basis functions used are axis-aligned.
-As we will see later on, axis-aligned basis functions become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
+While all grid-based methods all share the common problem of being affected by the curse of dimensionality to some degree, the subsequently introduced sparse grids technique \cite{Zenger1991} manages to reduce the impact of the curse of dimensionality and therefore delay the point at which their application becomes infeasible.
+To decouple the model dimensionality from the actual sparse grid dimensionality, at least to some extent, various sparse grid based methods for the purpose of dimensionality reduction are available to choose from.
+For example, there exist several kinds of adaptive sparse grids, which are able to eliminate or neglect certain dimensions of the model and are able to tailor the constructed sparse grid to the model.
+These grid based techniques in general are however limited in their effectiveness, as the grid structures itself, the associated basis functions, and adaptivity rules are all axis-aligned.
+As we will see later on, axis-aligned basis functions and therefore all techniques that are based on them become rather ineffective when dealing with model functions that primarily consist out of function terms that are not axis-aligned.
 
-This limitation is used as a motivation to look into ways of transforming the input parameters of the model function, such that sparse grid methods can be applied more effectively.
-By conducting a parameter study to identify potential starting points and exploring the influence of different input parameters on the model function output, we construct a transformation function for the model inputs prior to feeding them into sparse grids.
-The goal is to then obtain transformed input parameters that have a better alignment and also a reduced dimensionality, such that we can construct a sparse grid surrogate of a lower dimensionality and maintains a comparable approximation error compared to regular sparse grids.
+This limitation is used as a motivation to look into ways of transforming the input parameters of the model, such that sparse grid based methods can be applied more effectively to all kinds of models.
+By conducting a parameter study to identify potential starting points and exploring the influence of different input parameters on the model output, we try to construct and apply a transformation function on the model inputs prior to feeding them into sparse grids.
+The goal is to then obtain transformed input parameters that have a better alignment and optionally a reduced dimensionality, such that we can construct a sparse grid surrogate of a lower dimensionality while managing to maintain a comparable approximation error compared to regular sparse grids.
 
-The concrete method presented in this thesis tries to combine the process of determining so-called active subspaces in the inputs \cite{Constantine2015} with dimensionality reduction techniques.
+The concrete method presented in this thesis combines the process of determining so-called active subspaces in the inputs \cite{Constantine2015} with dimensionality reduction techniques.
 It takes inspiration from already established ideas in data science, such as the concept of intrinsic dimensionality \cite{Bennett1969} and principal component analysis (PCA) \cite{Abdi2010}.
-Done well, this allows us to transform the original model function approximation problem into a lower-dimensional one, while still preserving input structures that are suitable for sparse grids.
-Over the course of this thesis, we will first introduce and explore the name-giving function approximation method of transformed sparse grids, and afterwards put it to the test in multiple experiments with practical, high-dimensional models. 
+Done well, this allows us to transform the original model approximation problem into a lower-dimensional one, while still preserving input structures that are suitable for sparse grids.
+Over the course of this thesis, we will first introduce and explore the name-giving function approximation method of transformed sparse grids and afterwards put it to the test in multiple experiments with high-dimensional models for real-world phenomena. 
 
 \section{Outline}
 
-We start off in \cref{chap:c2} by covering all the basics needed to understand and use sparse grids for function approximation in conjunction with different kinds of basis functions and spatial adaptivity.
-Furthermore, we will also take a look at other components needed for function approximation like sampling techniques and used error metrics.
+We start off in \cref{chap:c2} by covering all the fundamentals needed to understand and use sparse grids in conjunction with different kinds of basis functions and spatial adaptivity to create model surrogates.
+Furthermore, we will also take a look at other components commonly needed for models approximation tasks, such as sampling techniques and error metrics.
 
-Next, we extensively introduce input transformations, the central focus of this thesis, in \cref{chap:c3} through a motivational example function that causes various established sparse grid based methods to underperform, but can easily be corrected with an input transformation to fix the occuring  problems.
+Next, we extensively introduce input transformations, which are the central focus of this thesis, in \cref{chap:c3} through a simple motivational example function that causes various established sparse grid based methods to underperform, but can easily be revamped with an input transformation to fix the underlying problem.
 Following that, we define various concrete types of input transformations, with main focus lying on transformations generated with the active subspace method.
 
-Over the course of \cref{chap:c4}, we look at the process of generating transformed sparse grid surrogates for a given input transformation to obtain the name-giving transformed sparse grids.
-We focus on the differences compared to the normal sparse grid workflow and its resulting surrogates.
+Over the course of \cref{chap:c4}, we look at the process of generating sparse grid surrogates for already transformed input to obtain the name-giving transformed sparse grids.
+We focus on the unique characteristics of this construction process and its resulting surrogates compared to the normal sparse grid workflow.
 
-\Cref{chap:c5} then combines the input transformation process of the previous chapters with an iterative approach and formalizes an algorithm on which the practical implementation is based on.
-The basic functionality of the algorithm is also investigated with the help of a simple example function.
+\Cref{chap:c5} then combines the input transformations of the previous chapters with an iterative approach to obtain the more powerful compounded transformed surrogates.
+We also provide a formal algorithm description on which the practical implementation is based on.
+Moreover, some basic properties of the algorithm are also investigated with the help of a simple example function.
 
-Then, in \cref{chap:c6}, we model the general structure of the practical implementation of the transformation process and explore various configuration options that can be used to fine tune different aspects of the algorithm.
+Then, in \cref{chap:c6}, we model the concrete structure of the practical implementation for the transformation process and explore various configuration options that can be used to fine tune different aspects of the algorithm.
 
 The individual components of the implementation are evaluated in \cref{chap:c7}, in which we apply the new transformation-based approach on two models using a variety of different configurations, with the goal of evaluating the implementation components in an isolated enviroment to prepare for the practical applications in the succeeding chapter.
 
 The implementation is then put to the test in \cref{chap:c8}, as we perform multiple experiments on pratical, high-dimensional models to draw conclusions about the technique in general and about its comparative quality.
-To achieve the best possible results, we leverage the insights gained from the preceeding chapters.
+To achieve the best possible results, we leverage the insights gained in preceeding chapter.
 
-\Cref{chap:c9} concludes this thesis by providing a summary of the newly introduced techniques and its results.
+\Cref{chap:c9} concludes this thesis by providing a summary of the newly introduced technique and its results.
 We also reflect on the limitations and possible improvements of the method.
-
 
 \chapter{Surrogate construction}
 \label{chap:c2}
 
-The complexity of computer simulations that work on mathematical models is heavily dependent on the model dimensionality.
-Threfore, to succesfully perform complex simulations on high-dimensional models, various optimizations, such as model function surrogates, have been developed to ease the curse of dimensionality.
-More formally, we assume that a model is represented by a model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain.
+When performing computer simulations on mathematical models to study their properties, many different aspects of the model can make the process difficult.
+For example, the complexity of simulations is often heavily dependent on the model dimensionality, making them subject to the curse of dimensionality.
+Moreover, a simulation run can also require a lot of computational resources when for example a differential equation has to be solved.
+Discretization methods are one way to mitigate this problem by constructing a continuous surrogate that can fill in the gaps between a discrete set of simulation run results of feasible size.
+Other times when dealing with black box models, \ie when the underlying model function is not known and only a fixed set of model outputs is given, we can employ regression algorithms to construct a surrogate instead.
+
+More formally, we assume that a model is represented by a mathematical model function $f \colon \Omega \to \mathds{R}$ where $\Omega \coloneqq [0,1]^d$ is the model domain.
 While the original domain of many models may not be the $d$-dimensional unit hypercube, it can be transformed into one as long as the domain is a bounded Cartesian product.
 Furthermore, many models are also subject to uncertanties in their inputs.
 To incorporate these uncertanties, we model the inputs stochastically with a probability distribution defined by a probability density function $\rho \colon \Omega \to \mathds{R_+}$.
+In case the model outputs are also subject to uncertainties, such as random noise or measurement errors, a well fitted surrogate should be able to average out the uncertainties and represent a smoothed version of the original model.
 
-Surrogates for model functions come into play in cases where executing an operation requires many model function evaluations to achieve accurate results and it is very computationally expensive to directly evaluate $f$.
-Common use cases are operations such as optimization or quadrature that are performed on a model given by a differential equation that has to be solved.
-The usual course of action is then to construct a surrogate $\hat{f}$ that approximates $f$ and has the advantage of being much faster to evaluate.
-Of course, the surrogate has to preserve an required amount of accuracy, such that the simulation results are still representative of the original model.
-In other words, we are trying to construct an approximating function $\hat{f}$ that fulfills the following condition:
+The usual course of action is to construct a surrogate $\hat{f}$ that approximates $f$ and preserves an required amount of accuracy, such that the simulation results are still representative for the original model.
+In other words, we are trying to construct an approximating function $\hat{f}$ such that
 \begin{equation}
 \forall x \in \Omega \colon f(x) \approx \hat{f}(x)
 \end{equation}
-%
+holds.
 Moreover, by constructing surrogates of a certain type, other additional useful properties can be provided for free, even if they were not available for the original model function.
 For example, the gradients and moments of spline based surrogates are very easy to compute and are essentially provided for free.
 
 Plenty of different surrogate types and construction methods already exist where each one comes with its own specific properties and limitations.
-These properties can range from their sensitivity to the model dimensionality to their approximation quality in general or with regards to certain types of functions. 
+These properties can range from their sensitivity to the model dimensionality, over their approximation quality in general , to unique effects when being applied to certain types of model functions. 
 The primary focus of this thesis lies on the already established sparse grid surrogates, their various subtypes, and construction methods, with the goal of enhancing the sparse grid technique by finding and exploiting important lower-dimensional subsets of the model input parameters.
 
+\newpage
 \section{Notation}
 
-Prior to starting out with formalizing the basis of the surrogate construction, we first have to define some basic notation for working with vectors that is commonly used during the sparse grid construction process.
-In cases where a scalar and vector with the same identifier are used, for example for the level and index notation of sparse grids, we use an underlined identifier to differentiate a vector from a scalar.
-In this thesis, the identifier $\ell$ would a scalar, and $\underline{\ell}$ would represent a vector.
+Prior to starting out with formalizing the fundanental of the surrogate construction process, we first have to define some basic notation for working with vectors that will be frequently used.
+In cases where a scalar and vector with the same identifier are used, for example for the level and index notation of sparse grids a little bit later on, we use an underlined identifier to differentiate a vector from a scalar.
+For example, the identifier $\ell$ would represent a scalar, while $\underline{\ell}$ would represent a vector.
 Other times, when no differentiation between scalars and vectors is necessary, no explicit underlined identifier is used for vectors. 
-Furthermore, an underlined constant value $\underline{k}$ with $k \in\mathds{R}$ is defined as a $d$-dimensional vector of the form $\underline{k} \coloneqq (k, \dots, k)^T \in \mathds{R}^d$.
+An underlined constant value $\underline{k}$ with $k \in\mathds{R}$ is used to define a $d$-dimensional vector of the form $\underline{k} \coloneqq (k, \dots, k)^T \in \mathds{R}^d$.
 
-Some other commonly used notation are basic vector norms and vector comparisions:
+Furthermore, other common constructs, namely basic vector norms and vector comparision operators, are defined as follows:
 \begin{definition}[Vector norms]
 Let $v \in \mathds{R}^d$ be a $d$-dimensional vector.
-We make use of the $\ell_1$ norm
+We make use of the $\ell_1$ norm,
 \begin{equation}
 |v|_1 \coloneqq \sum_{i=1}^d |v_i| ~,
 \end{equation}
-the Euclidean norm
+the Euclidean norm,
 \begin{equation}
 |v|_2 \coloneqq \sqrt{\sum_{i=1}^d v_i^2} ~,
 \end{equation}
-and the maximum norm
+and the maximum norm,
 \begin{equation}
 |v|_\infty \coloneqq \max_{1 \leq i \leq d} v_i ~.
 \end{equation}
@@ -282,25 +285,25 @@ and the maximum norm
 %
 \begin{definition}[Vector comparision]
 Let $u, v \in \mathds{R}^d$ be $d$-dimensional vectors.
-We define the vector comparision operator
+We define the vector comparision operator,
 \begin{equation}
-u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i
+u \leq v \Leftrightarrow \forall i \in \{1,\dots,d\} \colon u_i \leq v_i,
 \end{equation}
 as a component-wise comparision.
 \end{definition}
 
 \section{Full grids}
 
-Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform grid that spans $\Omega$ and interpolates function values using neighbouring grid points.
-More formally, we can first construct a one-dimensional mesh of level $\ell$ with equidistant points $x_{\ell,i}=i2^{-\ell}$ and mesh size $h=2^{-\ell}$.
-Then, by associating appropriate basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with every grid point, we can interpolate functions very accurately.
-Using a basic tensor product approach, we can obtain a uniform isotropic $d$-dimensional grid mesh where the grid point indices are vectors and the basis functions $\phi_{\underline{\ell},\underline{i}} \colon [0,1]^d \mapsto \mathds{R}$ are multivariate functions.
+Model functions can easily be discretisized using a naive full grid approach, which involves creating a uniform isotropic grid that spans $\Omega$ and interpolates function values using surrounding grid points.
+More formally, we can first construct a one-dimensional mesh of level $\ell$ with equidistant points $x_{\ell,i}=i2^{-\ell}$, which results in the mesh size $h=2^{-\ell}$.
+Then, by associating appropriate basis functions $\phi_{\ell,i} \colon [0,1] \mapsto \mathds{R}$ with every grid point $x_{\ell,i}$, we can interpolate functions very accurately for reasonably small mesh sizes.
+Using a basic tensor product approach, we can obtain a uniform isotropic $d$-dimensional grid mesh where the grid point indices become vectors and the basis functions $\phi_{\underline{\ell},\underline{i}} \colon [0,1]^d \mapsto \mathds{R}$ become multivariate functions.
 The asymptotic interpolation error for full grids is $\mathcal{O}(h^2)$, however this comes at the cost of requiring $\mathcal{O}(2^{\ell d})$ grid points.
-Full grids therefore suffer from the curse of dimensionality, as the required amount of function evaluations for the grid points grows exponentially for both the level $\ell$ and dimensionality $d$.
+Full grids therefore suffer from the curse of dimensionality, as the required amount of function evaluations for the grid points grows exponentially for the level $\ell$ and model dimensionality $d$.
 
 \begin{definition}[Levels and indices]
 Let $\underline{\ell} \coloneqq (\ell_1, \dots, \ell_d) \in \mathds{N}_0^d$ be a $d$-dimensional multi-index.
-For every multi-index $\underline{\ell}$, we define the hierarchical index set
+For every multi-index $\underline{\ell}$, we define the hierarchical index set,
 \begin{equation}
 H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathds{N}^d_0 \mid
 \begin{cases}
@@ -311,33 +314,33 @@ H_{\underline{\ell}} \coloneqq \left\{ \underline{i} \in \mathds{N}^d_0 \mid
 \end{definition}
 %
 We use these hierarchical index sets in order to define a full grid as the sum of grid increments that are constructed for a given level multi-index $\underline{\ell}$ and its associated index set $H_{\underline{l}}$, such that every point in the grid mesh is assigned to exactly one level multi-index and hierarchical multi-index.
-This incremental construction will make it easier to transition from full grids to sparse grids later on.
+An incremental construction like this will make it easier to transition from full grids to sparse grids later on.
 
 \begin{definition}[Grid points]
 Let $x_{\ell,i}=i2^{-\ell}$ be a one-dimensional grid point coordinate with $x_{\ell,i} \in [0,1]$, and let
 \begin{equation}
 x_{\underline{\ell},\underline{i}} \coloneqq (x_{\ell_1,i_1}, \dots, x_{\ell_d,i_d})
 \end{equation}
-be a $d$-dimensional grid point. The set of grid points of a regular full grid with boundary is then given by
+be a $d$-dimensional grid point. The set of grid points of a regular full grid with boundary points is then given by
 \begin{equation}
 X^{\mathrm{fb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
-and the set of grid points of regular full grid without boundary by
+and the set of grid points of regular full grid without boundary points by
 \begin{equation}
 X^{\mathrm{f}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_{\infty} \leq \ell, \underline{1} \leq \ell',  \underline{i} \in H_{\underline{\ell}}\}.
 \end{equation}
 \end{definition}
 %
-Next, we assign the grid points supporting multivariate basis functions that stem from one family of basis functions, like a family of linear hat functions or polynomial basis functions.
+Next, we assign each grid point a supporting multivariate basis function that stems from one family of basis functions, for example a family of linear hat functions or polynomials.
 
 \begin{definition}[Basis functions]
 Let $\phi_{\ell,i}(x)$ be a univariate basis function for the one-dimensional grid points $x_{\ell,i}$.\\
-By applying the tensor product approach on $\phi_{\ell,i}(x)$, we obtain the multivariate $d-$dimensional basis function
+By applying the tensor product approach on $\phi_{\ell,i}(x)$, we obtain the multivariate $d-$dimensional basis function,
 \begin{equation}
-\phi_{\underline{\ell},\underline{i}} \coloneqq \prod_{k=1}^{d} \phi_{\ell_k,i_k}
-\label{eq:basis_functions}
+\phi_{\underline{\ell},\underline{i}} \coloneqq \prod_{k=1}^{d} \phi_{\ell_k,i_k},
 \end{equation}
-for the grid point $x_{\underline{\ell},\underline{i}}$.
+for the $d$-dimensional grid point $x_{\underline{\ell},\underline{i}}$.
+\label{def:basis_functions}
 \end{definition}
 %
 \begin{definition}[Full grid]
@@ -350,7 +353,7 @@ is defined as a regular full boundary grid of level $\ell$ and the span over all
 \begin{equation}
 V^{\mathrm{f}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{f}}_{\ell}\},
 \end{equation}
-is defined as a regular full grid of level $\ell$.
+is equivalently defined as a regular full grid of level $\ell$.
 \label{def:full_grid}
 \end{definition}
 
@@ -359,21 +362,21 @@ is defined as a regular full grid of level $\ell$.
 Full grids can be decomposed into a direct sum of subspaces in a hierarchical way, to allow for a more granular selection of which subspaces to keep.
 By keeping only a specific subset of subspaces, we obtain the so-called sparse grids.
 Compared to full grids, a sparse grid construction leads to a worse approximation quality with the asymptotic interpolation error $\mathcal{O}(h^2 (\log h^{-1})^{d-1})$ including an additional logarithmic factor.
-The amount of grid points however only grows with $\mathcal{O}(h^{-1} (\log h^{-1})^{d-1})$, which is a significant improvement over full grids.
+As shown in \cite{Bungartz2004}, the amount of grid points however only grows with $\mathcal{O}(h^{-1} (\log h^{-1})^{d-1})$, which is a significant improvement over full grids.
 As a result, the reduced amount of required grid points makes it possible to apply the sparse grid technique to higher-dimensional problems than the naive full grid technique.
 
 \begin{definition}[Sparse grid points]
-Let $\ell$ be a level. Using the hierarchical index sets $H_{\underline{\ell}}$, we define the grid points for a regular sparse boundary grid as
+Let $\ell$ be a level. Using the hierarchical index sets $H_{\underline{\ell}}$, we define the grid points for a regular sparse boundary grid,
 \begin{equation}
 X^{\mathrm{sb}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
-and the grid points for a regular sparse grid as
+and the grid points for a regular sparse grid,
 \begin{equation}
 X^{\mathrm{s}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell', \underline{i} \in H_{\underline{\ell}}\}.
 \end{equation}
 \end{definition}
 %
-As we can see, the sparse grid point set definition is very similar to the full grid definition (\cref{def:full_grid}), with the only difference being the level multi-index selection using the $\ell_1$ norm $|\cdot|_1$ instead of the maximum norm $|\cdot|_\infty$.
+As we can see, the sparse grid point set definition is very similar to the full grid definition (\cref{def:full_grid}), with the only difference being the level multi-index selection using the $\ell_1$ norm $|\cdot|_1$ instead of the maximum norm $|\cdot|_\infty$, effectively performing a diagonal cut on the available grid increments, as seen in \cref{fig:grid_splitting}.
 The sparse grid itself can then also be defined similar to full grids:
 \begin{definition}[Sparse grid]
 The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ over all regular sparse boundary grid points,
@@ -389,26 +392,27 @@ is referred to as a regular sparse grid.
 \label{def:sparse_grid}
 \end{definition}
 %
-The grid construction process of full grids as well as sparse grids using grid increments is visualized in \cref{fig:grid_construction}.
-In related sparse grid literature, the hierarchical decomposition of sparse grids, which is also called hierarchical splitting and can be seen in \cref{fig:grid_splitting}, is realized through the decomposition of subspaces instead of the decomposition of the grid point set.
-This allows for easier proofs of various approximation qualities, but is not required in this thesis.
-It is sufficient to see that a sparse grid construction used in this thesis is equivalent to the construction through hierarchical subspaces:
+The grid construction results for full grids as well as sparse grids is visualized in \cref{fig:full_grid} and \cref{fig:sparse_grid}.
+
+In related sparse grid literature, the hierarchical decomposition, which is also called hierarchical splitting, throughout which sparse grids are realized is achieved through the decomposition of subspaces instead of the decomposition of the grid point set.
+This allows for easier proofs of various approximation qualities, but is not required for the purposes of this thesis.
+It is sufficient to see that a sparse grid construction used in this thesis is equivalent to the construction through hierarchical subspaces.
+
 \begin{definition}[Hierarchical subspaces]
 The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ of a grid increment indentified by a level multi-index $\underline{\ell}$,
 \begin{equation}
 W_{\underline{\ell}} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell'},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
-is defined as the hierarchical subspace of $\underline{\ell}$.\\
-A sparse (boundary) grid can then also be represented as a direct sum of the hierarchical subspaces:
+is defined as the hierarchical subspace of $\underline{\ell}$.
+A sparse (boundary) grid can then also be represented as a direct sum of the hierarchical subspaces with
 \begin{equation}
 V^{\mathrm{sb}}_{\ell} = \mathrm{span}~ \left\{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{sb}}_{\ell}\right\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell, \underline{1} \leq \ell'} W_{\underline{\ell'}}.
 \label{eq:direct_sum}
 \end{equation}
 \end{definition}
 %
-The sparse grid construction through \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid}, as the only difference between both is that the hierarchical decomposition is realized in different stages.
+The sparse grid construction of \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid}, as the only difference between both is that the hierarchical decomposition is realized in different stages.
 
-\newpage
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
 \begin{figure}[H]
@@ -418,88 +422,47 @@ The sparse grid construction through \cref{eq:direct_sum} is equal to \cref{eq:s
   \includegraphics[width=.8\linewidth]{graphics/grid_subspaces}
   \subcaption{Hierarchical splitting of a grid point set}
 \label{fig:grid_splitting}
+\vspace{2.5mm}
     \end{minipage}%
     \begin{minipage}{0.28\textwidth}
         \centering
   \includegraphics[width=.8\linewidth]{graphics/full_grid}
   \subcaption{Grid points of $V^{\text{fb}}_{3}$}
+\label{fig:full_grid}
 \vspace{4.5mm}
   \includegraphics[width=.8\linewidth]{graphics/sparse_grid}
   \subcaption{Grid points of $V^{\text{sb}}_{3}$}
-    \end{minipage}
+\label{fig:sparse_grid}
 \vspace{2.5mm}
+    \end{minipage}
 \delimit
-\caption{Construction of different grids from hierarchical grid point set increments. The full boundary grid $V^{\text{fb}}_{3}$ is a sum of all grid increments outlined in dotted \greencomma\,\,the sparse boundary grid $V^{\text{sb}}_{3}$ is a sum of all grid increments outlined in dotted \reddot\,\,Boundary grid point increments are shaded in \greydot}
+\caption{Construction of different grids from hierarchical grid point set increments. The full boundary grid $V^{\text{fb}}_{3}$ is a sum of all grid increments outlined in dotted \greencomma\,\,while the sparse boundary grid $V^{\text{sb}}_{3}$ is a sum of all grid increments outlined in dotted \reddot\,\,Boundary grid point increments are shaded in \greydot}
 \label{fig:grid_construction}
 \end{figure}
 \end{mdframed}
 
-\section{Sparse grid surrogates}
-\label{sec:gsc}
-
-Sparse grid surrogates that try to approximate a model function can be constructed using multiple different approaches.
-As sparse grid surrogate is a linear combination of all basis functions, to represent the instance $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight $\alpha_{\underline{\ell},\underline{i}}$, also called hierarchical surplus
-.
-\begin{definition}[Sparse grid surrogates]
-Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
-Furthermore, let $\alpha_{\underline{\ell},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.\\
-A grid surrogate is then the linear combination
-\begin{equation}
-\hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
-\underline{\ell},\underline{i}}(x).
-\end{equation}
-\end{definition}
-%
-In the case of a regular sparse grid with $X=X^{\mathrm{s}}_{\ell}$ for example, the surrogate instance can be expressed with
-\begin{equation}
-\hat{f}(x) = \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
-\underline{\ell},\underline{i}}(x).
-\end{equation}
-%
-The hierarchical surplusses can be computed with a variety of different methods, which results in multiple possible sparse grid construction schemes.
-Most of the times, the interpolation approach to approximate model function is used.
-In cases where only a function sample is given, a sparse grid surrogate can also be constructed through regression.
-
-\paragraph{Interpolation}
-The interpolation method is the most simple and common sparse grid surrogate construction scheme.
-It evaluates the model function at every grid point and performs a hierarchization algorithm to obtain the hierarchical surplusses $\alpha_{\underline{\ell},\underline{i}}$.
-The resulting surrogate constructed with the hierarchization method equals the model function at all grid points, such that $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}(x)$.
-As the model function has to be evaluated at every grid point, a grid interpolation surrogate requires exactly $|X|$ function evaluations at the grid points and can not be used to approximate a function from a given function sample.
-
-\paragraph{Regression}
-An alternative surrogate construction scheme is sparse grid based regression \cite{Pflueger2010}.
-In contrast to interpolation, a regression approach does no longer require the function values at the grid points to interpolate between them.
-Instead, it uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$ with regards to the approximation error, by using train and validation samples drawn from the model function.
-As a result, the size of the function sample, and therefore the amount of function evaluations, does no longer have to be equal to the amount of grid points.
-This provides a greater level of flexibility, as the amount of model function evaluations and the amount of grid points can vary.
-
-The basic approach is to solve the least squares problem for the function sample $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function,
-\begin{equation}
-\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2 ,
-\end{equation}
-and a regularization parameter $\lambda > 0$ to prevent overfitting.
-Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\lambda \in \Lambda$ and sparse grid level $\ell$ to obtain
-\begin{equation}
-\hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
-\end{equation}
-
-
 \section{Basis functions}
 
-The multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$, as defined in \cref{eq:basis_functions}, are a central aspect of sparse grids.
+Multivariate basis functions $\phi_{\underline{\ell},\underline{i}}$ (\cref{def:basis_functions}), are a central aspect of sparse grids.
 Many different families of basis functions exist, each with various levels of complexity, capabilities, and properties.
-We will from now on refer to a family of basis functions of the same type as a basis.
-In this section we will take a look at different elemtary basis functions used in this thesis and list reasons for using them.
+In this section we will take a short look at the basis functions used in this thesis.
 
 \paragraph{Hat functions}
-One of the most simple types of basis functions are hat functions.
-A one-dimensional hat function $h(x) \coloneqq \max(1 - |x|,0)$ can be transformed into a basis function for a level $\ell$ and index $i$ with $\phi^h_{\ell,i}(x) \coloneqq h(2^\ell x-i)$.
-They are also not differentiable at their supporting grid point $x_{\ell,i}$.
+An elementary basis for sparse grids can be constructed with the help of hat functions, which are just piecewise linear functions.
+A one-dimensional hat function, $h(x) \coloneqq \max(1 - |x|,0)$, can be transformed into a basis function for a level $\ell$ and index $i$ to obtain
+\begin{equation}
+\phi^h_{\ell,i}(x) \coloneqq h(2^\ell x-i).
+\end{equation}
+These basis functions are centered at their associated grid point $x_{\ell,i}$.
+Furthermore, their supports are disjoint for the same level.
+\Cref{fig:basis_hat_normal} shows the hat basis functions for the first few levels.
 
 \paragraph{Modified basis functions}
-One method of removing the need of using boundary grid points, at least to some degree, are modified basis functions.
-These basis functions do not require grid points at the boundary and instead extrapolate the values at the boundaries from the grid points closest to the boundaries by using a modified version of normal basis functions.
-It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by defining the modified basis with
+One method of removing the need of using boundary grid points to accurately approximate some model functions in the boundary regions are modified basis functions.
+These basis functions extrapolate the values at the boundaries from the grid points closest to the boundaries by using a modified version of normal basis functions.
+Extrapolation of this sort can, at least to some degree, be a viable alternative to using boundary grids as a lot of grid points would be allocated just for the boundaries in higher dimensionalities.
+Removing all of them while still providing acceptable boundary approximations will usually result in a good tradeoff between grid points and accuracy, which is already the intuition behind sparse grids.
+More formally, it is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by defining modified basis functions,
 \begin{equation}
 \phi^{\mathrm{mod}}_{\ell,i}(x) \coloneqq
 \begin{cases}
@@ -509,11 +472,61 @@ It is possible to modify any non-boundary basis functions $\phi_{\ell,i}$ by def
 \phi_{\ell,i}(x)&, \text{else}
 \end{cases},
 \end{equation}
-where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are special boundary extrapolation functions that are usually are similar with regards to their construction compared to the normal basis functions $\phi_{\ell,i}$.
+where $\phi^{\text{left}}_{\ell}$ and $\phi^{\text{right}}_{\ell}$ are the special boundary extrapolation functions that are usually are similar with regards to their construction compared to the normal basis functions $\phi_{\ell,i}$.
+\Cref{fig:basis_hat_mod} shows the modified hat basis functions for the first few levels.
 
-\paragraph{Splines}
-One solution to eliminating the hat basis discontinuities are B-Splines, which are just piecewise polynomials.
-They can also be combined with the modified basis technique to obtain a modified B-Spline basis.
+\paragraph{Other basis functions}
+Over time, many kinds of basis functions have been developed.
+Each one was created with a specific purpose in mind and has the potential to outshine other basis functions for certain applications.
+There exist polynomial basis functions, spline basis functions that are just piecewise polynomials, wavelet basis functions, and numerous subtypes of them.
+However, for the sake of simplicity, they are not covered in detail as they will not be primarily used in this thesis.
+Instead, we will focus on hat basis functions and modified hat basis functions.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=\linewidth]{graphics/basis_hat}
+  \subcaption{Hat basis for $\ell=0,\dots,2$.}
+  \label{fig:basis_hat_normal}
+\vspace{1.5mm}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \includegraphics[width=\linewidth]{graphics/basis_mod}
+  \subcaption{Modified hat basis for $\ell=1,\dots,3$.}
+  \label{fig:basis_hat_mod}
+\vspace{1.5mm}
+\end{subfigure}
+  \delimit
+\caption{Hat basis functions and their modified counterparts.}
+  \label{fig:basis_hat}
+\end{figure}
+\end{mdframed}
+
+\section{Sparse grid surrogates}
+\label{sec:gsc}
+
+Sparse grid surrogates that try to approximate a model function can be constructed using one out of multiple different approaches.
+As a sparse grid surrogate is a linear combination of all basis functions, in order to represent the instance $\hat{f}$, each basis function $\phi_{\underline{\ell},\underline{i}}$ is assigned a weight $\alpha_{\underline{\ell},\underline{i}}$, also called a hierarchical surplus.
+
+\begin{definition}[Sparse grid surrogates]
+Let $\phi_{\underline{\ell},\underline{i}}$ be multivariate basis functions and $X$ a set of grid points.
+Furthermore, let $\alpha_{\underline{\ell},\underline{i}} \in \mathds{R}$ be the hierarchical surplusses.
+A grid surrogate is then the linear combination,
+\begin{equation}
+\hat{f}(x) \coloneqq \sum_{x_{\underline{\ell},\underline{i}} \in X} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
+\underline{\ell},\underline{i}}(x).
+\end{equation}
+\end{definition}
+%
+In the case of a regular sparse grid with $X=X^{\mathrm{s}}_{\ell}$, the surrogate instance can be expressed with
+\begin{equation}
+\hat{f}(x) = \sum_{|\underline{\ell}|_1 \leq \ell, \underline{1} \leq \ell'} \sum_{\underline{i} \in {H_{\underline{\ell}}}} \alpha_{\underline{\ell},\underline{i}} ~ \phi_{
+\underline{\ell},\underline{i}}(x).
+\end{equation}
+%
+The hierarchical surplusses can be computed with a variety of different methods, which results in multiple possible sparse grid construction schemes.
+Most of the time, the interpolation approach to approximate model function is used.
+In cases where only a model function sample is given, a sparse grid surrogate can also be constructed using a regression approach.
 
 \begin{definition}[Fundamental property]
 A family of univariate basis functions $\phi_{\ell,i}$ fulfills the fundamental property iff
@@ -524,9 +537,33 @@ A family of univariate basis functions $\phi_{\ell,i}$ fulfills the fundamental 
 \end{split}
 \end{equation}
 As the used multivariate basis functions are constructed using the tensor-product approach, the fundemental property holds for a multivariate basis if it holds for the univariate one.
+\label{def:fund}
 \end{definition}
-%
-A multivariate basis that fulfills the fundamental property can be hierarchized very efficiently through the unidirectional principle \cite{Balder1994} by applying a hierarchisation operator iteratively on every dimension separately, effectively breaking down the hierarchisation process into a series of one-dimensional hierarchisations.
+
+\paragraph{Interpolation}
+The interpolation method is the most simple and common sparse grid surrogate construction scheme.
+It evaluates the model function at every grid point and performs a hierarchization algorithm to obtain the hierarchical surplusses $\alpha_{\underline{\ell},\underline{i}}$.
+A multivariate basis that fulfills the fundamental property (\cref{def:fund}) can be hierarchized very efficiently through the unidirectional principle \cite{Balder1994} by applying a hierarchisation operator iteratively on every dimension separately, effectively breaking down the hierarchisation process into a series of one-dimensional hierarchisations.
+
+The resulting surrogate constructed with the hierarchization method equals the model function at all grid points, such that $\forall x_{\underline{\ell},\underline{i}} \in X \colon f(x)=\hat{f}(x)$.
+As the model function has to be evaluated at every grid point, a grid interpolation surrogate requires exactly $|X|$ function evaluations and can not be used to approximate a function from a given model function sample.
+
+\paragraph{Regression}
+An alternative surrogate construction scheme is sparse grid based regression \cite{Pflueger2010}.
+In contrast to interpolation, a regression approach does no longer require the function values at the grid points to interpolate between them.
+Instead, it uses established regression approaches to iteratively improve the weights $\alpha_{\underline{\ell},\underline{i}}$ with regards to the approximation error, by using train and validation observations from the model function.
+As a result, the amount of observations, does no longer have to be equal to the amount of grid points, resulting in a greater level of flexibility, as the amount of available inputs and the amount of grid points can vary.
+
+The basic approach is to solve the least squares problem for the samples $S=\{(x_i, f(x_i)\}_{i=1}^n$ with the standard square loss function,
+\begin{equation}
+\varepsilon_{\text{MSE}}(\hat{f}) \coloneqq \frac{1}{n} \sum_{i=1}^n \left(f(x_i) - \hat{f}(x_i)\right)^2 ,
+\end{equation}
+with a regularization functional $R$ and associated regularization control parameter $\lambda > 0$, which allows for smoothing and also prevents overfitting.
+Sparse grid based regression therefore tries to solve the regularized least squares problem to find the best possible surrogate for a set of possible smoothing factors $\lambda \in \Lambda$ and sparse grid level $\ell$ to obtain
+\begin{equation}
+\hat{f} = \argmin_{\hat{f} \in V^{\text{sb}}_{\ell}, ~ \lambda \in \Lambda} \varepsilon_{\text{MSE}}(\hat{f}) + \lambda R(\hat{f}).
+\end{equation}
+This approach of computing the $\alpha_{\underline{\ell},\underline{i}}$ is slower compared to the interpolation scheme.
 
 \section{Spatially adaptive sparse grids}
 
