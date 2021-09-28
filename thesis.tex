@@ -1598,7 +1598,7 @@ We then construct the surrogate $\hat{f}_t$ for the transformed sample $S_t$ usi
 Compared to sparse grid interpolation, the regression method takes longer to construct a well fitting surrogate, as an optimization problem that involves all grid points has to be solved.
 Furthermore, the regression method also requires parameter calibration, as there are many configuration parameters available that can significantly affect the resulting surrogate.
 Given a set of possible regression configuration parameter combinations, finding the best combination can become very computationally expensive, since every parameter combination has to be evaluated to determine the best one.
-To mitigate this problem, we employ the concept of multifidelity simulations \cite{Robinson2006, Forrester2008}, \ie reducing the cost of parametrization by using low-fidelity sparse grids and datasets to evaluate a parameter combination and only using high-fidelity sparse grids and datasets when creating the final surrogate using the determined optimal parameters.
+To mitigate this problem, we employ the concept of multifidelity simulations \cite{Robinson2006, Forrester2008}, \ie reducing the cost of parametrization by using low-fidelity (lo-fi) sparse grids and datasets to evaluate a parameter combination and only using high-fidelity (hi-fi) sparse grids and datasets when creating the final surrogate using the determined optimal parameters.
 
 A low-fidelity sparse grid surrogate $\hat{f}^l$ has less grid points and employs no adaptivity compared to a high-fidelity sparse grid surrogate $\hat{f}^h$, \ie the level of $\hat{f}^l$ is lower and no grid points are refined.
 It is vital that the used low-fidelity surrogates still stay comparable when evaluating their approximation errors for different parameter combinations.
@@ -2079,7 +2079,7 @@ The used notation for these component diagrams is shown in \cref{fig:defs}.
 
 \delimit
 
-\captionof{figure}{Notation used for different elements in the component structure diagrams in this chapter.}
+\caption{Notation used for different elements in the component structure diagrams in this chapter.}
 \label{fig:defs}
 \end{figure}
 \end{mdframed}
@@ -2091,10 +2091,8 @@ It is basically implemented exactly as described in this chapter and also includ
 \section{Transformation pipeline}
 \label{sec:tp}
 
-The general implementation is not as straightforward as it could be, due to intrinsic limitations
-
 The complete transformation process is modeled and implemented as pipeline that is made up of different components to allow for maximum flexibility.
-The pipeline structure is visualized in figure \cref{fig:tp}.
+The pipeline structure is visualized in \cref{fig:tp}.
 Every pipeline iteration has the goal of adding another transformed surrogate to the current sum of surrogates to further improve the model approximation.
 Many pipeline function components can be exchanged for various different implementation types, where instances of these types can also be customized by passing configuration parameters.
 
@@ -2105,27 +2103,27 @@ Many pipeline function components can be exchanged for various different impleme
 \vspace{-7.5mm}
 
 \delimit
+\vspace{1.5mm}
 
 \begin{description}
 \item[Parameters] {~ \begin{itemize}[\indent{}]
 \item \texttt{\textbf{exitCondition}}: A predicate indicating whether the pipeline iteration loop should exit. This can make use of a variety of conditions, such as a fixed iteration amount with \texttt{maxIterations($i_{\mathrm{max}}$)} or a relative convergence condition \texttt{relativeConvergence($\eta$)} from \cref{sec:it}.
-\item \texttt{\textbf{sampleCount}}: The amount of function samples $n$ used during pipeline execution. These samples are used for a variety of operations and split into train, validate, and test datasets in each iteration.
+\item \texttt{\textbf{sampleCount}}: The amount of function observations $n$ used during pipeline execution. These samples are used for a variety of operations and are split into train, validate, and test datasets in each iteration.
 \end{itemize}}
 \end{description}
 
 \delimit
 
-\captionof{figure}{Component structure of the transformation pipeline and its associated possible configuration parameters.}
+\caption{Component structure of the transformation pipeline and its associated configuration parameters.}
 \label{fig:tp}
 \end{figure}
 \end{mdframed}
 %
-The most important component of the transformation pipeline with regards to achieving good approximation results is the transformation generator component \cref{sec:tg}, as the quality of a single transformation will affect all later iterations.
-The generated transformation is fed into a surrogate generator component \cref{sec:sg}, which will generate the transformed surrogate.
-Using the appropriate surrogate generator, basically any type of surrogate, such as sparse grids or RBFs, can be generated.
+The most important component of the transformation pipeline with regards to achieving good approximation results is the transformation generator component (\cref{sec:tg}), as the quality of a single transformation will affect all later iterations.
+The generated transformation is fed into a surrogate generator component (\cref{sec:sg}), which will generate the transformed surrogate.
+Using the appropriate surrogate generator, any type of surrogate, such as sparse grids or RBFs, can be generated.
 The newly generated surrogate is then added to the sum of previously generated surrogates to obtain the new transformed surrogate sum.
 At the end of each iteration, we decide whether to exit the pipeline or continue.
-
 
 \newpage
 \section {Transformation generators}
@@ -2138,30 +2136,29 @@ We covered the creation of input transformation extensively in \cref{chap:c4}, a
 \label{sec:tsg}
 
 We saw previsouly that we can generate a whole family of transformations for every generated active direction matrix, which is usually accomplished by using different values for the reduced dimensionality $r$, \ie cutting off less or more dimensions.
-To apply this concept and to couple it with other components introduced later on, such as transformation evaluators, this implementation makes use of so-called transformation stream generators.
+To apply this concept and to couple it with other components introduced later on, this implementation makes use of so-called transformation stream generators.
 A transformation stream generator will generate as much different transformations as it can, where the range of generated transformations is usually defined by a minimum and maximum value for $r$.
-Every transformation that is generated from the stream is evaluated using a transformation evaluator and the best transformation will be chosen and returned in the end.
-The stream-based transformation generator component structure, which makes use of the transformation streams, can be seen in \cref{fig:tsg}.
+Every transformation that is generated by the stream generator is first evaluated using a transformation evaluator (\cref{sec:te}) and then compared to the other transformations to choose the best transformation in the end.
+The stream-based transformation generator component structure can be seen in \cref{fig:tsg}.
 
 \begin{mdframed}[style=style,frametitle={Transformation generator (stream-based)}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
 \delimit
-\captionof{figure}{Component structure of a stream-based transformation generator.}
+\caption{Component structure of a stream-based transformation generator.}
 \label{fig:tsg}
 \end{figure}
 \end{mdframed}
 
+\newpage
 \subsection{Active Subpsace stream generator}
 
-Transformation generation with the active subspace method, as covered in \cref{sec:as}, is implemented as a transformation stream generator component, since there are multiple different cutoff possibilities.
-The exact range of the cutoff dimensions can be customized using various parameters, as seen in figure \cref{fig:astsg}.
+Transformation generation with the active subspaces method, as covered in \cref{sec:as}, is implemented as a transformation stream generator component, since there are multiple different cutoff possibilities and the exact range of the cutoff dimensions can be customized using various parameters, as seen in \cref{fig:astsg}.
+The order of active directions is still fixed however, as it is dictated by the magnitude of the eigenvalues.
 
-\newpage
 
 \begin{mdframed}[style=style,frametitle={Transformation stream generator (active subspaces)}]
 \begin{figure}[H]
-\vspace{5px}
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
 
 \delimit
@@ -2174,25 +2171,25 @@ The exact range of the cutoff dimensions can be customized using various paramet
 \end{itemize}}
 \end{description}
 \delimit
-\captionof{figure}{Component structure of an active subspace transformation stream generator and the associated possible configuration parameters.}
+\caption{Component structure of an active subspace transformation stream generator and the associated configuration parameters.}
 \label{fig:astsg}
 \end{figure}
 \end{mdframed}
 %
-The Monte-Carlo based active subspace method requires gradient samples as inputs.
+The Monte-Carlo based active subspaces method requires gradient samples as inputs.
 These are generated by a gradient sample generator component.
-Possible implementations for gradient approximation, which we already covered in section \cref{sec:as_est}, are available to choose from, as seen in \cref{fig:gg}.
+If the gradient function of the model function is not known, we can employ various gradient approximation algorithms, which we already covered in \cref{sec:as_est}.
+Three implementations for gradient approximation are available to choose from, as listed in \cref{fig:gg}.
 
-\begin{mdframed}[style=style,frametitle={Gradient sample generator}]
+\begin{mdframed}[style=style,frametitle={Gradient sample generators}]
 \begin{figure}[H]
 \begin{description}
-\item[\texttt{\textbf{givenGradient()}}:] If the gradient function of the model function $f$ is known or easy to calculate analytically, then generating a gradient sample is straightforward by just evaluating the gradient function at the sample points.
-\item[\texttt{\textbf{finiteDifferences($h$)}}:] Alternatively, the sample gradients can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample point is acceptable.
-\item[\texttt{\textbf{randomNeighbour($n'$)}}] Random neighbour approximation using $n'$ random neighbours.
-\item[\texttt{\textbf{nearestNeighbour($n', m$)}}] Nearest neighbour approximation that selects the $m$ nearest neighbours out of $n'$ possible ones.
+\item[\texttt{\textbf{finiteDifferences($h$)}}:] Gradient samples can be determined using finite differences if the runtime cost of $d$ model function evaluations per sample is acceptable.
+\item[\texttt{\textbf{randomNeighbours($n'$)}}] Random neighbour approximation using $n'$ random neighbours.
+\item[\texttt{\textbf{nearestNeighbours($n', m$)}}] Nearest neighbour approximation that selects the $m$ nearest neighbours out of $n'$ possible ones.
 \end{description}
 \delimit
-\captionof{figure}{List of available gradient sample generator implementations.}
+\caption{List of available gradient sample generator implementations.}
 \label{fig:gg}
 \end{figure}
 \end{mdframed}
@@ -2200,13 +2197,13 @@ Possible implementations for gradient approximation, which we already covered in
 \subsection {Random stream generator}
 \label{sec:rtg}
 
-An alternative approach to finding an active direction transformation is just generating a random one, as covered in \cref{sec:rt}.
+An alternative approach to constructing an active direction transformation is just generating a random one, as covered in \cref{sec:rt}.
 This random transformation generator is easy to implement, as shown in \cref{fig:rtsg}, can generate new transformation functions almost instantly, and offers a purely exploratory approach to finding the best transformation.
+Random transformations are only viable if many of them are generated consecutively, as the chance of finding a good random transformation in one try is very low.
+They are therefore mainly used in conjunction with iterative transformation generators (\cref{sec:itg}).
 
 \begin{mdframed}[style=style,frametitle={Transformation stream generator (random)}]
 \begin{figure}[H]
-
-\vspace{5px}
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
 \delimit
 \begin{description}
@@ -2216,22 +2213,26 @@ This random transformation generator is easy to implement, as shown in \cref{fig
 \end{itemize}}
 \end{description}
 \delimit
-\captionof{figure}{Component structure of an random transformation stream generator and the associated possible configuration paremeters.}
+\caption{Component structure of an random transformation stream generator and the associated configuration paremeters.}
 \label{fig:rtsg}
 \end{figure}
 \end{mdframed}
+%
+Note that the random active direction matrix generation is also be affected by the curse of dimensionality in the sense that it will become much harder to find a good random transformation in higher dimensionalities, as there are many more degrees of freedom for a single active direction vector and also a lot more possible orderings of multiple active direction vectors.
+Since the ordering process can be seen as a combination of a set of orthonormal vectors without replacement, the amount of possible combinations given a set of $d$ active directions is $\binom{d}{r} r!$, which increases sharply as $r$ and $d$ grows.
 
 \newpage
 
 \subsection {Iterative transformation generator}
+\label{sec:itg}
 
-In some cases, especially when dealing with a random transformation generation, the probability of finding a good transformation in one try is very low.
-Therefore, it makes sense to also introduce an iterative transformation generator component, which can be combined with any other transformation generator component, \eg a stream-based one.
+In some cases, for example when dealing with random transformation generation, it makes sense to introduce an iterative transformation generator component, which can be combined with any other transformation generator component.
+A transformation evaluator component (\cref{sec:te}) is responsible for assigning comparable quality ratings to each generated transformation such that the best one can be returned after the iteration limit is reached.
+This process is shown in \cref{fig:itg}.
 
 \begin{mdframed}[style=style,frametitle={Transformation generator (iterative)}]
 \begin{figure}[H]
 	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
-
 \delimit
 
 \begin{description}
@@ -2241,7 +2242,7 @@ Therefore, it makes sense to also introduce an iterative transformation generato
 \end{description}
 
 \delimit
-\captionof{figure}{Component structure of an iterative transformation generator and the associated possible configuration parameters.}
+\caption{Component structure of an iterative transformation generator and the associated configuration parameters.}
 \label{fig:itg}
 \end{figure}
 \end{mdframed}
@@ -2250,102 +2251,95 @@ Note that this iterative approach is independent from the pipeline iterations, \
 To achieve fast execution of many iterations, we choose to work on low-fidelity surrogates during the iterations when interacting with transformation evaluator.
 This means that the approximation errors used to identify the best transformation do not necessarily come close to the actual high-fidelity approximation errors.
 
-\newpage
+\section {Surrogate generators}
+\label{sec:sg}
+
+The last component needed for the pipeline implementation is the surrogate generator, which constructs the function $\hat{f}_t$ for given configuration parameters and transformed input samples,
+\begin{equation}
+S_t=\left\{\left(t(x_i), f(x_i)\right)\right\}_{i=1}^n \subseteq T \times \mathds{R}.
+\end{equation}
+The implementation is straightforward and closely matches the theoretic construction of sparse grid surrogates in \cref{chap:c4} and of RBF surrogates in \cref{sec:rbf}.
+
+\subsection {Sparse Grid surrogate generator}
+
+Sparse grid generators are implemented using the $\mathrm{SG}^{++}$ library \cite{Pflueger2010}.
+The configuration parameters of a sparse grid surrogate generator contains all the usually required inputs like grid type, basis type, several adaptivity properties, and regression parameters.
+Instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the most appropriate level and refinement amounts from there, as it varies greatly for different values of $r$.
+This guarantees that sparse grids of different dimensionalities all contain an almost equal amount of grid points, which is very useful when performing comparisions.
+Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint}, to automatically link the amount of grid points and used training samples together.
+
+\subsection {RBF surrogate generator}
+
+Radial basis function surrogate generation is implemented with the help of ALGLIB \cite{Bochkanov}, a numerical analysis and data processing library which supports fitting RBFs on arbitrary input data.
+Compared to sparse grids, RBFs do not have a lot of configuration parameters.
+The main parameters are the shape parameter $\epsilon$ and also a regularization factor $\lambda$.
+RBF surrogates can be created with the interpolation approach, as they can interpolate from arbitrary function obervations $S_t$.
+
 \section {Evaluators}
 
-To judge the quality of transformations and surrogates, we introduce evaluators.
-Evaluator components simple take a transformation or surrogate as an input and output a real number that represent the quality.
-They are usually implemented through basic error metrics (see \cref{sec:errors}).
+To judge the quality of transformations and surrogates, we introduce evaluator components.
+These evaluator components take a transformation or surrogate as an input and output a real number that represents their quality and allows for comparisions with others.
 
 \subsection {Surrogate evaluator}
 \label{sec:se}
 
-A surrogate evaluator is a simple component that computes the surrogate approximation error by using randomly drawn samples and an error metric to compute the Monto-Carlo approximation error.
-Common error metrics that will be used later on are MSE, RMSE, and NRMSE.
+A surrogate evaluator is a simple component that computes the surrogate approximation error by using validation observations and an error metric to compute the Monto-Carlo approximation error of the surrogate, \eg the MSE, RMSE, and NRMSE.
+To compute the approximation error, we can either implement a simple train-validate observation split or make use of a more sophisticated cross-validation approach.
+Furthermore, this straightforward evaluation can also be customized, for example by adding penalty terms for certain surrogate features, \eg the surrogate dimensionality or regression regularization parameters, to steer the transformation pipeline that relies on these evaluation results in a certain direction.
 
+\newpage
 \subsection {Transformation evaluator}
 \label{sec:te}
 
 The role of a transformation evaluator is to take a newly constructed transformation, evaluate its quality, and make it comparable to other transformations.
 As discussed in \cref{sec:trans_gen}, evaluating the true quality of a transformation is only really possible by creating a transformed surrogate with it.
-We therefore generate a surrogate first and then make use of a surrogate evaluator to return the evaluation result.
+We therefore generate a surrogate first and then make use of a surrogate evaluator to return the evaluation result, as illustrated in \cref{fig:te}.
 While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules, for example by using a low-fidelity surrogate generator to speed up the evaluation.
 
 \begin{mdframed}[style=style,frametitle={Transformation evaluator (forward looking)}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
 \delimit
-\begin{description}
-\item[Parameters] {~ \begin{itemize}[\indent{}]
-\item \texttt{\textbf{$\gamma$}}: The penality exponent for additional dimensionalities (see \cref{sec:trans_gen}). Default value is $0.0$, \ie no penalty at all.
-\end{itemize}}
-\end{description}
-\delimit
-\captionof{figure}{Component structure of a forward looking transformation evaluator.}
+\caption{Component structure of a forward looking transformation evaluator.}
 \label{fig:te}
 \end{figure}
 \end{mdframed}
 
+
+\subsection{Observation sample budgeting}
+
+A central aspect of the transformation is pipeline is the handling of observations, as they are used in almost every pipeline component, including evaluators.
+With the heavy use of the same observations across various stages, special care has to be taken to prevent all kinds of overfitting that can occur.
+For example, the generator components and evaluator components should all work on different observations such that no overtting can possibly take place.
+
+Furthermore, components that only work together, such as the surrogate generator and surrogate evaluator, are internally designed to coordinate their observation use with each other.
+For example, a cross validated surrogate evaluator partitions the observation samples multiple times and passes the train partition to the surrogate generator and then evaluates the quality using the associated validate partition.
+Therefore, the actual implementation control flow is not as simple as shown in \cref{fig:tpex}.
+The observation subset, which is passed down by each component to the next ones is also randomly shuffled, such that partioning them into train and validation sets is not deterministic when performing multiple pipeline iterations.
+
+The pipeline works fine for any amount of observations, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work, if an appropriate transformation generator is chosen.
+This is an advantage compared to any interpolation based approach and makes the transformed surrogate technique very flexible.
+
 \newpage
-
-\section {Surrogate generators}
-\label{sec:sg}
-
-The last components needed for the pipeline implementation are surrogate generators, which construct the function $\hat{f}_t$ for given configuration parameters and the transformed input samples
-\begin{equation}
-S_t=\left\{(t(x_i), f(x_i))\right\}_{i=1}^n \subseteq T \times \mathds{R}.
-\end{equation}
-The implementation is straightforward and closely matches the theoretic construction of sparse grid surrogates (see \cref{chap:c4}) and RBF surrogates (see \cref{sec:rbf}).
-
-\subsection {Sparse Grid surrogate generator}
-
-The sparse grid generation implementation is realized with the $\mathrm{SG}^{++}$ library \cite{Pflueger2010}.
-In the case of sparse grid surrogates, as used in this thesis, the construction parameters contain all the normally required inputs like grid type, basis type, adaptivity properties, and regression parameters.
-Instead of passing a fixed level $\ell$ as a parameter, we instead use \texttt{approxGridPoints} to specify how much grid points the surrogate should approximately have and determine the most appropriate level and refinement amounts from there, as it varies greatly for different values of $r$.
-Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint}, to automatically link the amount of grid points and used training samples together.
-
-\subsection {RBF surrogate generator}
-
-Radial basis function surrogates are implemented with the help of ALGLIB \cite{Bochkanov}, a numerical analysis and data processing library which supports fitting RBFs on arbitrary input data.
-Compared to sparse grids, RBFs do not have a lot of configuration parameters.
-The main parameters are the shape parameter $\epsilon$ and also a regularization factor $\lambda$.
-RBF surrogates can be created with the interpolation approach, as they can interpolate from arbitrary function samples $S_t$.
-
 \section{Example pipeline}
 
-To give an example on how an actual transformation pipeline instance could look like, we will construct a simple one here.
-As many components are designed in a way to be forward looking, we can think of the transformation pipeline as a collection of different subpipelines.
-The high-fidelity subpipeline is responsible for finding the the best and most expensive possible surrogate that will be retuned afer each iteration.
-It does so by usually evaluating the quality of multiple transformations from one family of possible transformations using a look-ahead approach, \ie executing a low-fidelity subpipeline that evaluates the transformation quality by effectively performing a whole iteration with low-fidelity surrogates.
+To give an example on how an actual transformation pipeline instance could look like, we will construct a simple one in this section.
+As many components are designed to be forward looking, we can think of the transformation pipeline as a collection of different subpipelines.
+The high-fidelity subpipeline is responsible for finding the the best and most expensive possible surrogate that will be retuned after each complete pipeline iteration.
+It achieves this by usually evaluating the quality of multiple transformations from one family of possible transformations using a look-ahead approach, \ie executing a low-fidelity subpipeline that evaluates the transformation quality by effectively performing a whole iteration with low-fidelity surrogates.
 This low-fidelity subpipeline has to be quick to execute, as it gets executed for all possible values of $r$.
 The structure of an example pipeline can be seen in \cref{fig:tpex}.
 
-\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/PipelineExample.pdf}
 \delimit
 
 \captionof{figure}{Structure and control flow of an examplary transformation pipeline.\\
-The \red box identifies the high-fidelity subpipeline components and the \green box identifies the low-fidelity subpipeline components.}
+The \red box represents the high-fidelity subpipeline components, while the \green box identifies the low-fidelity subpipeline components.}
 \label{fig:tpex}
 \end{figure}
 \end{mdframed}
-
-
-\section{Sample budgeting}
-
-A central aspect of the transformation is pipeline is the handling of input samples, as they are used in almost every pipeline component.
-With the heavy use of the same samples across various stages, special care has to be taken to prevent all kinds of overfitting that can occur.
-For example, the generator components and evaluator components should all work with different samples such that no overtting can possibly take place.
-
-Furthermore, components that only work together, such as the surrogate generator and surrogate evaluator, are internally designed to coordinate their sample use with each other.
-For example, a cross validated surrogate evaluator partitions the input samples multiple times and passes the train partition to the surrogate generator and then evaluates the quality using the associated validate partition.
-Therefore, the actual implementation control flow is not as simple as shown in \cref{fig:tpex}.
-The sample subset, that is passed down by each component to the next ones is also randomly shuffled, such that partioning them into train and validation samples is not deterministic when performing multiple pipeline iterations with the sample input samples.
-
-The pipeline works for any amount of input samples, as long there is at least a minimum viable amount, and does not require any additional function evaluations to work, if an appropriate transformation generator is chosen.
-This is an advantage compared to any interpolation based approach and makes the transformed surrogate technique very flexible.
 
 \chapter{Experiments}
 \label{chap:c7}
@@ -2832,15 +2826,6 @@ We therefore employ the look-ahead approach, which will also work with low-fidel
 
 The results for a baseline amount of grid points are visualized in \cref{fig:ww_comp}.
 From there it is pretty evident that random active directions are uncompetitive and ...
-
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\includegraphics[width=\textwidth]{graphics/wingweight_fixed}
-\delimit
-\captionof{figure}{Comparision of approximation errors for transformed sparse grids constructed in various different ways.}
-\label{fig:ww_comp}
-\end{figure}
-\end{mdframed}
 
 
 \chapter{Practical applications}
