@@ -1,5 +1,5 @@
 Computerexperimente ermöglichen es, Phänomene der realen Welt zu untersuchen.
-Um so mehr Informationen der Simulation zur Verfügung gestellt werden können, umso genauer kann diese dann die Realität darstellen.
+Um so mehr Informationen der Simulation zur Verfügung gestellt werden können, um so genauer kann diese dann die Realität darstellen.
 Viele komplexe Simulationen leiden jedoch unter dem Fluch der Dimensionalität, wodurch eine genaue Simulation schwierig wird und die Verwendung eines Modelsurrogats erforderlich ist.
 In vielen Fällen zeigt sich, dass eine Simulation hauptsächlich nur von einer Teilmenge der Eingabeparameter abhängt, was sie zu einem möglichen Ziel für Dimensionsreduktionstechniken macht.
 Diese Techniken zielen darauf ab, solche Parameterstrukturen zu identifizieren und versuchen die Simulation entsprechend anzupassen, beispielsweise durch die Konstruktion eines niedrigerdimensionalen Modellsurrogats.
