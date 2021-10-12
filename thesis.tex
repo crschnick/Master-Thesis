@@ -1895,7 +1895,7 @@ The regression surrogate had to employ a lot of regularization, as seen in \cref
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_1.png}
-  \caption{Error function $e_0$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_0$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \label{fig:pipeline_current_1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
@@ -1919,7 +1919,7 @@ However, because the method is not perfect and encounters small errors from vari
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_2.png}
-  \caption{Error function $e_1$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_1$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \label{fig:pipeline_current_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
@@ -1948,7 +1948,7 @@ Even though we can try to fit a heavily regularized surrogate to the transformed
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.73\linewidth]{graphics/pipeline_current_3.png}
-  \caption{Error function $e_2$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_2$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -1965,7 +1965,7 @@ Even though we can try to fit a heavily regularized surrogate to the transformed
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.75\linewidth]{graphics/pipeline_current_4.png}
-  \caption{Error function $e_3$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_3$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -1986,7 +1986,7 @@ We can also choose to not include the last few transformed surrogates as they di
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.8\linewidth]{graphics/pipeline_current_5.png}
-  \caption{Error function $e_4$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_4$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -2010,7 +2010,7 @@ If we look at the example function from the previous section again and give the 
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.75\linewidth]{graphics/pipeline_bad_current_1.png}
-  \caption{Error function $e_0=f$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_0=f$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \label{fig:pipeline_bad_current_1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
@@ -2035,7 +2035,7 @@ However, the consequences of this badly fitted surrogate will propagate into the
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.85\linewidth]{graphics/pipeline_bad_current_2.png}
-  \caption{Error function $e_1$ and its intersection with the first active subspace direction $v_1$ in \reddot}
+  \caption{Error function $e_1$ and its intersection with the first active subspace direction $w_1$ in \reddot}
 \label{fig:pipeline_bad_current_2}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
@@ -2362,12 +2362,14 @@ The \red box represents the high-fidelity sub-pipeline components, and the \gree
 \label{chap:c7}
 
 The construction process for transformed surrogates is realized through the transformation pipeline, which consists out of many different components.
-These components interact with each other by passing data down the transformation pipeline, which can cause compounding inaccuracies and errors.
-In this evaluation chapter, we investigate the qualities and properties of transformation pipeline components in an isolated environment, such that we can obtain concrete data for each component that enables us to make use of the best possible pipeline configurations when performing experiments on real world model functions in the next chapter.
+These components interact with each other by exchanging data and are therefore vulnerable to compounding inaccuracies and errors.
+In this evaluation chapter, we investigate the qualities and properties of transformation pipeline components in an isolated environment such that we can obtain concrete data for each component that enables us to make use of the best possible pipeline configurations when performing experiments on real-world model functions in the next chapter.
 Of course, since not all components can be perfectly isolated, we will settle with best effort approaches that try to be as convincing as possible.
 We will first look at the low-dimensional Ishigami function followed by the higher-dimensional wing weight function.
 
 All approximation error results throughout the chapter are computed using a Monte-Carlo NRMSE surrogate evaluator with $10^5$ separate observations.
+Furthermore, the sparse grid surrogate generator uses a value of $\texttt{trainSamplesPerGridPoint}=1$ when creating the regression surrogate.
+The concrete grid point amount of low-fidelity and high-fidelity surrogates varies and is explicitly mentioned in each section.
 
 \section{Ishigami function}
 
@@ -2376,8 +2378,9 @@ We start off with the three-dimensional Ishigami function,
 i(x)=\sin(x_1) + a \sin^2(x_2) + b x_3^4 \sin(x_1), ~~ a = 7, b=0.1,
 \end{equation}
 %
-which has been originally used for uncertainty quantification purposes in \cite{Ishigami1990AnIQ}, but has also been used to test sensitivity analysis techniques in \cite{Sobol1999}.
-To get an idea of the general structure and importance of the inputs, we first apply the active subspace method on this function, which yields the following results:
+which has been originally used for uncertainty quantification purposes in \cite{Ishigami1990AnIQ}.
+It has also been used to test sensitivity analysis techniques in \cite{Sobol1999}.
+To get an idea of the general structure and importance of the inputs, we first apply the active subspace method on this function. It yields the following results:
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \centering
@@ -2385,7 +2388,7 @@ To get an idea of the general structure and importance of the inputs, we first a
 \bgroup
 \def\arraystretch{1.2}%
   \begin{tabular}{ l | c c c}
-$i$ & $v_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
+$i$ & $w_i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
 \hline
 $1$ & $(+0.005, ~+0.999, ~+0.007)^T$ & 967.93 & $81.7\%$\\
 $2$  & $(+0.540, ~+0.003, ~-0.841)^T$ & 112.20 & $9.5\%$\\
@@ -2401,13 +2404,14 @@ $3$ & $(-0.841, ~+0.008, ~+0.540)^T$ & 104.77 & $8.8\%$\\
 \end{figure}
 \end{mdframed}
 %
-Based on the values in \cref{tab:ishigami_as}, we can see that the most active direction almost exactly corresponds to second input dimension and is responsible for a big chunk of the average gradient change, while the other two directions are less important and are also not axis aligned.
-These two less active directions are however not negligible, as their combined eigenvalue share still is $18.3\%$.
+Based on the values in \cref{tab:ishigami_as}, we can see that the most active direction almost exactly corresponds to second input dimension and is responsible for a big chunk of the average gradient change while the other two directions are less important and are also not axis aligned.
+These two less active directions are however not negligible beucase their combined eigenvalue share still is $18.3\%$.
 
 \subsection{Dimensionality preserving transformations}
 
 While the main focus of this thesis lies on reducing transformations with $r < d$, we still take a short look at the quality of simple dimensionality preserving transformations with $r=d$, which are effectively only changing the orientation of the function input parameters.
-For the orientation change, we use all computed active directions from \cref{tab:ishigami_as}, or in other words apply the active direction transformation $t_{W_3}$ (see \cref{sec:ruh}) on the inputs.
+For the orientation change, we use all computed active directions from \cref{tab:ishigami_as}.
+In other words, we apply the active direction transformation $t_{W_3}$ (see \cref{sec:ruh}) on the inputs.
 As discussed in \cref{sec:ms}, with a few small modifications concerning model function evaluations outside of $\Omega$, we can also apply the interpolation method to construct a transformed sparse grid surrogate.
 Compared the non transformed interpolation approach, the approximation error should be improved by the more optimal orientation of inputs.
 On the other side, the unused parts of surrogate space (see \cref{sec:tis}) effectively reduce the grid point resolution of the sparse grid surrogate and may make some grid points obsolete.
@@ -2434,23 +2438,23 @@ In this section, we are interested in answering the following basic questions:
 As we can see in \cref{fig:ishigami_errors}, the pure orientation change does not lead to better interpolation results.
 In this concrete example, the penalty of the unused transformation space $U$ evens out the gains from a more optimal orientation for sparse grid surrogates.
 As we do not perform a dimensionality reduction, even if it would be feasible, this results in a constructed surrogate space that covers a lot more than the required transformation space.
-In this case the value is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$.
+In this case, the unused surrogate space share is $\tilde{u}_t=0.44$, which means that $T$ only makes up $56\%$ of the surrogate space $S$.
 This effectively lowers the grid point resolution and results in some grid points being unused.
-Furthermore, the introduced regression penalty factor, is approximately $10^1$ compared to the interpolation method.
+Furthermore, the introduced regression penalty factor is approximately $10^1$ compared to the interpolation method.
 
 There are also no significant quality differences when using modified linear basis functions instead of a linear hat basis with boundaries.
-Therefore, we will only use the modified hat basis for the Ishigami function for the rest of this evaluation section.
+Therefore, we will only use the modified hat basis for the Ishigami function later in this evaluation section.
 
-Based on these results we can conclude that, even though there is no improvement with this method, there is also no significant downside, even as $\tilde{u}$ is relatively large and regression is employed.
-This can be seen as a positive insight, as it means that having a lot of unused space, which can not be avoided when using active direction transformations, approximately cancels out with the orientation improvements.
+Based on these results, we can conclude that, even though there is no improvement with this method, there is also no significant downside even as $\tilde{u}$ is relatively large and regression is employed.
+This can be seen as a positive insight because it means that having a lot of unused space, which can not be avoided when using active direction transformations, approximately cancels out with the orientation improvements.
 Moreover, the additional use of regression only results in a slight increase of the approximation error.
-As the transformation process focuses on reducing transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change, but allow for a much more flexible dimensionality reduction process.
+As the transformation process focuses on reducing transformations that have to deal with unused space and can only use regression, this means that the individual transformed sparse grid surrogates do not become worse just through the orientation change but allow for a much more flexible dimensionality reduction process.
 Therefore, dimensionality reducing transformations seem to have a much bigger potential.
 
 \subsection{Dimensionality reducing transformations}
 
 Next, we look at dimensionality reducing transformations with $r < d$.
-Note that for this low-dimensional model function, there is no real need to perform a dimensionality reduction, as the curse of dimensionality does not really affect sparse grid surrogates for $d=3$.
+Note that for this low-dimensional model function, there is no real need to perform a dimensionality reduction as the curse of dimensionality does not really affect sparse grid surrogates for $d=3$.
 We can therefore not expect to see any gain from applying a transformation with $r < d$.
 Even though reducing transformations should not be competitive for the Ishigami function, we are still interested in answering some basic questions:
 \begin{enumerate}
@@ -2458,9 +2462,9 @@ Even though reducing transformations should not be competitive for the Ishigami 
 \item How much do the increased approximation errors correlate with the computed active subspace eigenvalues?
 \end{enumerate}
 %
-Based on the active subspace information from \cref{tab:ishigami_as}, a one-dimensional reduction by cutting off the eigenvectors $v_2$ and $v_3$ looks feasible, as the first active direction covers the majority of the eigenvalue share.
-However, as already discussed in \cref{sec:asl}, the active subspaces method can be biased and may not produce suitable active directions and eigenvalues.
-Therefore, the primarily used pipeline component uses a look ahead approach to evaluate the suitability of the computed active directions and corresponding eigenvalues, instead of relying solely on the active subspaces results.
+Based on the active subspace information from \cref{tab:ishigami_as}, a one-dimensional reduction by cutting off the eigenvectors $v_2$ and $v_3$ looks feasible because the first active direction covers the majority of the eigenvalue share.
+However, as already discussed in \cref{sec:asl}, the active subspace method can be biased and may not produce suitable active directions and eigenvalues.
+Therefore, the primarily used pipeline component uses a look ahead approach to evaluate the suitability of the computed active directions and corresponding eigenvalues instead of relying solely on the active subspaces results.
 
 To better investigate the active subspace properties, we first generate transformations for $r=1$ and $r=2$.
 Since these are dimensionality reducing transformations, we can only create regression surrogates.
@@ -2471,12 +2475,13 @@ Then we compare them to regression and interpolation surrogates with $r=3$ to ob
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/ishigami_red}\vspace{-2mm}
 \delimit
-\captionof{figure}{Approximation errors of various transformed sparse grid surrogates with $\ell \in \{2, \dots, 7\}$ for the Ishigami function using boundary hat basis functions and modified hat basis functions. The transformations were constructed using the active directions from \cref{tab:ishigami_as} and only one pipeline iteration was performed.}
+\captionof{figure}{Approximation errors of various transformed sparse grid surrogates with $\ell \in \{2, \dots, 7\}$ for the Ishigami function using boundary hat basis functions and modified hat basis functions. The transformations were constructed using the active directions from \cref{tab:ishigami_as} and only one pipeline iteration was performed.
+The interpolation result is included as a reference.}
 \label{fig:ishigami_red}
 \end{figure}
 \end{mdframed}
 %
-As we can see in \cref{fig:ishigami_red}, the dimensionality reducing transformations lead to, as expected, way worse results and do not provide viable surrogates.
+As we can see in \cref{fig:ishigami_red}, the dimensionality reducing transformations lead to, as expected, way worse results and do not provide competitive surrogates.
 We see that the approximation error for the reduced surrogates reaches a convergent state very fast and an increase in grid points does not improve the surrogate quality.
 Furthermore, the actual approximation error of the reduced surrogates does not correlate with the active subspace eigenvalues.
 Even though the eigenvalue share of the first two eigenvectors is around $90\%$, the loss of the approximation quality when cutting of the most inactive eigenvector in the $r=2$ case is already very large.
@@ -2492,7 +2497,7 @@ We are interested in answering the following questions:
 \item Do multiple iterations deliver better results than a single one?
 \item Are there differences between the amount of grid points added per iteration?
 \end{enumerate}
-Results for various grid point amounts are shown in \cref{fig:ww_dyn}, which showcases dynamic pipeline results that use a different amount of grid points per iteration (gp/it).
+Results for various grid point amounts are shown in \cref{fig:ishigami_dyn}, which showcases dynamic pipeline results that use a different amount of grid points per iteration (gp/it).
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2501,19 +2506,224 @@ Results for various grid point amounts are shown in \cref{fig:ww_dyn}, which sho
 \delimit
 \captionof{figure}{Approximation errors of various transformed surrogate sum approximations for the Ishigami function created using a dynamic pipeline.\\
 In contrast to previous figures, every marker of a graph in \cref{fig:ww_dyn} now represents the result of a new iteration with the approximation error of the new surrogate sum and the grid point amount of all surrogate sum elements combined.}
-\label{fig:ww_dyn}
+\label{fig:ishigami_dyn}
 \end{figure}
 \end{mdframed}
 %
 As we are able to see, the gains from using multiple iterations are, except in the 20 gp/it case, nonexistent.
 This might be explained by the fact that reducing transformations are very ineffective at approximating the function and therefore force the iterative algorithm to always construct three-dimensional surrogates as they still provide the best approximation quality.
-It is therefore wise to wait for the high-dimensional function evaluation later in this chapter to judge the true potential of the iterative algorithm, as it can not deliver any gains for model functions like this.
+We therefore wait for the high-dimensional function evaluation later in this chapter to judge the true potential of the iterative algorithm because it can not deliver any gains for low-dimensional model functions like this.
 
+\subsection{Random transformations}
+
+To verify the quality of the active subspace method compared to a true optimal active direction transformation, which we can't necessarily construct deterministically using active subspaces, one approach are random active direction transformations (see \cref{sec:rt}).
+This generation method is not affected by any potential biases or compounding gradient approximation errors like the active subspace method is.
+To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal transformation.
+As the mainly used transformation evaluator component is forward looking, \ie generating an actual transformed surrogate, we have to employ very low-fidelity components to achieve a large amount of runs.
+We are interested in answering the following questions:
+\begin{enumerate}
+\item How do the best found random transformations compare to active subspaces?
+\item What does the approximation error distribution of the randomly generated transformations look like?
+\item Are random active direction transformations a viable alternative for constructing transformations?
+\end{enumerate}
+%
+Once the algorithm has determined the random transformation with the lowest error based on the low-fidelity surrogates, we construct an actual high-fidelity surrogate and calculate the error again.
+The low-fidelity transformation errors are visualized using histograms and while the errors do not come close to the actual high-fidelity errors, the distribution of low-fidelity errors can provide valuable insights into the actual approximation error distribution since the low-fidelity surrogates are chosen to be comparatively representative.
+
+As we will make use of low-fidelity and high-fidelity simulations, we will distinguish the resulting errors by denoting them by $\varepsilon^\mathrm{l}_{\mathrm{NRMSE}}$ and $\varepsilon^\mathrm{h}_{\mathrm{NRMSE}}$, respectively.
+For the Ishigami function in the low-fidelity case, we use a sparse grid surrogate generator with modified linear basis functions, and 250 grid points..
+In the high-fidelity case, we increase the grid point amount to $10^3$.
+We only perform one pipeline iteration as we already saw that additional iterations do not considerably improve the approximation.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_3_inter}
+  \subcaption{Interpolated transformed sparse grid surrogates with $r=3$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.0007$.}
+\vspace{3mm}
+  \label{fig:ishigami_hist_3_inter}
+\end{subfigure}%
+\begin{subfigure}[H]{.5\textwidth}
+  \centering
+   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_3}
+  \subcaption{Regressed transformed sparse grid surrogates with $r=3$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.031$.}
+\vspace{3mm}
+  \label{fig:ishigami_hist_3}
+\end{subfigure}
+\delimit
+  \caption{Histogram of low-fidelity approximation errors for $10^4$ randomly generated transformations and the associated best possible high-fidelity error.}
+\label{fig:ishigami_hists_pres}
+\end{figure}
+\end{mdframed}
+%
+\Cref{fig:ishigami_hists_pres} shows the approximation error distribution of interpolation and regression surrogates for $r=3$.
+Comparing the high-fidelity results with $10^3$ grid points to the previous active subspace transformation results in \cref{fig:ishigami_red}, we see that random transformations can deliver competitive results.
+We see that the distribution has a broad center of mass and almost no real tails, which makes it easier to find good transformations.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_2}
+  \subcaption{Regressed transformed sparse grid surrogates with $r=2$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.05$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_2}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_1}
+  \subcaption{Regressed transformed sparse grid surrogates with $r=1$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.09$.}
+\vspace{3mm}
+\label{fig:ishigami_hist_1}
+\end{subfigure}
+\delimit
+  \caption{Histogram of low-fidelity approximation errors for $10^4$ randomly generated transformations and the associated best possible high-fidelity error.}
+\label{fig:ishigami_hists_red}
+\end{figure}
+\end{mdframed}
+%
+In \cref{fig:ishigami_hists_red} with $r=1$ and $r=2$, the distribution shape changes drastically to a distribution with a high peak, very long tails and a negative skew.
+As a result, it requires more generation runs to obtain a good transformation because the probability of finding one far too the left of the peak is low.
+However, compared to the results in \cref{fig:ishigami_red}, the best found transformation still delivers similar results to active subspaces.
+
+In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function and enough runs, as it comes close to the active subspace transformations.
+However, for higher dimensional functions, the required amount of random generation iterations to find an acceptable transformation is expected grow very fast, as more dimensions will mean more possible directions and also orders of directions.
+Therefore, we expect the active subspace method to scale better with higher dimensions as it only requires exactly one run and an order of directions is implicitly given.
+
+\newpage
+\section{Wing weight function}
+
+Now that we investigated several important pipeline components with regards to their properties when being applied to a low-dimensional model function, we compare the results to a case study that involves a high-dimensional model function to look out for properties that can't be generalized from one low-dimensional case study.
+The model function covered in this section is the wing weight function \cite{Forrester2008},
+\begin{equation}
+w=0.036 \, S_\mathrm{w}^{0.758} \, W_\mathrm{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_\mathrm{c}}{\cos(\Lambda)} \right)^{-0.3} (N_\mathrm{z} W_\mathrm{dg})^{0.49} + S_\mathrm{w} W_\mathrm{p},
+\end{equation}
+which models the weight of a wing for a light aircraft based on ten input parameters that are defined in \cref{tab:ww_params}.
+It has already been studied in the context of sensitivity analysis in \cite{Moon2012}.
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\vspace{-2mm}
+\centering
+\bgroup
+\def\arraystretch{1.2}%
+  \begin{tabular}{ l l l l}
+Variable & Description & Distribution\\
+\hline
+$S_{\mathrm{w}}$ & wing area (ft$^2$) & $\mathcal{U}(150,\, 200)$\\
+$W_{\mathrm{fw}}$ & weight of fuel in the wing (lb) & $\mathcal{U}(220,\, 300)$\\
+$A$ & aspect ratio & $\mathcal{U}(6,\, 10)$\\
+$\Lambda$ & quarter-chord sweep (degrees) & $\mathcal{U}(-10 ,\,  10)$\\
+$q$ & dynamic pressure at cruise (lb/ft$^2$) & $\mathcal{U}(16,\, 45)$\\
+$\lambda$ & taper ratio & $\mathcal{U}(0.5, \, 1)$\\
+$t_\mathrm{c}$ & aerofoil thickness to chord ratio & $\mathcal{U}(0.08\, 0.18)$\\
+$N_\mathrm{z}$ & ultimate load factor & $\mathcal{U}(2.5\, 6)$\\
+$W_\mathrm{dg}$ & flight design gross weight (lb)& $\mathcal{U}(1700\, 2500)$\\
+$W_\mathrm{p}$ & paint weight (lb/ft$^2$) & $\mathcal{U}(0.025,\, 0.08)$\\
+\end{tabular}
+\egroup\\
+\vspace{0.5em}
+\delimit
+\captionof{table}{Input parameters of the wing weight model function.}
+\label{tab:ww_params}
+\end{figure}
+\end{mdframed}
+%
+To get an idea of the general structure and importance of the inputs, we apply the active subspaces method on this function as well, which yields the results of \cref{tab:ww_as}.
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\vspace{-2mm}
+\centering
+\bgroup
+\def\arraystretch{1.2}%
+  \begin{tabular}{ l | c c c}
+$i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
+\hline
+$1$  & 28318.959 & $97.1\%$\\
+$2$   & 478.48 & $1.6\%$\\
+$3$  & 200.70 & $0.7\%$\\
+$4 \dots 10$  & < 71.0 & $< 0.02\%$\\
+\end{tabular}
+\egroup
+\vspace{0.5em}
+
+\delimit
+
+\captionof{table}{Computed eigenvalues and eigenvalue shares of the active subspace matrix for the wing weight function using the Monte-Carlo method and $10^5$ samples with finite differences.}
+\label{tab:ww_as}
+\end{figure}
+\end{mdframed}
+%
+Based on the values in \cref{tab:ww_as}, we can see that there exists one dominant active direction that takes up the majority of the eigenvalue share and that there are two less important active directions as well.
+The seven other directions only make up a very small share of the total eigenvalue sum.
+
+\noindent However, as we learned for the Ishigami function, these eigenvalues should only be used as rough indicators and not as reliable sources about the suitability for using transformed sparse grids.
+
+\subsection{Static pipeline}
+
+To start off, we first investigate the general quality of active direction transformations with multiple iterations and fixed $r$ to get an idea of the model function properties with regards to its approximate compounded intrinsic dimensionality.
+To achieve this, we use the directions from \cref{tab:ww_as} and employ the relative convergence criterion with $\eta=0$, \ie we perform iterations until the approximation error does not improve anymore.
+The results can be seen in \cref{fig:wwf}.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\vspace{-2mm}
+\includegraphics[width=0.97\textwidth]{graphics/wingweight_fixed}\vspace{-4mm}
+\delimit
+\captionof{figure}{Approximation errors of various transformed surrogate sum approximations with fixed values of $r$ for the wing weight function.}
+\label{fig:wwf}
+\end{figure}
+\end{mdframed}
+%
+Every marker of a graph in \cref{fig:wwf} represents the result of a new iteration with the approximation error of the new surrogate sum and the grid point amount of all surrogate sum elements combined.
+In the left half, we see surrogate sum approximations using a coarse level and in the right half we see the fine level equivalents.
+The range between coarse and fine level surrogate sums for the same reduced dimensionality $r$ gives insight into what part of the approximation error is based on the compounded intrinsic dimensionality of the model function and what part is based on the surrogate fidelities itself.
+For example, we see that for $r=1, \dots, 4$, the approximation error improvement from low-level to high-level surrogates is relatively small compared to higher values of $r$.
+This means that the main limiting factor in these cases is that the model function can not be approximated well with such low-dimensional surrogates.
+For $r > 4$, we see bigger improvement gaps when going from low levels to higher levels, which means that there is  more potential approximation quality for higher-dimensional surrogates.
+
+Moreover, we see that multiple iterations do improve the approximation, in contrast to the Ishigami function.
+The majority of approximation improvements can be achieved within the first three pipeline iterations as most error graphs converge after the third iteration.
+As we make use of static pipeline iterations only and therefore do not have the freedom to optimally choose the best reduced dimensionality in each iteration, we also might limit the effectiveness of multiple iterations.
+
+Another interesting trend that can be observed is the behaviour of the approximation errors as $r$ grows.
+The general approximation quality improves from $r=1$ to $r=7$ but hits a point at which the trend reverses and then worsens from $r=7$ to $r=10$.
+This can be explained by the general tradeoff between grid point resolution and dimensionality.
+As higher-dimensional grids effectively have to spend less grid points for each dimension when keeping the amount of grid points constant, this results in a tradeoff between grid points spent per dimension and reduced dimensionality.
+This optimal tradeoff point is hit at $r=7$ in this case.
+
+All in all, we can conclude that higher reduced dimensionalities up to $r=7$ provide the best approximation error tradeoff when comparing the results for an equal amount of grid points
+This does not correlate at all with the active subspace results from \cref{tab:ww_as} and reinforces the evidence that we should not rely on the active subspace eigenvalues.
+The greater difference between low-fidelity and high-fidelity surrogates for larger values of $r$ means that applying transformation generators that require a lot of low-fidelity surrogates, such as the random active direction generators, will take up more runtime as the amount of grid points for low-fidelity surrogates has to be increased to produce representative surrogates.
+
+\newpage
+\subsection{Dynamic pipeline}
+
+After we looked at the results of a mostly static pipeline in the sense that $r$ was fixed, we now continue to look at a more dynamic pipeline approach.
+The goal is to dynamically choose a suitable reduced dimensionality $r_i$ for each iteration such that we can obtain better results than with a static pipeline.
+By specifying how many grid points should be added in each iteration, we can easily implement a dynamic pipeline that determines the best $r_i$ by looking ahead and then creates a sparse grid surrogate with the given amount of grid points.
+The targeted grid point amount can always be reached by performing refinements a certain amount of times.
+We differentiate the dynamic pipeline results by the spent amount of grid points per iteration (gp / it).
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\vspace{-2mm}
+\includegraphics[width=\textwidth]{graphics/ww_dynamic}\vspace{-4mm}
+\delimit
+\captionof{figure}{Approximation errors of various transformed surrogate sum approximations for the wing weight function created using a dynamic pipeline.
+The best results from the static pipeline are also included for reference.}
+\label{fig:ww_dyn}
+\end{figure}
+\end{mdframed}
+%
+\Cref{fig:ww_dyn} shows that by utilizing a more flexible dynamic pipeline, we can improve the approximation quality a little bit compared to a purely static pipeline.
+Furthermore, we also observe that there are differences in the approximation quality between the different amount of grid points spent per iteration, as a pipeline with 500 gp/it delivers better results than one with 100 gp/it and 200 gp/it.
+Overall, when using the right amount of grid points per iteration, we are able to obtain some improvements.
 
 \subsection{Active subspace approximations}
 
 Another central aspect of the transformation pipeline is the quality of the generated transformations for any given value of $r$.
-In cases the transformation is constructed using the active subspace method, we are interested in the quality differences between the available active subspace approximation methods (see \cref{sec:as_est}), and want to ideally make use of the neighbour approximation methods, as they don't require known gradients and no additional model function evaluations.
+In cases the transformation is constructed using the active subspace method, we are interested in the quality differences between the available active subspace approximation methods (see \cref{sec:as_est}) and want to ideally make use of the neighbour approximation methods because they don't require known gradients and no additional model function evaluations.
 We are interested in answering the following questions:
 \begin{enumerate}
 \item How much do approximated active subspaces differ from the true active subspaces?
@@ -2546,7 +2756,7 @@ We therefore settle with the surrogate look ahead approximation error.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
-	\includegraphics[width=\textwidth]{graphics/ishigami_as_grad_errors}
+	\includegraphics[width=\textwidth]{graphics/ww_as_grad_errors}
 \delimit
 	\caption{Gradient approximation errors of various gradient approximation methods averaged over 10 separate runs.}
 	\label{fig:ishigami_as_grad}
@@ -2554,37 +2764,37 @@ We therefore settle with the surrogate look ahead approximation error.
 \end{mdframed}
 %
 As seen in \cref{fig:ishigami_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
-Furthermore, the nearest neighbour method does deliver better results than the random neighbour method with regards to $\varepsilon_{\mathrm{grad}}$.
-The random neighbour methods gradient errors all lie in a range that is similar to the finite differences approximation with a very big step size of $h=5$ and therefore performs the worst out of all methods.
+Furthermore, both neighbour methods do deliver approximately the same results with regards to $\varepsilon_{\mathrm{grad}}$.
+Their gradient errors all lie in a range that is similar to the finite differences approximation with a very big step size of $h=5$, which at first glance makes them look not suitable.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
   \centering
-   \includegraphics[width=\linewidth]{graphics/ishigami_as_3_inter}
-	\caption{Interpolated surrogates with $r=3$.}
+   \includegraphics[width=\linewidth]{graphics/ww_as_10}
+	\caption{Surrogates with $r=10$.}
 	\label{fig:ishigami_as_3_inter}
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
-   \includegraphics[width=\linewidth]{graphics/ishigami_as_3}
-	\caption{Regressed surrogates with $r=3$.}
+   \includegraphics[width=\linewidth]{graphics/ww_as_7}
+	\caption{Surrogates with $r=7$.}
 	\label{fig:ishigami_as_3}
 \end{subfigure}\vspace{4mm}
 \begin{subfigure}{.5\textwidth}
   \centering
-   \includegraphics[width=\linewidth]{graphics/ishigami_as_2}
-	\caption{Regressed surrogates with $r=2$.}
+   \includegraphics[width=\linewidth]{graphics/ww_as_4}
+	\caption{Surrogates with $r=4$.}
 	\label{fig:ishigami_as_2}
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
-   \includegraphics[width=\linewidth]{graphics/ishigami_as_1}
-	\caption{Regressed surrogates with $r=1$.}
+   \includegraphics[width=\linewidth]{graphics/ww_as_1}
+	\caption{Surrogates with $r=1$.}
 	\label{fig:ishigami_as_1}
 \end{subfigure}\vspace{4mm}
 \delimit
-	\caption{Surrogate look ahead errors using active direction transformations and various gradient approximation methods averaged over 10 separate runs.
+	\caption{Surrogate look ahead errors for select values of $r$ using active direction transformations and various gradient approximation methods averaged over 10 separate runs.
 	The sparse grid surrogates were created using $10^3$ grid points and modified linear basis functions.}
 	\label{fig:ishigami_as}
 \end{figure}
@@ -2592,209 +2802,15 @@ The random neighbour methods gradient errors all lie in a range that is similar 
 %
 \Cref{fig:ishigami_as} shows the actual performance of the different methods by using the look ahead error.
 It can be observed that the gradient approximation quality from \cref{fig:ishigami_as_grad} does not exactly correlate with the constructed surrogate quality.
-While the finite differences method with $h=0.01$ has the best error $\varepsilon_{\mathrm{grad}}$ by far, the constructed surrogate does not perform better than basically the other finite differences methods and also the nearest neighbour methods in \cref{fig:ishigami_as_3_inter} and \cref{fig:ishigami_as_3}.
-The random neighbour methods lag a little bit behind in terms of the gradient errors and surrogate errors, but are still in a comparable range to the other methods.
-They also take more active subspace samples to converge to the other methods.
+While the finite differences method with $h=0.01$ has the best error $\varepsilon_{\mathrm{grad}}$ by far, the constructed surrogate does not perform better than basically the other finite differences methods and also some of the nearest neighbour methods.
+The random neighbour method lags a little bit behind in terms of the gradient errors and also surrogate errors in some cases but is still in a comparable range to the other methods.
+Furthermore, the nearest neighbour method does deliver far better results than the random neighbour method as it shows a similar quality as the finite differences approximation with smaller step sizes when $m$ is chosen correctly.
 
-In \cref{fig:ishigami_as_2} and \cref{fig:ishigami_as_1}, the random neighbour method errors are still contained in a small range comparable to the finite differences approximation with a very big step size of $h=0.5$.
-The nearest neighbour method does deliver far better results than the random neighbour method, as it shows a similar quality as the finite differences approximation with smaller step sizes.
+Especially important here are the results for $r=7$ as we have seen that the best approximation errors are achieved for that reduced dimensionality.
+Overall, the finite differences method performs the best, followed by the nearest neighbour method with $m=100$.
+The random neighbour method performs the worst in almost all cases.
+These results are good news as they indicate that the nearest neighbour approximation method, which is way cheaper with regards to required function evaluations, can deliver almost the same results as more expensive methods when the configuration parameters are chosen right.
 
-These results are good news, as they indicate that the nearest neighbour approximation method, which is way cheaper with regards to required function evaluations, can deliver almost the same results as more expensive methods.
-
-\subsection{Random transformations}
-
-To verify the quality of the active subspace method compared to a true optimal active direction transformation, which we can't necessarily construct deterministically using active subspaces, one approach are random active direction transformations (see \cref{sec:rt}).
-This generation method is not affected by any potential biases or compounding gradient approximation errors like the active subspace method is.
-To effectively make use of this strategy, it is vital that we can quickly generate, evaluate, and discard many random transformations, as more generated transformations will allow us to get closer to the potential optimal transformation.
-As the mainly used transformation evaluator component is forward looking, \ie generating an actual transformed surrogate, we have to employ very low-fidelity components to achieve a large amount of runs.
-We are interested in answering the following questions:
-\begin{enumerate}
-\item How do the best found random transformations compare to active subspaces?
-\item What does the approximation error distribution of the randomly generated transformations look like?
-\item Are random active direction transformations a viable alternative for constructing transformations?
-\end{enumerate}
-%
-Once the algorithm has determined the random transformation with the lowest error based on the low-fidelity surrogates, we construct an actual high-fidelity surrogate and calculate the error again.
-The low-fidelity transformation errors are visualized using histograms and while the errors do not come close to the actual high-fidelity errors, the distribution of low-fidelity errors can provide valuable insights into the actual approximation error distribution, as the low-fidelity surrogates are chosen to be comparatively representative.
-
-As we will make use of low-fidelity and high-fidelity simulations, we will distinguish the resulting errors by denoting them by $\varepsilon^\mathrm{l}_{\mathrm{NRMSE}}$ and $\varepsilon^\mathrm{h}_{\mathrm{NRMSE}}$, respectively.
-For the Ishigami function in the low-fidelity case, we use a sparse grid surrogate generator with modified linear basis functions, and 250 grid points..
-In the high-fidelity case, we increase the grid point amount to $10^3$.
-We only perform one pipeline iteration as we already saw that additional iterations do not considerably improve the approximation.
-\Cref{fig:ishigami_hists} shows the approximation error distribution of interpolation and regression surrogates.
-
-\newpage
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\begin{subfigure}{.5\textwidth}
-  \centering
-   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_3_inter}
-  \captionof{figure}{Interpolated transformed sparse grid surrogates with $r=3$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.0007$.}
-\vspace{3mm}
-  \label{fig:ishigami_hist_3_inter}
-\end{subfigure}%
-\begin{subfigure}[H]{.5\textwidth}
-  \centering
-   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_3}
-  \captionof{figure}{Regressed transformed sparse grid surrogates with $r=3$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.031$.}
-\vspace{3mm}
-  \label{fig:ishigami_hist_3}
-\end{subfigure}\vspace{4mm}
-\begin{subfigure}{.5\textwidth}
-  \centering
-   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_2}
-  \caption{Regressed transformed sparse grid surrogates with $r=2$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.05$.}
-\vspace{3mm}
-\label{fig:ishigami_hist_2}
-\end{subfigure}%
-\begin{subfigure}{.5\textwidth}
-  \centering
-   \includegraphics[width=0.95\linewidth]{graphics/ishigami_hist_1}
-  \caption{Regressed transformed sparse grid surrogates with $r=1$. The resulting high-fidelity error is $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.09$.}
-\vspace{3mm}
-\label{fig:ishigami_hist_1}
-\end{subfigure}
-\delimit
-  \captionof{figure}{Histogram of low-fidelity approximation errors for $10^4$ randomly generated transformations and the associated best possible high-fidelity error.}
-\label{fig:ishigami_hists}
-\end{figure}
-\end{mdframed}
-%
-Comparing the high-fidelity results with $10^3$ grid points to the previous active subspace transformation results in \cref{fig:ishigami_red}, we see that random transformations can deliver competitive results.
-In the orientation changing cases with $r=3$, we see that the distribution has a broad center of mass and almost no real tails, which makes it easier to find good transformations.
-With $r=1$ and $r=2$ the distribution shape changes drastically to a distribution with a high peak, very long tails and a negative skew.
-As a result, it requires more generation runs to obtain a good transformation, as the probably of finding one far too the left of the peak is low.
-
-In conclusion, random transformation generation proves to be a valuable alternative to active subspaces, at least for this example function and enough runs, as it comes close to the active subspace transformations.
-However, for higher dimensional functions, the required amount of random generation iterations to find an acceptable transformation is expected grow very fast, as more dimensions will mean more possible directions and also orders of directions.
-Therefore, we expect the active subspace method to scale better with higher dimensions as it only requires exactly one run and an order of directions is implicitly given.
-
-\newpage
-\section{Wing weight function}
-
-Now that we investigated several important pipeline components with regards to their properties when being applied to a low-dimensional model function, we compare the results to a case study that involves a high-dimensional model function to look out for properties that can't be generalized from one low-dimensional case study.
-The model function covered in this section is the wing weight function \cite{Forrester2008},
-\begin{equation}
-w=0.036 \, S_\mathrm{w}^{0.758} \, W_\mathrm{fw}^{0.0035} \left(\frac{A}{\cos^2(\Lambda)}\right)^{0.6} q^{0.006} \lambda^{0.04} \left( \frac{100 t_\mathrm{c}}{\cos(\Lambda)} \right)^{-0.3} (N_\mathrm{z} W_\mathrm{dg})^{0.49} + S_\mathrm{w} W_\mathrm{p},
-\end{equation}
-which models the weight of a wing for a light aircraft based on ten inputs that are defined in \cref{tab:ww_params} and  has been already studied in the context of sensitivity analysis in \cite{Moon2012}.
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\vspace{-2mm}
-\centering
-\bgroup
-\def\arraystretch{1.2}%
-  \begin{tabular}{ l l l l}
-Variable & Description & Distribution\\
-\hline
-$S_{\mathrm{w}}$ & wing area (ft$^2$) & $\mathcal{U}(150,\, 200)$\\
-$W_{\mathrm{fw}}$ & weight of fuel in the wing (lb) & $\mathcal{U}(220,\, 300)$\\
-$A$ & aspect ratio & $\mathcal{U}(6,\, 10)$\\
-$\Lambda$ & quarter-chord sweep (degrees) & $\mathcal{U}(-10 ,\,  10)$\\
-$q$ & dynamic pressure at cruise (lb/ft$^2$) & $\mathcal{U}(16,\, 45)$\\
-$\lambda$ & taper ratio & $\mathcal{U}(0.5, \, 1)$\\
-$t_\mathrm{c}$ & aerofoil thickness to chord ratio & $\mathcal{U}(0.08\, 0.18)$\\
-$N_\mathrm{z}$ & ultimate load factor & $\mathcal{U}(2.5\, 6)$\\
-$W_\mathrm{dg}$ & flight design gross weight (lb)& $\mathcal{U}(1700\, 2500)$\\
-$W_\mathrm{p}$ & paint weight (lb/ft$^2$) & $\mathcal{U}(0.025,\, 0.08)$\\
-\end{tabular}
-\egroup\\
-\vspace{0.5em}
-\delimit
-\captionof{table}{Input parameters for the wing weight model.}
-\label{tab:ww_params}
-\end{figure}
-\end{mdframed}
-%
-To get an idea of the general structure and importance of the inputs, we apply the active subspaces method on this function as well, which yields the results of \cref{tab:ww_as}.
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\vspace{-2mm}
-\centering
-\bgroup
-\def\arraystretch{1.2}%
-  \begin{tabular}{ l | c c c}
-$i$ & $\lambda_i$ & $\lambda_i / \sum_{i=1}^d \lambda_i$\\
-\hline
-$1$  & 28318.959 & $97.1\%$\\
-$2$   & 478.48 & $1.6\%$\\
-$3$  & 200.70 & $0.7\%$\\
-$4 \dots 10$  & < 71.0 & $< 0.02\%$\\
-\end{tabular}
-\egroup
-\vspace{0.5em}
-
-\delimit
-
-\captionof{table}{Computed eigenvalues, and eigenvalue shares of the active subspace matrix for the wing weight function using the Monte-Carlo method and $10^5$ samples with finite differences.}
-\label{tab:ww_as}
-\end{figure}
-\end{mdframed}
-%
-Based on the values in \cref{tab:ww_as}, we can see that there exists one dominant active direction that takes up the majority of the eigenvalue shares and that there are two less important active directions as well.
-The seven other directions only make up a very small share of the total eigenvalue sum.
-
-\noindent However, as we learned for the Ishigami function, these eigenvalues should only be used as rough indicators and not as reliable sources about the suitability for using transformed sparse grids.
-
-\subsection{Static pipeline}
-
-To start off, we first investigate the general quality of active direction transformations with multiple iterations and fixed $1 \leq r \leq 10$ to get an idea of the model function properties with regards to its approximate compounded intrinsic dimensionality.
-To achieve this, we use the directions from \cref{tab:ww_as} and employ the relative convergence criterion with $\eta=0$, \ie we perform iterations until the approximation error does not improve anymore.
-The results can be seen in \cref{fig:wwf}.
-
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\vspace{-2mm}
-\includegraphics[width=0.97\textwidth]{graphics/wingweight_fixed}\vspace{-4mm}
-\delimit
-\captionof{figure}{Approximation errors of various transformed surrogate sum approximations with fixed values of $r$ for the wing weight function.}
-\label{fig:wwf}
-\end{figure}
-\end{mdframed}
-%
-Every marker of a graph in \cref{fig:wwf} represents the result of a new iteration with the approximation error of the new surrogate sum and the grid point amount of all surrogate sum elements combined.
-In the left half, we see surrogate sum approximations using a coarse level and in the right half we see the fine level equivalents.
-The range between coarse and fine level surrogate sums for the same reduced dimensionality $r$ gives insight into what part of the approximation error is based on the compounded intrinsic dimensionality of the model function and what part is based on the surrogate fidelities itself.
-For example, we see that for $r=1, \dots, 4$, the approximation error improvement from low-level to high-level surrogates is relatively small compared to higher values of $r$.
-This means that the main limiting factor in these cases is that the model function can not be approximated well with such low-dimensional surrogates.
-For $r > 4$, we see bigger improvement gaps when going from low levels to higher levels, which means that there is  more potential approximation quality for higher-dimensional surrogates.
-
-Moreover, we see that multiple iterations do improve the approximation, in contrast to the Ishigami function case.
-The majority of approximation improvements can be achieved within the first three pipeline iterations, as most error graphs converge after the third iteration.
-As we make use of static pipeline iterations only and therefore do not have the freedom to optimally choose the best reduced dimensionality in each iteration, we might limit the effectiveness of multiple iterations.
-
-Another interesting trend that can be observed is the behaviour of the approximation errors as $r$ grows.
-The general approximation quality improves from $r=1$ to $r=7$ but hits a point at which the trend reverses and then worsens from $r=7$ to $r=10$.
-This can be explained by the general tradeoff between grid point resolution and dimensionality.
-As higher-dimensional grids effectively have to spend less grid points for each dimension when keeping the amount of grid points constant, this results in a tradeoff between grid points spent per dimension and reduced dimensionality.
-This optimal tradeoff point is hit at $r=7$ in this case.
-
-All in all, we can conclude that higher reduced dimensionalities in combination with a lower sparse grid level provides the best approximation error tradeoff up until $r=7$.
-This does not correlate at all with the active subspace results from \cref{tab:ww_as} and reinforces the evidence that we should not rely on the active subspace eigenvalues.
-The greater difference between low-fidelity and high-fidelity surrogates for larger values of $r$ means that applying transformation generators that require a lot of low-fidelity surrogates, such as the random active direction generators, will take up more runtime as the amount of grid points for low-fidelity surrogates has to be increased to produce representative surrogates.
-
-\subsection{Dynamic pipeline}
-
-After we looked at the results of a mostly static pipeline in the sense that $r$ was fixed, we now continue to look at a more dynamic pipeline approach.
-The goal is to dynamically choose a suitable reduced dimensionality $r_i$ for each iteration such that we can obtain better results than with a static pipeline.
-By specifying how many grid points should be added in each iteration, we can easily implement a dynamic pipeline that determines the best $r_i$ by looking ahead and then creates a sparse grid surrogate with the given amount of grid points.
-The targeted grid point amount can always be reached by performing refinements a certain amount of times.
-We differentiate the dynamic pipeline results by the spent amount of grid points per iteration (gp / it).
-
-\begin{mdframed}[style=style]
-\begin{figure}[H]
-\vspace{-2mm}
-\includegraphics[width=\textwidth]{graphics/ww_dynamic}\vspace{-4mm}
-\delimit
-\captionof{figure}{Approximation errors of various transformed surrogate sum approximations for the wing weight function created using a dynamic pipeline.
-The best results from the static pipeline are also included for reference.}
-\label{fig:ww_dyn}
-\end{figure}
-\end{mdframed}
-%
-\Cref{fig:ww_dyn} shows that by utilizing a more flexible dynamic pipeline, we can improve the approximation quality a little bit compared to a purely static pipeline.
-Furthermore, we also observe that there are differences in the approximation quality between the different amount of grid points spent per iteration, as a pipeline with 500 gp/it delivers better results than one with 100 gp/it and 200 gp/it.
-Overall, when using the right amount of grid points per iteration, we are able to obtain some improvements.
 
 \subsection{Random active directions}
 
@@ -2806,6 +2822,11 @@ Therefore, we can already assess whether random active directions are potentiall
 
 When looking at the progression from lower dimensions to higher dimensions, we see that the distribution shape changes from having long tails and a negative skew to a more balanced bell shape, which makes finding a good transformation located on the left tail harder for higher dimensionalities.
 Histograms for $r > 6$ are omitted as they behave very similar with regards to their shape and also approximation errors compared to the histogram for $r=6$.
+
+Moreover, we see that the low-fidelity and high-fidelity errors of the best one-dimensional generation result are better than the best ones for $r=2, \dots, 5$.
+We therefore come closer to a good active direction matrix for $r=1$ than we do in higher dimensionalities.
+This behaviour can be explained by the fact that we require even more random generation runs than $10^4$ to find a good transformation for higher values of $r$ in this case.
+In conclusion, as the approximation errors in general do not come close the active subspace results, the random active direction transformation generation is not a viable alternative for the wing weight function.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2859,11 +2880,6 @@ Histograms for $r > 6$ are omitted as they behave very similar with regards to t
 \label{fig:ww_hist_all}
 \end{figure}
 \end{mdframed}
-%
-Moreover, we see that the low-fidelity and high-fidelity errors of the best one-dimensional generation result are better than the best ones for $r=2, \dots, 5$.
-We therefore come closer to a good active direction matrix for $r=1$ than we do in higher dimensionalities.
-This behaviour can be explained by the fact that we require even more random generation runs than $10^4$ to find a good transformation for higher values of $r$ in this case.
-In conclusion, as the approximation errors in general do not come close the active subspace results, the random active direction transformation generation is not a viable alternative for the wing weight function.
 
 \subsection{Summary}
 
