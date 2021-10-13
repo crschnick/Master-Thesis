@@ -847,7 +847,7 @@ We start off by interpolating both functions using spatially adaptive sparse gri
 \end{subfigure}
 \delimit
 \caption{Grid points of generated spatially adaptive sparse grids for $f_1$ and $f_2$.
-The sparse grids uses modified linear basis functions and started out as a regular sparse grid with level $\ell=1$. Moreover, the surplus refinement criterion and 15 refinements steps with one grid point refinement per step were used to adapt the sparse grids.}
+The sparse grids uses modified hat basis functions and started out as a regular sparse grid with level $\ell=1$. Moreover, the surplus refinement criterion and 15 refinements steps with one grid point refinement per step were used to adapt the sparse grids.}
 \label{fig:grids}
 \end{figure}
 \end{mdframed}
@@ -880,7 +880,7 @@ Modified basis functions come with a special constant basis function that is wel
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \includegraphics[width=\linewidth]{graphics/grid_approx_f2}
-  \subcaption{Spatially adaptive sparse grids with $\ell=1$, surplus refinement criterion, 280 single refinement steps, and mod. linear basis functions.}
+  \subcaption{Spatially adaptive sparse grids with $\ell=1$, surplus refinement criterion, 280 single refinement steps, and mod. hat basis functions.}
   \label{fig:grid_approx_f2}
 \vspace{2.5mm}
 \end{subfigure}
@@ -2442,7 +2442,7 @@ In this case, the unused surrogate space share is $\tilde{u}_t=0.44$, which mean
 This effectively lowers the grid point resolution and results in some grid points being unused.
 Furthermore, the introduced regression penalty factor is approximately $10^1$ compared to the interpolation method.
 
-There are also no significant quality differences when using modified linear basis functions instead of a linear hat basis with boundaries.
+There are also no significant quality differences when using modified hat basis functions instead of a hat basis with boundaries.
 Therefore, we will only use the modified hat basis for the Ishigami function later in this evaluation section.
 
 Based on these results, we can conclude that, even though there is no improvement with this method, there is also no significant downside even as $\tilde{u}$ is relatively large and regression is employed.
@@ -2531,7 +2531,7 @@ Once the algorithm has determined the random transformation with the lowest erro
 The low-fidelity transformation errors are visualized using histograms and while the errors do not come close to the actual high-fidelity errors, the distribution of low-fidelity errors can provide valuable insights into the actual approximation error distribution since the low-fidelity surrogates are chosen to be comparatively representative.
 
 As we will make use of low-fidelity and high-fidelity simulations, we will distinguish the resulting errors by denoting them by $\varepsilon^\mathrm{l}_{\mathrm{NRMSE}}$ and $\varepsilon^\mathrm{h}_{\mathrm{NRMSE}}$, respectively.
-For the Ishigami function in the low-fidelity case, we use a sparse grid surrogate generator with modified linear basis functions, and 250 grid points..
+For the Ishigami function in the low-fidelity case, we use a sparse grid surrogate generator with modified hat basis functions, and 250 grid points..
 In the high-fidelity case, we increase the grid point amount to $10^3$.
 We only perform one pipeline iteration as we already saw that additional iterations do not considerably improve the approximation.
 
@@ -2561,6 +2561,7 @@ We only perform one pipeline iteration as we already saw that additional iterati
 Comparing the high-fidelity results with $10^3$ grid points to the previous active subspace transformation results in \cref{fig:ishigami_red}, we see that random transformations can deliver competitive results.
 We see that the distribution has a broad center of mass and almost no real tails, which makes it easier to find good transformations.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{subfigure}{.5\textwidth}
@@ -2696,7 +2697,6 @@ All in all, we can conclude that higher reduced dimensionalities up to $r=7$ pro
 This does not correlate at all with the active subspace results from \cref{tab:ww_as} and reinforces the evidence that we should not rely on the active subspace eigenvalues.
 The greater difference between low-fidelity and high-fidelity surrogates for larger values of $r$ means that applying transformation generators that require a lot of low-fidelity surrogates, such as the random active direction generators, will take up more runtime as the amount of grid points for low-fidelity surrogates has to be increased to produce representative surrogates.
 
-\newpage
 \subsection{Dynamic pipeline}
 
 After we looked at the results of a mostly static pipeline in the sense that $r$ was fixed, we now continue to look at a more dynamic pipeline approach.
@@ -2705,6 +2705,7 @@ By specifying how many grid points should be added in each iteration, we can eas
 The targeted grid point amount can always be reached by performing refinements a certain amount of times.
 We differentiate the dynamic pipeline results by the spent amount of grid points per iteration (gp / it).
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \vspace{-2mm}
@@ -2717,8 +2718,10 @@ The best results from the static pipeline are also included for reference.}
 \end{mdframed}
 %
 \Cref{fig:ww_dyn} shows that by utilizing a more flexible dynamic pipeline, we can improve the approximation quality a little bit compared to a purely static pipeline.
-Furthermore, we also observe that there are differences in the approximation quality between the different amount of grid points spent per iteration, as a pipeline with 500 gp/it delivers better results than one with 100 gp/it and 200 gp/it.
+Furthermore, we also observe that there are differences in the approximation quality between the different amount of grid points spent per iteration as a pipeline with 500 gp/it delivers better results than one with 100 gp/it and 200 gp/it.
 Overall, when using the right amount of grid points per iteration, we are able to obtain some improvements.
+This is in contrast to the Ishigami function where multiple iterations did not improve the approximation at all.
+Therefore, when we have more possible values of $r$ to choose from and when almost all values of $r$ result in somewhat acceptable approximations, the dynamic pipeline approach becomes the better option.
 
 \subsection{Active subspace approximations}
 
@@ -2730,6 +2733,8 @@ We are interested in answering the following questions:
 \item Do the active subspace differences actually manifest themselves in the approximation error?
 \item Which active subspace approximation method performs the best?
 \end{enumerate}
+\newpage
+\noindent
 To judge the quality of approximated gradients, we first have to define an error metric for them:
 \begin{definition}[Gradient approximation error]
 Let $S=\{(x_i, f(x_i)\}_{i=1}^n$ be a set of observations, and let $\widetilde{\nabla} f(x_i)$ be the approximated gradient for each observation point $x_i$. We then define
@@ -2759,13 +2764,14 @@ We therefore settle with the surrogate look ahead approximation error.
 	\includegraphics[width=\textwidth]{graphics/ww_as_grad_errors}
 \delimit
 	\caption{Gradient approximation errors of various gradient approximation methods averaged over 10 separate runs.}
-	\label{fig:ishigami_as_grad}
+	\label{fig:ww_as_grad}
 \end{figure}
 \end{mdframed}
 %
-As seen in \cref{fig:ishigami_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
+As seen in \cref{fig:ww_as_grad}, the finite differences approximation error converges towards zero as the spacing $h$ goes down, which is to be expected.
 Furthermore, both neighbour methods do deliver approximately the same results with regards to $\varepsilon_{\mathrm{grad}}$.
 Their gradient errors all lie in a range that is similar to the finite differences approximation with a very big step size of $h=5$, which at first glance makes them look not suitable.
+Different configuration parameters for the neighbour-based methods also seem to only improve the gradient approximation error by a small amount.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2773,38 +2779,38 @@ Their gradient errors all lie in a range that is similar to the finite differenc
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_as_10}
 	\caption{Surrogates with $r=10$.}
-	\label{fig:ishigami_as_3_inter}
+	\label{fig:ww_as_3_inter}
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_as_7}
 	\caption{Surrogates with $r=7$.}
-	\label{fig:ishigami_as_3}
+	\label{fig:ww_as_3}
 \end{subfigure}\vspace{4mm}
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_as_4}
 	\caption{Surrogates with $r=4$.}
-	\label{fig:ishigami_as_2}
+	\label{fig:ww_as_2}
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=\linewidth]{graphics/ww_as_1}
 	\caption{Surrogates with $r=1$.}
-	\label{fig:ishigami_as_1}
+	\label{fig:ww_as_1}
 \end{subfigure}\vspace{4mm}
 \delimit
-	\caption{Surrogate look ahead errors for select values of $r$ using active direction transformations and various gradient approximation methods averaged over 10 separate runs.
-	The sparse grid surrogates were created using $10^3$ grid points and modified linear basis functions.}
-	\label{fig:ishigami_as}
+	\caption{Surrogate look ahead errors for select values of $r$ using active direction transformations, which were created by using various gradient approximation methods, averaged over 10 separate runs.
+	The sparse grid surrogates were created using $10^3$ grid points and modified hat basis functions.}
+	\label{fig:ww_as}
 \end{figure}
 \end{mdframed}
 %
-\Cref{fig:ishigami_as} shows the actual performance of the different methods by using the look ahead error.
-It can be observed that the gradient approximation quality from \cref{fig:ishigami_as_grad} does not exactly correlate with the constructed surrogate quality.
+\Cref{fig:ww_as} shows the actual performance of the different methods by using the look ahead error.
+It can be observed that the gradient approximation quality from \cref{fig:ww_as_grad} does not exactly correlate with the constructed surrogate quality.
 While the finite differences method with $h=0.01$ has the best error $\varepsilon_{\mathrm{grad}}$ by far, the constructed surrogate does not perform better than basically the other finite differences methods and also some of the nearest neighbour methods.
 The random neighbour method lags a little bit behind in terms of the gradient errors and also surrogate errors in some cases but is still in a comparable range to the other methods.
-Furthermore, the nearest neighbour method does deliver far better results than the random neighbour method as it shows a similar quality as the finite differences approximation with smaller step sizes when $m$ is chosen correctly.
+Furthermore, the nearest neighbour method does deliver far better results than the random neighbour method as it shows a similar quality as the finite differences approximation with smaller step sizes in many cases when $m$ is chosen correctly.
 
 Especially important here are the results for $r=7$ as we have seen that the best approximation errors are achieved for that reduced dimensionality.
 Overall, the finite differences method performs the best, followed by the nearest neighbour method with $m=100$.
@@ -2815,19 +2821,27 @@ These results are good news as they indicate that the nearest neighbour approxim
 \subsection{Random active directions}
 
 Similar to the first model function, we also try to find good active directions randomly as well.
-This time however, the results should be way worse, because finding good active directions in ten dimensions is more difficult.
+This time however, the results should be way worse because finding good active directions in ten dimensions is more difficult.
 We saw in the last sections that the wing weight function can already be approximated pretty well with only one transformed surrogate and further iterations do not massively increase the approximation quality.
 Therefore, we can already assess whether random active directions are potentially viable by only performing one pipeline iteration.
-\Cref{fig:ww_hist_all} shows the low-fidelity approximation error distribution for random active direction generators and the high-fidelity approximation error of the best transformation out of all.
+\Cref{fig:ww_hist_all} shows the low-fidelity approximation error distribution for random active direction generators and the high-fidelity approximation error of the best transformation out of all after one iteration.
 
-When looking at the progression from lower dimensions to higher dimensions, we see that the distribution shape changes from having long tails and a negative skew to a more balanced bell shape, which makes finding a good transformation located on the left tail harder for higher dimensionalities.
+When looking at the progression from lower dimensionalities to higher dimensionalities, we see that the distribution shape changes from having long tails and a negative skew to a more balanced bell shape, which makes finding a good transformation located on the left tail harder for higher dimensionalities.
 Histograms for $r > 6$ are omitted as they behave very similar with regards to their shape and also approximation errors compared to the histogram for $r=6$.
 
 Moreover, we see that the low-fidelity and high-fidelity errors of the best one-dimensional generation result are better than the best ones for $r=2, \dots, 5$.
 We therefore come closer to a good active direction matrix for $r=1$ than we do in higher dimensionalities.
 This behaviour can be explained by the fact that we require even more random generation runs than $10^4$ to find a good transformation for higher values of $r$ in this case.
-In conclusion, as the approximation errors in general do not come close the active subspace results, the random active direction transformation generation is not a viable alternative for the wing weight function.
+In conclusion, as the overall approximation errors in general do not come close the active subspace results, the random active direction transformation generation is not a viable alternative for the wing weight function.
 
+\subsection{Summary}
+
+To summarise our findings, we can say that the active subspace method performs much better than the random active direction generation for this high-dimensional model function.
+This is caused by the sheer amount of possible active direction matrices and might be improved somewhat if more random generation runs were used.
+As the random approach is subject to the curse of dimensionality, it is not a feasible alternative for high-dimensional models.
+Active subspaces are therefore the way to go in higher dimensions.
+
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
   \centering
@@ -2836,14 +2850,14 @@ In conclusion, as the approximation errors in general do not come close the acti
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_1}
   \caption{Distribution for $r=1$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.040$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_1}
+\label{fig:ww_hist_1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_2}
   \caption{Distribution for $r=2$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.060$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_2}
+\label{fig:ww_hist_2}
 \end{subfigure}%
 \vspace{3mm}
   \begin{subfigure}{.5\textwidth}
@@ -2851,14 +2865,14 @@ In conclusion, as the approximation errors in general do not come close the acti
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_3}
   \caption{Distribution for $r=3$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.061$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_2}
+\label{fig:wwi_hist_3}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_4}
   \caption{Distribution for $r=4$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.046$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_3}
+\label{fig:ww_hist_4}
 \end{subfigure}%
 \vspace{3mm}
 \begin{subfigure}{.5\textwidth}
@@ -2866,34 +2880,28 @@ In conclusion, as the approximation errors in general do not come close the acti
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_5}
   \caption{Distribution for $r=5$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.041$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_2}
+\label{fig:ww_hist_5}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
    \includegraphics[width=0.95\linewidth]{graphics/ww_hist_6}
   \caption{Distribution for $r=6$ with $\varepsilon^\mathrm{h}_{\mathrm{min}}=0.035$.}
 \vspace{3mm}
-\label{fig:ishigami_hist_1}
+\label{fig:ww_hist_6}
 \end{subfigure}
 \delimit
 \caption{Histogram of low-fidelity approximation errors for $10^4$ randomly generated active direction transformations.}
 \label{fig:ww_hist_all}
 \end{figure}
 \end{mdframed}
-
-\subsection{Summary}
-
-To summarise our findings, we can say that the active subspace method performs much better than the random active direction generation for this high-dimensional model function.
-This is caused by the sheer amount of possible active direction matrices and might be improved somewhat if more random generation iterations were used.
-As the random approach is subject to the curse of dimensionality, it is not a feasible alternative for high-dimensional models.
-Active subspaces are therefore the way to go in higher dimensions.
-
+%
 In terms of determining the optimal reduced dimensionalities $r_i$, we saw that there are huge differences in the tradeoff between approximation error and grid points for various values of $r_i$.
-Some values of $r_i$ just perform objectively worse than others and there is no quick heuristic, such as inspecting the active subspace eigenvalues, to gauge their expected quality.
-We therefore employ the look-ahead approach, which will also work with low-fidelity surrogates, as the quality differences for different $r_i$ are already evident at pretty low grid levels.
+Some values of $r_i$ just perform objectively worse than others and there is no quick heuristic, for example inspecting the active subspace eigenvalues, to gauge their expected quality.
+We therefore employ the look-ahead approach that works with low-fidelity surrogates because the quality differences for different $r_i$ are already evident at pretty low grid levels.
 
-The results for a baseline amount of $10^3$ total grid points are visualized in \cref{fig:ww_comp}.
-From there it is pretty evident that random active directions are uncompetitive, static pipelines deliver acceptable results if $r$ is chosen correctly, and a dynamic pipeline provides the best results and is also the easiest to use.
+The results for a baseline amount of $10^3$ total grid points after two iteration are visualized in \cref{fig:ww_comp}.
+To arrive at $10^3$ grid points after two iterations, each method spent 500 grid points per iteration.
+From there it is pretty evident that random active directions are uncompetitive, static pipelines deliver acceptable results if $r$ is chosen correctly, and a dynamic pipeline provides the best results and is also the easiest one to use.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2911,13 +2919,13 @@ From there it is pretty evident that random active directions are uncompetitive,
 
 Having investigated the properties of the transformed sparse grid technique in detail, we are now aiming to leverage this knowledge to construct function surrogates that are competitive in their approximation quality when being compared to other already existing techniques.
 In this chapter, we will apply the transformed sparse grid technique on practical models such that we can, at least to some degree, compare the approximation quality to other techniques.
-Of course, these comparisons are limited in their nature, as it is difficult to control for every property unique to an approximation technique across others.
+Of course, these comparisons are limited in their nature as it is difficult to control for every property unique to an approximation technique across others.
 
 \section{Borehole function}
 
-The initial practical application that we will investigate is a function modeling the water flow through a borehole that was drilled through aquifers above and below a nuclear waste repository.
+The initial practical application that we will investigate is the borehole function, which modes the water flow through a borehole that was drilled through aquifers above and below a nuclear waste repository.
 It was first studied in the context of sensitivity analysis in \cite{Harper1983}.
-The resulting output $Q$, which represents the flow in m$^3$/year, is then given by
+The resulting output $Q$, which represents the flow in m$^3$/year, is given by
 \begin{equation}
 Q=\frac{2 \pi T_u(H_u - H_t)}{\text{ln}(r / r_w) \left( 1 + \frac{2L T_u}{\text{ln}(r / r_w) r_w^2 K_w} + \frac{T_u}{T_l} \right)},
 \end{equation}
@@ -2942,14 +2950,14 @@ $K_w$ & borehole hydraulic conductivity (m/year) & $\mathcal{U}(9855, \, 12045)$
 \egroup\\
 \vspace{0.5em}
 \delimit
-\captionof{table}{Input parameters for the borehole model.}
+\captionof{table}{Input parameters for the borehole model function.}
 \label{tab:borehole_params}
 \end{figure}
 \end{mdframed}
 %
-The borehole function has been thoroughly investigated in the context of sparse grid interpolation in \cite{} using B-Spline basis function variants.
-B-Splines are a solution to eliminating the discontinuities of the standard hat basis functions functions and are piecewise polynomials.
-Not-a-knot B-Splines (NAK B-Splines) on spatially adaptive sparse grids were shown to be very competitive compared to various other approximation techniques and serve as a good benchmark.
+The borehole function has been thoroughly investigated in the context of sparse grid interpolation in \cite{Rehme2021} using B-spline basis function variants with sparse grids.
+B-splines are a solution to eliminating the discontinuities of the standard hat basis functions functions and are piecewise polynomials.
+Not-a-knot B-splines (NAK B-splines) on spatially adaptive sparse grids were shown to be very competitive compared to various other approximation techniques and serve as a good benchmark.
 
 \begin{mdframed}[style=style]
 \begin{figure}[H]
@@ -2959,18 +2967,19 @@ Not-a-knot B-Splines (NAK B-Splines) on spatially adaptive sparse grids were sho
 \label{fig:borehole_comp}
 \end{figure}
 \end{mdframed}
-
-\Cref{fig:borehole_comp} presents the approximation errors of both NAK B-Splines and transformed sparse grids.
+%
+\Cref{fig:borehole_comp} presents the approximation errors of both NAK B-splines and transformed sparse grids.
 We see that in the early stages, transformed sparse grids provide a better tradeoff between grid points and approximation quality.
-However, as more grid points are added to the surrogates, their quality improvement decays very fast and they soon reach a convergent state, which is consistent with previous results.
+However, as more grid points are added to the surrogates, their quality improvement decays very fast and they soon reach a convergent state.
+This is consistent with previous results.
 In contrast, the sparse grid interpolation surrogates outshine them as the grid point amount rises and are able to continuously improve the approximation error.
 This crossover point is reached early on, which results in transformed sparse grids not being a viable alternative to sparse grid interpolation for the borehole function.
 
 \subsection{Summary}
 We can deduce that the transformed sparse grid technique comparatively performs much better than various untransformed sparse grid interpolation techniques for a very low amount of grid points.
 However, the interpolation techniques reach a crossover point at which they are able to continuously improve the approximation and overtake the transformation technique, which reaches a convergent state pretty early on.
-In this case with $d=8$, the crossover point is reached too early such that the transformed surrogate technique is not viable, as it is easy enough to still create an accurate interpolation surrogate.
-This crossover point is continuously pushed back as the model dimensionalities grow since untransformed sparse grids will be more heavily affected by the curse of dimensionality and require a lot more grid points, while the transformed sparse grids will only be affected by the best choice for $r$, which is usually smaller than $d$.
+In this case with $d=8$, the crossover point is reached too early such that the transformed surrogate technique is not viable as it is easy enough to still create an accurate interpolation surrogate.
+This crossover point is continuously pushed back as the model dimensionalities grow since untransformed sparse grids will be more heavily affected by the curse of dimensionality and require a lot more grid points while the transformed sparse grids will only be affected by the best choice for $r$, which is usually smaller than $d$.
 \Cref{fig:trend} summarizes this hypothesis in a simple way.
 
 \begin{mdframed}[style=style]
@@ -2989,11 +2998,10 @@ This crossover point is continuously pushed back as the model dimensionalities g
 \end{figure}
 \end{mdframed}
 %
-Furthermore, as the transformed technique internally uses regression, we are comparing an interpolation based approach with regression, which is an inherently weaker technique as it can not evaluate the model function at the most optimal points.
-Therefore, the best applications for transformed sparse grids should be pure, high-dimensional regression problems, with optionally only a small number of instances, as the transformation technique even outperforms interpolation methods in these cases.
-
+Furthermore, as the transformed technique internally uses regression, we are comparing an interpolation-based approach to a regression-based one, which is inherently weaker as it does not evaluate the model function at the most optimal points for the approximation.
+Therefore, the best applications for transformed sparse grids should be pure, high-dimensional regression problems, with optionally only a small number of instances as the transformation technique even outperforms interpolation methods in these cases.
 Another potential application could be models that can only support a very small amount of function evaluations such that a normal sparse grid of an acceptable level can not be constructed.
-One such approach of trying to provide an acceptable approximation of the borehole function using only a very small amount of evaluations has already been investigated in \cite{}.
+One such approach of trying to provide an acceptable approximation of the borehole function using only a very small amount of evaluations has already been investigated in \cite{Dette2010}.
 
 
 
@@ -3004,117 +3012,39 @@ One such approach of trying to provide an acceptable approximation of the boreho
 \chapter{Conclusion and outlook}
 \label{chap:c9}
 
-To summarise, we discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients, by using the effective neighbour approximation methods as a basis for the active subspace computations.
-However, if more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve improved results.
-The question, for which application the transformed sparse grid technique is most suitable, also warrants further experiments.
-While we looked at two major applications, function approximation and regression, in a few experiments, this does not constitute enough evidence to draw definite conclusions.
+To summarise this thesis, we discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients by using the effective neighbour approximation methods as a basis for the active subspace computations.
+However, if more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve better results.
+The question for which application the transformed sparse grid technique is most suitable also warrants further experiments.
+While we looked at two major applications in a few experiments, function approximation and regression, this does not constitute enough evidence to draw definite conclusions.
 There are also a few more areas of interest regarding transformed sparse grids that might warrant further research and also potential areas of improvement:
 
 \paragraph{Parallelization}
 The implementation of the transformation pipeline has the potential to be almost perfectly parallelized.
 A huge portion of the total runtime is spent on evaluating multiple surrogates that either come from transformation stream generators (\cref{sec:tsg}) or from the process of determining the optimal surrogate configuration parameters (\cref{sec:gs}) .
-These components can be parallelized by evaluating all of them in parallel, as they don't exchange any data or need to coordinate, using an API like OpenMP \cite{openmp08}.
+These components can be parallelized by evaluating all of them in parallel as they don't exchange any data or need to coordinate for example by using an API like OpenMP \cite{openmp08}.
 Furthermore, other optimizations like vectorization \cite{Maleki2011} or GPU execution support with OpenCL \cite{Stone2010} could also be implemented.
-This can be combined with the already implemented support of the many of the listed frameworks and technologies by the sparse grid library SG$^{++}$, to obtain a completely optimized and very performant pipeline.
+This can be combined with the already implemented support of the many of the listed frameworks and technologies by the sparse grid library SG$^{++}$ to obtain a completely optimized and very performant pipeline.
 
 \paragraph{Formalization of concepts}
 The main workflow used to eventually come up with the resulting transformation pipeline was mainly based on ideas and practical experiments.
 While some formal concepts, like intrinsic dimensionality (\cref{sec:intrinsic}) or active subspaces (\cref{sec:as}), were used, many parts, especially the transformation construction and the iterative algorithm design, were introduced constructively without any proof of their qualities.
-Maybe there exist better ways to construct transformed surrogates compared to the ones used in this thesis or a better way to design an iterative transformation algorithm that works with these surrogates.
-Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach, such that the results are backed by a theory and can be better explained and understood.
+Maybe there also exist better ways to construct transformed surrogates compared to the ones used in this thesis or a better way to design an iterative transformation algorithm that works with these surrogates.
+Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach such that the results can be backed by a theory and can as a result be better explained and understood.
 
 \paragraph{Surrogate types}
-In this thesis we used sparse grid surrogates as primary reduced surrogates and to a limited degree radial basis function surrogates as well, but mainly as a control method to identify grid specific surrogate properties.
-In theory, any surrogate type that uses the tensor-product approach to construct basis functions and supports some form of regression can benefit from the presented linear input transformations.
+In this thesis, we focused on the sparse grid technique when constructing reduced surrogates for the simple reason that they are better suited for a following dimensionality reduction after the inputs have been transformed using an orthonormal active direction matrix.
+Other surrogate types, like radial basis function surrogates, can not make use of the transformed inputs with the same effectiveness as axis-aligned sparse grids.
+In theory, any surrogate type that uses the tensor-product approach to construct basis functions and supports some form of regression can benefit from the presented active direction transformations.
 Another common candidate aside from sparse grids would be the polynomial chaos expansion method \cite{Crestaux2009}.
 As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would not be too difficult.
 
-\paragraph{Lo-fi surrogates}
-As mentioned before, it is vital to determine good lo-fi surrogates to guarantee a fast pipeline execution.
-Suitable lo-fi surrogates are indicative of the comparative quality of their high-fidelity surrogates.
-Right now, these are determined more or less empirically, as automating this process is not trivial, especially when dealing with pre-convergent behaviour of the lo-fi surrogates.
-However, it should be possible to develop an algorithm that automatically determines optimal lo-fi surrogate configuration parameters by generating lo-fi surrogates with different parameters until a representative one is found.
-This would make the transformation process even simpler to apply on a variety of models, as it would eliminate prior manual probing of the model function.
-
-\appendix
-\chapter{Appendix}
-
-\subsection{B-Spline basis}
-
-One downside of the hat basis is that the functions do not have a continuous derivative.
-Instead, there are discontinuities at the grid point $x_{l,i}$ itself where the derivative flips its sign and at the neighbouring grid points $x_{l,i+2}$ and $x_{l,i-2}$ where the derivative changes to zero.
-One solution to eliminating these discontinuities are B-Splines, which are just piecewise polynomials.
-\begin{definition}[B-Splines]
-Let $p \in \mathds{N}$.
-Then
-\begin{equation}
-b^0(x) \coloneqq
-\begin{cases}
-    1, & x \in [0,1) \\
-   0, & \text{else}
-\end{cases}
-\end{equation}
-is a B-Spline of degree $0$ and
-\begin{equation}
-b^p(x) \coloneqq \frac{1}{p} xb^{p-1}(x) + (p + 1 - x) b^{p-1}(x-1)
-\end{equation}
-is a B-Spline of degree $p$.
-\end{definition}
-This definition of B-Splines is based on the Cox-de-Boor recursion.
-
-\begin{definition}[B-Spline basis functions]
-Let $l,i \in \mathds{N}_0$.
-Then
-\begin{equation}
-\phi^b_{l,i}(x) \coloneqq b^p \left( 2^l x + \frac{p+1}{2} -i \right)
-\end{equation}
-is an univariate B-Spline basis function of degree $p$.
-\end{definition}
-
-\subsection{Mod B-Spline basis}
-
-\begin{definition}[Knots]
-Let $m,p \in \mathds{N}_0$.
-We then define
-\begin{equation}
-\underline{\xi}=(\xi_0, \dots, \xi_{m + p}) \in \mathds{R}^{m + p}, ~~ \xi_0 \leq \dots \leq \xi_{m + p}
-\end{equation}
-as a sequence of knots.
-\end{definition}
-
-\begin{definition}[B-Splines]
-Let $p \in \mathds{N}$.
-Then
-\begin{equation}
-b^0_{i,\underline{\xi}}(x) \coloneqq
-\begin{cases}
-    1, & x \in [\xi_i,x_i] \\
-   0, & \text{else}
-\end{cases}
-\end{equation}
-is a B-Spline of degree $0$ and
-\begin{equation}
-b_{i,\underline{\xi}}^p(x) \coloneqq \frac{x - \xi_i}{\xi_{i + p} - \xi_i} b_{i,\underline{\xi}}^{p-1}(x) + \frac{\xi_{i+p+1} - \xi_i}{\xi_{i + p} - \xi_i} b_{i+1,\underline{\xi}}^{p-1}(x)
-\end{equation}
-is a B-Spline of degree $p$.
-\end{definition}
-
-\begin{definition}[Mod B-Spline basis functions]
-Let
-\begin{equation}
-\phi_l^p(x) \coloneqq \sum_{i=0}^{\lceil (p+1)/2 \rceil} (i+1) \phi^p_{l,1-k}(x)
-\end{equation}
-be the boundary...
-\begin{equation}
-\phi^{p,\text{mod}}_{l,i}(x) \coloneqq
-\begin{cases}
-1 &, l=1\\
-\phi^p_{l}(x)&, l>1, i=1\\
-\phi^p_{l}(x)&, l>1, i=2^l - 1\\
-\phi_{l,i}(x)&, \text{else}
-\end{cases}
-\end{equation}
-\end{definition}
+\paragraph{Low-fidelity surrogates}
+As mentioned before, it is vital to determine good low-fidelity surrogates to guarantee a fast pipeline execution.
+Suitable low-fidelity surrogates are indicative of the comparative quality of their high-fidelity surrogate equivalents.
+Right now, these are determined more or less empirically as automating this process is not trivial, especially when dealing with pre-convergent behaviour of the low-fidelity surrogates.
+It therefore requires some trial and error to get a feeling at which point low-fidelity surrogates become suitable to use.
+However, it should be possible to develop an algorithm that automatically determines optimal low-fidelity surrogate configuration parameters by generating low-fidelity surrogates with different parameters until a representative one is found.
+This would make the transformation process even simpler to apply on a variety of models as it would eliminate prior manual probing of the model function.
 
 \newpage
 \printbibliography
