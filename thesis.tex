@@ -3007,7 +3007,65 @@ One such approach of trying to provide an acceptable approximation of the boreho
 
 
 \section{High-dimensional function}
-\section{High-dimensional regression}
+
+
+\section{Million songs dataset}
+
+For the final covered application, we try to apply the transformed sparse grid technique to a very high-dimensional model function to test out the limits of it.
+We choose to look at the Million Song Dataset \cite{BertinMahieux2011}, which contains various audio features and metadata for a collection of over one million songs.
+A dataset like this can be used for many potential applications.
+One common commercial application are tailored song recommendations based on gathered user data, while another application is music identification.
+In many cases, the processes of identifying and recommending music are interlinked, \ie instead of always aiming to exactly identify a song, which can be difficult at times, it can also be sufficient to estimate the production year of a song and base recommendations on this value.
+Therefore, one application is to predict the production year of a song based solely on its observed audio features, which is a pretty straightforward regression task.
+The limiting factor of this regression problem is the amount of input parameters, which in the case of this dataset are 90 different audio features.
+These audio features consist out of various timbre values that make up the song.
+
+We can also not aim to reduce the approximation error to zero because this problem is ill-posed.
+
+In a regression setting, we can go all out with the amount of grid points of the surrogate as adding additional grid points does not come with any associated model function evaluation cost.
+Only the general runtime of the regression learner and other algorithms than perform operations on the surrogate is increased.
+
+We start off by investigating the results for various dynamic pipelines that add different amounts of grid points per iteration.
+We use the nearest neighbour gradient approximation method with $n'=10000$ and $m=1000$ as it proved to be better than the random neighbour method in previous experiments.
+The dynamic pipeline can choose $1 \leq r_i \leq 25$ and create a sparse grid surrogate using regression with $20$ train observations per grid point.
+
+
+Such a high-dimensional regression problem proves to be difficult as the curse of dimensionality is in full effect.
+It is therefore hard to provide insightful comparisions to normal sparse grids.
+Sparse grids can be applied on this problem by heavily utilizing spatial adaptivity.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{graphics/msd_errors}
+\delimit
+\captionof{figure}{Approximation errors for transformed sparse grids constructed with various grid sizes per iteration and for various NAK B-Splines.}
+\label{fig:msd_approx}
+\end{figure}
+\end{mdframed}
+
+In \cite{BertinMahieux2011}, the authors also included some evaluation results for this regression problem using the $k$-nearest neighbours ($k$-NN) method \cite{Altman1992} and the Vowpal Wabbi method \cite{Langford2009}, which is a large-scale learning algorithm designed for problems like this.
+The benchmark they set out to beat was the constant prediction method, which always returns the average release year of the total dataset.
+Any good regression method should be able to beat this trivial benchmark to provide actual gained insight for this problem.
+We compare these results to the best transformed sparse grid technique results that were determined previously.
+The results, including reference results, are shown in \cref{fig:msd_comp}.
+
+\begin{mdframed}[style=style]
+\begin{figure}[H]
+\vspace{-2mm}
+\includegraphics[width=\textwidth]{graphics/msd_comp}\vspace{-1mm}
+\delimit
+\captionof{figure}{Comparison of select results for various methods with $10^3$ total grid points.}
+\label{fig:msd_comp}
+\end{figure}
+\end{mdframed}
+
+We can oberve that normal spatially adaptive sparse grids do not produce a competetive approximation.
+The other included methods do perform much better but also differ in their approximation quality to some degree.
+When using the k-nearest neighbors algorithm, we see that just taking the closest into account already results in a much better approximation.
+However, this simple regression approach can be improved upon by utilizing the more complex Vowpal Wabbi method, which incorporates more than just neighbouring observations into its approximation.
+The transformed sparse grid method delivers similar results to the Vowpal Wabbi method.
+This might be explained by the fact that both methods use a rougly similar approach that is based on linear transformations.
+
 
 \chapter{Conclusion and outlook}
 \label{chap:c9}
