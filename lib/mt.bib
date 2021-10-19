@@ -2,9 +2,9 @@
 
 @Article{Constantine2014,
   author        = {Paul Constantine and David Gleich},
+  journal       = {arXiv preprint arXiv:1408.0545},
   title         = {Computing active subspaces with Monte Carlo},
   year          = {2014},
-  month         = aug,
   abstract      = {Active subspaces can effectively reduce the dimension of high-dimensional parameter studies enabling otherwise infeasible experiments with expensive simulations. The key components of active subspace methods are the eigenvectors of a symmetric, positive semidefinite matrix whose elements are the average products of partial derivatives of the simulation's input/output map. We study a Monte Carlo method for approximating the eigenpairs of this matrix. We offer both theoretical results based on recent non-asymptotic random matrix theory and a practical approach based on the bootstrap. We extend the analysis to the case when the gradients are approximated, for example, with finite differences. Our goal is to provide guidance for two questions that arise in active subspaces: (i) How many gradient samples does one need to accurately approximate the eigenvalues and subspaces? (ii) What can be said about the accuracy of the estimated subspace, both theoretically and practically? We test the approach on both simple quadratic functions where the active subspace is known and a parameterized PDE with 100 variables characterizing the coefficients of the differential operator.},
   archiveprefix = {arXiv},
   eprint        = {1408.0545},
@@ -15,6 +15,7 @@
 
 @Article{Bridges2019,
   author        = {Robert A. Bridges and Anthony D. Gruber and Christopher Felder and Miki Verma and Chelsey Hoff},
+  journal       = {arXiv preprint arXiv:1904.13386},
   title         = {Active Manifolds: A non-linear analogue to Active Subspaces},
   year          = {2019},
   month         = apr,
@@ -76,9 +77,7 @@ series = {KDD '15}
   publisher = {Verlag Dr. Hut},
   title     = {Spatially Adaptive Sparse Grids for High-Dimensional Problems},
   year      = {2010},
-  address   = {M{\"{u}}nchen},
   isbn      = {9783868535556},
-  month     = aug,
   school    = {Institut f{\"{u}}r Informatik, Technische Universit{\"{a}}t M{\"{u}}nchen},
   url       = {http://www5.in.tum.de/pub/pflueger10spatially.pdf},
 }
@@ -103,38 +102,36 @@ series = {KDD '15}
     pages = {57--80},
     publisher = {Springer}
 }
+
 @InProceedings{Pflueger2012,
   author    = {Pfl{\"{u}}ger, Dirk},
   booktitle = {Sparse Grids and Applications},
   title     = {Spatially Adaptive Refinement},
   year      = {2012},
-  address   = {Berlin Heidelberg},
   editor    = {Garcke, Jochen and Griebel, Michael},
-  month     = oct,
   pages     = {243--262},
   publisher = {Springer},
   series    = {Lecture Notes in Computational Science and Engineering},
   url       = {http://www5.in.tum.de/pub/pflueger12spatially_preprint.pdf},
 }
-@article{S01,
- author = {Sobol\'{a}, I. M.},
- title = {Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates},
- journal = {Math. Comput. Simul.},
- issue_date = {Feb. 15, 2001},
- volume = {55},
- number = {1-3},
- month = feb,
- year = {2001},
- issn = {0378-4754},
- pages = {271--280},
- numpages = {10},
- url = {http://dx.doi.org/10.1016/S0378-4754(00)00270-6},
- doi = {10.1016/S0378-4754(00)00270-6},
- acmid = {373383},
- publisher = {Elsevier Science Publishers B. V.},
- address = {Amsterdam, The Netherlands, The Netherlands},
- keywords = {Monte Carlo method, mathematical modelling, quasi-Monte Carlo method, sensitivity analysis},
-} 
+
+@Article{S01,
+  author     = {Sobol, Ilya M},
+  journal    = {Mathematics and computers in simulation},
+  title      = {Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates},
+  year       = {2001},
+  number     = {1-3},
+  pages      = {271--280},
+  volume     = {55},
+  acmid      = {373383},
+  address    = {Amsterdam, The Netherlands},
+  doi        = {10.1016/S0378-4754(00)00270-6},
+  issue_date = {Feb. 15, 2001},
+  keywords   = {Monte Carlo method, mathematical modelling, quasi-Monte Carlo method, sensitivity analysis},
+  numpages   = {10},
+  publisher  = {Elsevier Science Publishers B. V.},
+  url        = {http://dx.doi.org/10.1016/S0378-4754(00)00270-6},
+}
 
 @PhdThesis{Valentin2019,
   author        = {Julian Valentin},
@@ -150,10 +147,10 @@ series = {KDD '15}
   primaryclass  = {math.NA},
 }
 
-@Article{Weisstein,
+@Misc{Weisstein,
   author  = {Eric W. Weisstein},
-  journal = {MathWorld--A Wolfram Web Resource},
   title   = {Hypercube Line Picking.},
+  journal = {MathWorld--A Wolfram Web Resource},
   url     = {https://mathworld.wolfram.com/HypercubeLinePicking.html},
 }
 
@@ -179,15 +176,17 @@ series = {KDD '15}
   year={1985},
   publisher={JSTOR}
 }
-@article{Ishigami1990AnIQ,
-  title={An importance quantification technique in uncertainty analysis for computer models},
-  author={T. Ishigami and T. Homma},
-  journal={[1990] Proceedings. First International Symposium on Uncertainty Modeling and Analysis},
-  year={1990},
-  pages={398-403}
+
+@Article{Ishigami1990AnIQ,
+  author  = {T. Ishigami and T. Homma},
+  journal = {First International Symposium on Uncertainty Modeling and Analysis},
+  title   = {An importance quantification technique in uncertainty analysis for computer models},
+  year    = {1990},
+  pages   = {398--403},
 }
+
 @Article{Sobol1999,
-  author  = {Sobol, ' and Levitan, I and Y},
+  author  = {Sobol, and Levitan, I and Y},
   journal = {Computer Physics Communications},
   title   = {On the use of variance reducing multipliers in Monte Carlo computations of a global sensitivity index},
   year    = {1999},
@@ -196,18 +195,18 @@ series = {KDD '15}
   volume  = {117},
   date    = {1999},
 }
-@Inbook{Kress1999,
-author="Kress, Rainer",
-title="Regularization by Discretization",
-bookTitle="Linear Integral Equations",
-year="1999",
-publisher="Springer New York",
-address="New York, NY",
-pages="308--319",
-abstract="We briefly return to the study of projection methods and will consider their application to ill-posed equations of the first kind. In particular we will present an exposition of the moment discretization method. For further studies of regularization through discretization, we refer to Baumeister [13], Kirsch [87], Louis [116], and Natterer [136].",
-isbn="978-1-4612-0559-3",
-doi="10.1007/978-1-4612-0559-3_17",
-url="https://doi.org/10.1007/978-1-4612-0559-3_17"
+
+@InBook{Kress1999,
+  author    = {Kress, Rainer},
+  pages     = {308--319},
+  publisher = {Springer New York},
+  title     = {Regularization by Discretization},
+  year      = {1999},
+  isbn      = {978-1-4612-0559-3},
+  abstract  = {We briefly return to the study of projection methods and will consider their application to ill-posed equations of the first kind. In particular we will present an exposition of the moment discretization method. For further studies of regularization through discretization, we refer to Baumeister [13], Kirsch [87], Louis [116], and Natterer [136].},
+  booktitle = {Linear Integral Equations},
+  doi       = {10.1007/978-1-4612-0559-3_17},
+  url       = {https://doi.org/10.1007/978-1-4612-0559-3_17},
 }
 
 @Article{Wang2008,
@@ -217,7 +216,7 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   year     = {2008},
   issn     = {0377-0427},
   number   = {2},
-  pages    = {366-386},
+  pages    = {366--386},
   volume   = {213},
   abstract = {Quasi-Monte Carlo (QMC) methods have been successfully used to compute high-dimensional integrals arising in many applications, especially in finance. To understand the success and the potential limitation of QMC, this paper focuses on quality measures of point sets in high dimensions. We introduce the order-ℓ, superposition and truncation discrepancies, which measure the quality of selected projections of a point set on lower-dimensional spaces. These measures are more informative than the classical ones. We study their relationships with the integration errors and study the tractability issues. We present efficient algorithms to compute these discrepancies and perform computational investigations to compare the performance of the Sobol’ nets with that of the sets of Latin hypercube sampling and random points. Numerical results show that in high dimensions the superiority of the Sobol’ nets mainly derives from the one-dimensional projections and the projections associated with the earlier dimensions; for order-2 and higher-order projections all these point sets have similar behavior (on the average). In weighted cases with fast decaying weights, the Sobol’ nets have a better performance than the other two point sets. The investigation enables us to better understand the properties of QMC and throws new light on when and why QMC can have a better (or no better) performance than Monte Carlo for multivariate integration in high dimensions.},
   doi      = {https://doi.org/10.1016/j.cam.2007.01.005},
@@ -252,7 +251,6 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   publisher = {Springer-Verlag},
   title     = {Non-Uniform Random Variate Generation},
   year      = {1986},
-  address   = {New York},
   date      = {1986},
 }
 
@@ -288,7 +286,7 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
 }
 
 @Article{Crestaux2009,
-  author   = {Thierry Crestaux and Olivier {Le Maıˆtre} and Jean-Marc Martinez},
+  author   = {Crestaux, Thierry and Le Ma{\i}tre, Olivier and Martinez, Jean-Marc},
   journal  = {Reliability Engineering \& System Safety},
   title    = {Polynomial chaos expansion for sensitivity analysis},
   year     = {2009},
@@ -321,10 +319,8 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   journal    = {Computing},
   title      = {Data Mining with Sparse Grids},
   year       = {2001},
-  issn       = {0010-485X},
-  month      = nov,
   number     = {3},
-  pages      = {225–253},
+  pages      = {225--253},
   volume     = {67},
   address    = {Berlin, Heidelberg},
   doi        = {10.1007/s006070170007},
@@ -337,9 +333,10 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
 
 @Article{Gerstner1998,
   author  = {Thomas Gerstner and Michael Griebel},
-  journal = {NUMER. ALGORITHMS},
+  journal = {Numerical algorithms},
   title   = {Numerical Integration using Sparse Grids},
   year    = {1998},
+  number  = {3},
   pages   = {209--232},
   volume  = {18},
 }
@@ -347,7 +344,7 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
 @PhdThesis{Rehme2021,
   author = {Michael F. Rehme},
   school = {Universität Stuttgart},
-  title  = {B-Splines on Sparse Grids forUncertainty Quantification},
+  title  = {B-Splines on Sparse Grids for Uncertainty Quantification},
   year   = {2021},
 }
 
@@ -438,7 +435,6 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   booktitle = {Sparse Grids and Applications - Stuttgart 2014},
   title     = {Spatially-Dimension-Adaptive Sparse Grids for Online Learning},
   year      = {2016},
-  address   = {Cham},
   editor    = {Garcke, Jochen and Pfl{\"u}ger, Dirk},
   pages     = {133--162},
   publisher = {Springer International Publishing},
@@ -484,7 +480,7 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   url       = {http://www.jstor.org/stable/41714922},
 }
 
-@Article{Harper1983,
+@Book{Harper1983,
   author       = {Harper, W V and Gupta, S K},
   title        = {Sensitivity/uncertainty analysis of a borehole scenario comparing Latin Hypercube Sampling and deterministic sensitivity approaches},
   year         = {1983},
@@ -496,10 +492,11 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
 
 @Article{Bungartz2004,
   author  = {Bungartz, Hans-Joachim and Griebel, Michael},
-  journal = {In: Acta Numerica. Vol. 13, pp. 147-269},
+  journal = {In: Acta Numerica},
   title   = {Sparse Grids},
   year    = {2004},
   month   = {05},
+  pages   = {147--269},
   volume  = {13},
   doi     = {10.1017/S0962492904000182},
 }
@@ -528,7 +525,7 @@ url="https://doi.org/10.1007/978-1-4612-0559-3_17"
   url       = {https://doi.org/10.1198/TECH.2010.09157},
 }
 
-@Article{BertinMahieux2011,
+@Misc{BertinMahieux2011,
   author = {Bertin-Mahieux, Thierry and Ellis, Daniel PW and Whitman, Brian and Lamere, Paul},
   title  = {The million song dataset},
   year   = {2011},

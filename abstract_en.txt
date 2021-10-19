@@ -1,6 +1,6 @@
-Computer experiments provide a convenient framework to investigate real world phenomena, and making more information available to a simulation enables it to represent reality more accurately.
-However, many complex simulations suffer from the curse of dimensionality, hence making an accurate simulation difficult and requiring the use of a model surrogate.
-In many cases, a simulation mainly depends only on a subset of the input parameters, which makes it a possible target for dimensionality reduction techniques.
+Computer experiments provide a convenient framework for investigating real world phenomena, and making more information available to a simulation enables it to represent reality more accurately.
+However, many complex simulations suffer from the curse of dimensionality, which makes an accurate simulation difficult and requires the use of a model surrogate.
+In many cases, a simulation mainly depends only on a subset of the input parameters and is therefore a possible target for dimensionality reduction techniques.
 These techniques aim to identify such input parameter structures and try to adapt the simulation accordingly, for example by constructing a lower-dimensional model surrogate.
 Done well, this approach can ease the curse of dimensionality while still preserving a required level of simulation accuracy.
 
