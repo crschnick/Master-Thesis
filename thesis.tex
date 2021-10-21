@@ -3131,10 +3131,27 @@ This might be explained by the fact that both methods use a rougly similar appro
 \chapter{Conclusion and outlook}
 \label{chap:c9}
 
-To summarise this thesis, we discovered that the transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients by using the effective neighbour approximation methods as a basis for the active subspace computations.
-However, if more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve better results.
-The question for which application the transformed sparse grid technique is most suitable also warrants further experiments.
-While we looked at two major applications in a few experiments, function approximation and regression, this does not constitute enough evidence to draw definite conclusions.
+To summarise this thesis, we discovered that the introduced transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients by using neighbour approximation methods as a basis for the active subspace computations.
+In case more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve better results.
+
+Furthermore, it can be applied to both function approximation and regression problems and delivers competitive results in both cases.
+In a setting where every additional model function evaluation is costly, the technique is able to construct surrogates with a very low amount of required model function observations as seen for the borehole function.
+When a lot of observations are already available, for example for the million songs dataset, the technique is also able to utilize the additional available training data as well.
+
+The technique also succeeds at its primary goal to reduce the impact of the curse of dimensionality.
+In theory, the underlying sparse grid surrogates can still be affected by it if $r$ is required to be almost equal to $d$ to achieve an acceptable approximation.
+However, for all model functions we covered this was not the case, \ie the surrogate approximation quality was rather unaffected by higher values for $r$.
+In some cases, the approximation quality even dropped when $r$ was too high and resulted in a grid point resolution for each dimension that was too low.
+
+When being compared to other interpolation and regression techniques, we saw that a fundemental property of transformed sparse grids is a very fast approximation error convergence.
+Even for very high-dimensional models, the transformed sparse grid technique is usually able to converge within the first few hundred grid points.
+This is a strong indication that the active subspace method is very suitable for determining active directions and works well in conjunction with transformed sparse grids.
+
+The approximation error it converges to can be seen as competitive compared to other established methods as we have seen in the last chapter.
+However, mainly due to the fact that the technique is regression based, we saw that it can not deliver the same rate of convergence compared to interpolation techniques when more and more grid points are added to the surrogate.
+Relative to pure sparse grid regression, the technique delivers overall better results as it adds more flexibility to the approximation process.
+In a sense, classical sparse grid regression is a special case of the transformed sparse grid technique with an identity transformation function.
+
 There are also a few more areas of interest regarding transformed sparse grids that might warrant further research and also potential areas of improvement:
 
 \paragraph{Parallelization}
@@ -3150,6 +3167,12 @@ While some formal concepts, like intrinsic dimensionality (\cref{sec:intrinsic})
 Maybe there also exist better ways to construct transformed surrogates compared to the ones used in this thesis or a better way to design an iterative transformation algorithm that works with these surrogates.
 Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach such that the results can be backed by a theory and can as a result be better explained and understood.
 
+\paragraph{Active subspaces}
+For more general sensitivity analysis applications that active subspaces were originally designed to handle, \ie one where insights about the input parameter activity are enough or should be used for different purposes and no actual surrogate should be constructed, the neigbour-based gradient approximation methods can also be interesting.
+The novel approach of just using neighbouring observations to compute an active subspace allows the active subspace method to be applied to regression problems as well.
+We saw that the active subspace directions computed this way are perfectly usable, at least for the purposes of this thesis.
+Therefore, the neighbour-based active subspace approximation methods warrant further research since they may be potentially suitable for other applications as well.
+
 \paragraph{Surrogate types}
 In this thesis, we focused on the sparse grid technique when constructing reduced surrogates for the simple reason that they are better suited for a following dimensionality reduction after the inputs have been transformed using an orthonormal active direction matrix.
 Other surrogate types, like radial basis function surrogates, can not make use of the transformed inputs with the same effectiveness as axis-aligned sparse grids.
@@ -3157,7 +3180,7 @@ In theory, any surrogate type that uses the tensor-product approach to construct
 Another common candidate aside from sparse grids would be the polynomial chaos expansion method \cite{Crestaux2009}.
 As the implementation is designed to be very flexible in terms of possible surrogate types, adding support for other methods would not be too difficult.
 
-\paragraph{Low-fidelity surrogates}
+\paragraph{Automatic parameterization}
 To achieve good approximation results in a timely manner, it is vital to determine good low-fidelity surrogates to guarantee a fast pipeline execution.
 Suitable low-fidelity surrogates are indicative of the comparative quality of their high-fidelity surrogate equivalents.
 Right now, these are determined more or less empirically as automating this process is not trivial, especially when dealing with pre-convergent behaviour of the low-fidelity surrogates.
