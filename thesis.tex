@@ -1822,9 +1822,12 @@ where $c^\ast$ was determined with low-fidelity surrogates.
 %
 Some other sparse grid construction properties, like the level, also have to be adapted to handle arbitrary surrogate dimensionalities as a the approximate grid point amount should be decoupled from the used dimensionality $r$, especially when comparing surrogates with differing dimensionalities.
 This means that instead of passing a fixed level $\ell$ when constructing a sparse grid surrogate, we instead specify a fixed grid point amount to control how much grid points the surrogate should approximately have and determine the most appropriate level and refinements from there.
-That way, we can always get reasonably close to a specific amount of grid points even for higher dimensionalities.
-This means that we can always come reasonably close to any specified grid point amount through choosing the right sparse grid level and performing the right amount of refinements.
- such that we can accurately compare approximation errors of sparse grid surrogates across all possible reduced dimensionalities because their grid point amount is equal.
+We are able to come very close to a targeted amount of grid points $g$ by performing refinements a certain amount of times on a regular sparse grid of the largest possible level, \ie generating a regular sparse grid with
+\begin{equation}
+\ell_{\mathrm{max}}=\left\{\abs{X^{\mathrm{s}}_{\ell}} \leq g \mid \ell \in \mathds{N}\right\}
+\end{equation}
+and padding up the missing amount of grid points using refinements.
+That way, we can accurately compare approximation errors of sparse grid surrogates across all possible reduced dimensionalities because their grid point amount is equal.
 
 
 \section{Generating the best transformation}
@@ -2275,13 +2278,8 @@ The implementation is straightforward and closely matches the construction of sp
 
 Sparse grid generators are implemented using the $\mathrm{SG}^{++}$ library \cite{Pflueger2010}.
 The configuration parameters of a sparse grid surrogate generator contains all the usually required inputs like grid type, basis type, several adaptivity properties, and regression parameters.
-Instead of passing a fixed level $\ell$ as a parameter, we instead specify how many grid points the surrogate should approximately have and determine the most appropriate level and refinement amounts from there as it varies greatly for different values of $r$.
+Instead of passing a fixed level $\ell$ as a parameter, we instead use the variable \texttt{approxGridPoints} to specify the target grid point amount of the surrogate as covered in \cref{sec:gs}.
 This guarantees that sparse grids of different dimensionalities all contain an almost equal amount of grid points, which is very useful when performing comparisons.
-We are able to come very close to a targeted amount of grid points $g$ by performing refinements a certain amount of times on a regular sparse grid of the largest possible level, \ie generating a regular sparse grid with
-\begin{equation}
-\ell_{\mathrm{max}}=\left\{\abs{X^{\mathrm{s}}_{\ell}} \leq g \mid \ell \in \mathds{N}\right\}
-\end{equation}
-and padding up the missing amount of grid points using refinements.
 Furthermore, for sparse grid regression we similarly express the amount of training samples with the variable \texttt{trainSamplesPerGridPoint} to automatically link the amount of grid points and used training samples together.
 
 \subsection {RBF surrogate generator}
@@ -3063,6 +3061,16 @@ $W_\mathrm{p}$ & paint weight (lb/ft$^2$) & $\mathcal{U}(0.025,\, 0.08)$\\
 As there are two target regression outputs, we are dealing with a multi-output regression problem.
 For simplity however, this problem can be decomposed into two single-output regression problems where the approximation errors are evaluated individually.
 
+We observe that we are not able to really improve the approximation by using transformed sparse grids instead of untransformed sparse grids.
+
+As the data has been obtained through simulation, some input parameters were changed using fixed size increments.
+Due to the grid aligned nature of some of the components of the available observations, the nearest neighbour method has been modified such that it can be applied on this model.
+In some cases when the observation inputs are partly aligned along some form of grid structure, always choosing the nearest neighbours of an observation can cause the method to only select neighbours along one grid axis, especially when the intervals of the grid differ for each dimension.
+This can cause the system of linear of equations to not put a constraint on some of the gradient components, which in turn can cause the solver to return approximated gradients with some arbitrary components.
+To fix this issue such that we can still use the nearest neighbour method, we add small random vectors to the neighbour observations when solving the gradient system of linear equations.
+
+
+
 \section{Million songs dataset}
 
 For the final application we try to apply the transformed sparse grid technique to a very high-dimensional model function to explore the limits of it.
@@ -3152,8 +3160,9 @@ However, mainly due to the fact that the technique is regression based, we saw t
 Relative to pure sparse grid regression, the technique delivers overall better results as it adds more flexibility to the approximation process.
 In a sense, classical sparse grid regression is a special case of the transformed sparse grid technique with an identity transformation function.
 
-There are also a few more areas of interest regarding transformed sparse grids that might warrant further research and also potential areas of improvement:
-
+\vspace{5mm}
+\noindent There are also a few more areas of interest regarding transformed sparse grids that might warrant further research that might yield potential improvements:
+\vspace{-3mm}
 \paragraph{Parallelization}
 The implementation of the transformation pipeline has the potential to be almost perfectly parallelized.
 A huge portion of the total runtime is spent on evaluating multiple surrogates that either come from transformation stream generators (\cref{sec:tsg}) or from the process of determining the optimal surrogate configuration parameters (\cref{sec:gs}) .
@@ -3168,7 +3177,8 @@ Maybe there also exist better ways to construct transformed surrogates compared 
 Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach such that the results can be backed by a theory and can as a result be better explained and understood.
 
 \paragraph{Active subspaces}
-For more general sensitivity analysis applications that active subspaces were originally designed to handle, \ie one where insights about the input parameter activity are enough or should be used for different purposes and no actual surrogate should be constructed, the neigbour-based gradient approximation methods can also be interesting.
+The neigbour-based gradient approximation methods can also be interesting for purposes other than surrogate construction.
+For example, more general sensitivity analysis applications that active subspaces were originally designed to handle, \ie one where insights about the input parameter activity are enough or should be used for different purposes, could also benefit from it.
 The novel approach of just using neighbouring observations to compute an active subspace allows the active subspace method to be applied to regression problems as well.
 We saw that the active subspace directions computed this way are perfectly usable, at least for the purposes of this thesis.
 Therefore, the neighbour-based active subspace approximation methods warrant further research since they may be potentially suitable for other applications as well.
