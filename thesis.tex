@@ -348,11 +348,11 @@ The span of the multivariate basis functions $\phi_{\underline{\ell},\underline{
 \begin{equation}
 V^{\mathrm{fb}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{fb}}_{\ell}\},
 \end{equation}
-is defined as a regular full boundary grid of level $\ell$ and the span over all regular non-boundary full grid points,
+is defined as the regular full boundary grid space of level $\ell$ and the span over all regular non-boundary full grid points,
 \begin{equation}
 V^{\mathrm{f}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{f}}_{\ell}\},
 \end{equation}
-is defined as a regular full grid of level $\ell$, respectively.
+is defined as the regular full grid space of level $\ell$, respectively.
 \label{def:full_grid}
 \end{definition}
 
@@ -376,13 +376,13 @@ X^{\mathrm{s}}_{\ell} \coloneqq \{x_{\underline{\ell'},\underline{i}} \mid |\und
 \end{definition}
 %
 As we can see, the sparse grid point set definition is very similar to the full grid definition (\cref{def:full_grid}), with the only difference being the level multi-index selection using the $\ell_1$ norm ${|\cdot|}_1$ instead of the maximum norm $|\cdot|_\infty$, effectively performing a diagonal cut on the available grid increments, as seen in \cref{fig:grid_splitting}.
-The sparse grid itself can then also be defined similar to full grids:
+The sparse grid space can then also be defined similar to full grids:
 \begin{definition}[Sparse grid]
 The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ over all regular sparse boundary grid points,
 \begin{equation}
 V^{\mathrm{sb}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{sb}}_{\ell}\},
 \end{equation}
-is the as a regular sparse boundary grid space, and the span over all regular sparse non-boundary grid points,
+is the regular sparse boundary grid space, and the span over all regular sparse non-boundary grid points,
 \begin{equation}
 V^{\mathrm{s}}_{\ell} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{s}}_{\ell}\},
 \label{eq:sparse_grid}
@@ -395,7 +395,7 @@ The grid construction results for full grids as well as sparse grids are visuali
 
 In related sparse grid literature, the hierarchical decomposition, which is also called hierarchical splitting, throughout which sparse grids are realized is achieved through the decomposition of subspaces instead of the decomposition of the grid point set.
 This allows for easier proofs of various approximation qualities but is not required for the purposes of this thesis.
-It is sufficient to see that a sparse grid construction used in this thesis is equivalent to the construction through hierarchical subspaces.
+It is sufficient to see that the sparse grid construction used in this thesis is equivalent to the construction through hierarchical subspaces.
 
 \begin{definition}[Hierarchical subspaces]
 The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ of a grid increment identified by a level multi-index $\underline{\ell}$,
@@ -403,14 +403,14 @@ The span of the basis functions $\phi_{\underline{\ell},\underline{i}}$ of a gri
 W_{\underline{\ell}} \coloneqq \mathrm{span}~ \{\phi_{\underline{\ell},\underline{i}} \mid \underline{i} \in H_{\underline{\ell}}\},
 \end{equation}
 is defined as the hierarchical subspace of $\underline{\ell}$.
-A sparse grid space can then also be represented as a direct sum of the hierarchical subspaces with
+The sparse grid space can then also be represented as a direct sum of the hierarchical subspaces with
 \begin{equation}
 V^{\mathrm{s}}_{\ell} = \mathrm{span}~ \left\{\phi_{\underline{\ell},\underline{i}} \mid x_{\underline{\ell},\underline{i}} \in X^{\mathrm{s}}_{\ell}\right\}=\bigoplus_{|\underline{\ell'}|_1 \leq \ell} W_{\underline{\ell'}}.
 \label{eq:direct_sum}
 \end{equation}
 \end{definition}
 %
-The sparse grid construction of \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid} because the only difference between both is that the hierarchical decomposition is realized in different stages.
+The sparse grid space construction of \cref{eq:direct_sum} is equal to \cref{eq:sparse_grid} because the only difference between both is that the hierarchical decomposition is realized in different stages.
 
 \begin{mdframed}[style=style]
 \vspace{2.5mm}
@@ -419,23 +419,23 @@ The sparse grid construction of \cref{eq:direct_sum} is equal to \cref{eq:sparse
 \begin{minipage}{.71\textwidth}
         \centering
   \includegraphics[width=.8\linewidth]{graphics/grid_subspaces}
-  \subcaption{Hierarchical splitting of a grid point set}
+  \subcaption{Hierarchical splitting of the grid point set $X^{\text{fb}}_{3}$}
 \label{fig:grid_splitting}
 \vspace{2.5mm}
     \end{minipage}%
     \begin{minipage}{0.28\textwidth}
         \centering
   \includegraphics[width=.8\linewidth]{graphics/full_grid}
-  \subcaption{Grid points of $V^{\text{fb}}_{3}$}
+  \subcaption{Grid points of $X^{\text{fb}}_{3}$}
 \label{fig:full_grid}
 \vspace{4.5mm}
   \includegraphics[width=.8\linewidth]{graphics/sparse_grid}
-  \subcaption{Grid points of $V^{\text{sb}}_{3}$}
+  \subcaption{Grid points of $X^{\text{sb}}_{3}$}
 \label{fig:sparse_grid}
 \vspace{2.5mm}
     \end{minipage}
 \delimit
-\caption{Construction of different grids from hierarchical grid point set increments. The full boundary grid $V^{\text{fb}}_{3}$ is a sum of all grid increments outlined in dotted \greencomma\,\,whereas the sparse boundary grid $V^{\text{sb}}_{3}$ is a sum of all grid increments outlined in dotted \reddot\,\,Boundary grid point increments are shaded in \greydot}
+\caption{Construction of different grids from hierarchical grid point set increments. The full boundary grid point set $X^{\text{fb}}_{3}$ is a sum of all grid increments outlined in dotted \greencomma\,\,whereas the sparse boundary grid point set $X^{\text{sb}}_{3}$ is a sum of all grid increments outlined in dotted \reddot\,\,Boundary grid point increments are shaded in \greydot}
 \label{fig:grid_construction}
 \end{figure}
 \end{mdframed}
@@ -636,7 +636,7 @@ One more recently introduced method are spatially dimension adaptive sparse grid
 \section{Radial basis functions}
 \label{sec:rbf}
 
-Radial basis function surrogates \cite{Broomhead1988} are an alternative way of approximating a model function.
+Radial basis function (RBF) surrogates \cite{Broomhead1988} are an alternative way of approximating a model function.
 A radial basis function $\varphi' \colon \Omega \mapsto \mathds{R}$ is a function whose value solely depends on the distance between the input and its associated center point $c \in \Omega$.
 More formally, there must exist a function $\varphi$ such that $\varphi'(x)=\varphi(\|x - c\|)$ holds.
 Functions that fulfill this property are called radial functions and the associated univariate function $\varphi$ is called a radial kernel centered at $c$.
@@ -1424,7 +1424,7 @@ t_{\text{periodic}}(x_1,\dots,x_i,\dots,x_d) = (x_1,\dots, \frac{x_i\text{ mod }
 \label{eq:per}
 \end{equation}
 and create a surrogate $\hat{f}$ in $\Omega$ with $f(x) \approx \hat{f}(t_{\text{periodic}}(x))$.
-This way, the function can be interpolated better by sparse grids since there are effectively $1 / p_i$ times more grid points spent along the $i$-th dimension.
+This way, the function can be interpolated better by sparse grids since we only approximate one periodic interval and therefore effectively employ $1 / p_i$ times more grid points along the $i$-th dimension.
 In theory, this concept can be also expanded upon with handling multiple periodic dimensions at once, antiperiodic functions, offsets, and combination with other transformations.
 
 A simple example would be the periodic function $f_{\text{periodic}}(x)=\sin(16\pi x_1)  + \cos(16\pi x_2)$, which repeats in intervals of $\frac{1}{8}$ along both dimensions.
@@ -1437,7 +1437,6 @@ To illustrate the improvement of the approximation quality in multiple smaller s
 As we can see, a smaller value for $p$ results in a notable improvement, and going from $p=1$ (no transformation) to $p=0.125$ (best periodic transformation) improves the approximation error by a factor of around $10^2$.
 
 \begin{mdframed}[style=style]
-\vspace{2mm}
 \begin{figure}[H]
         \centering
 \begin{minipage}{.35\textwidth}
@@ -2096,7 +2095,7 @@ The used notation for these component diagrams is shown in \cref{fig:defs}.
 \end{figure}
 \end{mdframed}
 %
-The implementation project, which internally is called \textit{tsgpp} as it adds transformations to the $\mathrm{SG}^{++}$ library \footnote{The source code of $\mathrm{SG}^{++}$ is publicly available at \href{https://github.com/sgpp/sgpp}{https://github.com/sgpp/sgpp}} \cite{Pflueger2010}.
+The implementation uses the $\mathrm{SG}^{++}$ library \footnote{The source code of the $\mathrm{SG}^{++}$ library is publicly available at \href{https://github.com/sgpp/sgpp}{https://github.com/sgpp/sgpp}} \cite{Pflueger2010} as a foundation and adds transformation capabilities on top of it.
 It makes use of many elements of the $\mathrm{SG}^{++}$ library and is basically implemented exactly as described in this chapter.
 
 \newpage
@@ -2110,9 +2109,9 @@ Many pipeline function components can be exchanged for various different impleme
 
 \begin{mdframed}[style=style,frametitle={Transformation Pipeline}]
 \begin{figure}[H]
-
+\vspace{-3mm}
 \includegraphics[width=\textwidth]{graphics/TransformationPipeline.pdf}
-\vspace{-7.5mm}
+\vspace{-9.5mm}
 
 \delimit
 \vspace{1.5mm}
@@ -2123,7 +2122,6 @@ Many pipeline function components can be exchanged for various different impleme
 \item \texttt{\textbf{sampleCount}}: The amount of model observations $n$ used during pipeline execution. These observations are used for a variety of operations and are split into train, validate, and test datasets in each iteration.
 \end{itemize}}
 \end{description}
-
 \delimit
 
 \caption{Component structure of the transformation pipeline and its associated configuration parameters.}
@@ -2135,7 +2133,7 @@ The most important component of the transformation pipeline with regards to achi
 The generated transformation is fed into a surrogate generator component (\cref{sec:sg}), which will generate the transformed surrogate.
 Using the appropriate surrogate generator, any type of surrogate, such as sparse grids or RBFs, can be generated.
 The newly generated surrogate is then added to the sum of previously generated surrogates to obtain the new transformed surrogate sum.
-At the end of each iteration, we decide whether to exit the pipeline or continue.
+At the end of each iteration, we decide whether to exit the pipeline or continue with the resulting residual error function $e_k$ as the new target function.
 
 \newpage
 \section {Transformation generators}
@@ -2153,7 +2151,7 @@ A transformation stream generator will generate as much different transformation
 Every transformation that is generated by a stream generator is first evaluated using a transformation evaluator (\cref{sec:te}) and then compared to the other transformations to choose the best transformation out of all in the end.
 The stream-based transformation generator component structure can be seen in \cref{fig:tsg}.
 
-\begin{mdframed}[style=style,frametitle={Transformation generator (stream-based)}]
+\begin{mdframed}[style=style,frametitle={Stream-based transformation generator}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationGen_Stream.pdf}
 \delimit
@@ -2171,7 +2169,7 @@ Transformation generation with the active subspaces method, as covered in \cref{
 The exact range of the cutoff dimensions can be customized using various parameters, as seen in \cref{fig:astsg}.
 However, the general order of active directions from $w_1$ to $w_d$ is still fixed however as it is dictated by the magnitude of the eigenvalues.
 
-\begin{mdframed}[style=style,frametitle={Transformation stream generator (active subspaces)}]
+\begin{mdframed}[style=style,frametitle={Active subspace transformation stream generator}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_AS.pdf}
 
@@ -2195,12 +2193,12 @@ These are generated by a gradient sample generator component.
 If the gradient function of the model function is not known, we can employ various gradient approximation algorithms that we already covered in \cref{sec:as_est}.
 Three implementations for gradient approximation are available to choose from as listed in \cref{fig:gg}.
 
-\begin{mdframed}[style=style,frametitle={Gradient sample generators}]
+\begin{mdframed}[style=style]
 \begin{figure}[H]
 \begin{description}
 \item[\texttt{\textbf{finiteDifferences($h$)}}:] Gradient samples can be determined using finite differences if the runtime cost of $d$ additional model function evaluations per sample is acceptable.
-\item[\texttt{\textbf{randomNeighbours($n'$)}}] Random neighbour approximation using $n'$ random neighbours.
-\item[\texttt{\textbf{nearestNeighbours($n', m$)}}] Nearest neighbour approximation that selects the $m$ nearest neighbours out of $n'$ possible ones.
+\item[\texttt{\textbf{randomNeighbours($n'$)}}:] Random neighbour approximation using $n'$ random neighbours.
+\item[\texttt{\textbf{nearestNeighbours($n', m$)}}:] Nearest neighbour approximation that selects the $m$ nearest neighbours out of $n'$ possible ones.
 \end{description}
 \delimit
 \caption{List of available gradient sample generator implementations.}
@@ -2216,7 +2214,7 @@ This random transformation generator is easy to implement, as shown in \cref{fig
 Random transformations are only viable if many of them are generated consecutively because the chance of finding a good random transformation in one try is very low.
 They are therefore mainly used in conjunction with iterative transformation generators (\cref{sec:itg}).
 
-\begin{mdframed}[style=style,frametitle={Transformation stream generator (random)}]
+\begin{mdframed}[style=style,frametitle={Random transformation stream generator}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationStreamGen_Random.pdf}
 \delimit
@@ -2244,7 +2242,7 @@ In some cases, for example when dealing with random transformation generation, i
 A transformation evaluator component (\cref{sec:te}) is responsible for assigning comparable quality ratings to each generated transformation such that the best one can be returned after the iteration limit is reached.
 This process is shown in \cref{fig:itg}.
 
-\begin{mdframed}[style=style,frametitle={Transformation generator (iterative)}]
+\begin{mdframed}[style=style,frametitle={Iterative transformation generator}]
 \begin{figure}[H]
 	\includegraphics[width=\textwidth]{graphics/TransformationGen_Iterative.pdf}
 \delimit
@@ -2268,11 +2266,11 @@ This means that the approximation errors used to identify the best transformatio
 \section {Surrogate generators}
 \label{sec:sg}
 
-The last component needed for the pipeline implementation is the surrogate generator, which constructs the function $\hat{f}_t$ for given configuration parameters and transformed input samples,
+The last component needed for the pipeline implementation is the surrogate generator, which constructs the function $\hat{f}_t$ for given configuration parameters and transformed observations,
 \begin{equation}
 S_t=\left\{\left(t(x_i), f(x_i)\right)\right\}_{i=1}^n \subseteq T \times \mathds{R}.
 \end{equation}
-The implementation is straightforward and closely matches the construction of sparse grid surrogates in \cref{chap:c4} and of RBF surrogates in \cref{sec:rbf}.
+The implementation is straightforward and closely matches the construction of sparse grid surrogates in \cref{chap:c4} and of radial basis function surrogates in \cref{sec:rbf}.
 
 \subsection {Sparse Grid surrogate generator}
 
@@ -2311,7 +2309,7 @@ We therefore generate a surrogate first and then make use of a surrogate evaluat
 This is illustrated in \cref{fig:te}.
 While this is a pretty straightforward process, it can still be customized by changing the surrogate construction rules, for example by using a low-fidelity surrogate generator to speed up the evaluation.
 
-\begin{mdframed}[style=style,frametitle={Transformation evaluator (forward looking)}]
+\begin{mdframed}[style=style,frametitle={Forward looking transformation evaluator}]
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{graphics/TransformationEval.pdf}
 \delimit
@@ -2368,7 +2366,7 @@ Of course, since not all components can be perfectly isolated, we will settle wi
 We will first look at the low-dimensional Ishigami function followed by the higher-dimensional wing weight function.
 
 All approximation error results throughout the chapter are computed using a Monte-Carlo NRMSE surrogate evaluator with $10^5$ separate observations.
-Furthermore, the sparse grid surrogate generator uses a value of $\texttt{trainSamplesPerGridPoint}=1$ when creating the regression surrogate.
+Furthermore, the sparse grid surrogate generator uses a value of $\texttt{trainSamplesPerGridPoint}=1$ when creating the  surrogate.
 The concrete grid point amount of low-fidelity and high-fidelity surrogates varies and is explicitly mentioned in each section.
 
 \section{Ishigami function}
@@ -2998,12 +2996,9 @@ This crossover point is continuously pushed back as the model dimensionalities g
 \end{mdframed}
 %
 Furthermore, as the transformed technique internally uses regression, we are comparing an interpolation-based approach to a regression-based one, which is inherently weaker as it does not evaluate the model function at the most optimal points for the approximation.
-Therefore, the best applications for transformed sparse grids should be pure, high-dimensional regression problems, with optionally only a small number of instances as the transformation technique even outperforms interpolation methods in these cases.
+Therefore, the best applications for transformed sparse grids should be pure, high-dimensional regression problems with optionally only a small number of instances as the transformation technique even outperforms interpolation methods in these cases.
 Another potential application could be models that can only support a very small amount of function evaluations such that a normal sparse grid of an acceptable level can not be constructed.
 One such approach of trying to provide an acceptable approximation of the borehole function using only a very small amount of evaluations has already been investigated in \cite{Dette2010}.
-
-
-
 
 \section{Maintenance of naval propulsion plants}
 
@@ -3068,15 +3063,16 @@ Only the general runtime of the regression learner and other algorithms that per
 It is therefore beneficial for the approximation quality that we incorporate as much training data as possible into the surrogate construction process because it would otherwise be unused.
 
 As the data has been obtained through a simulation, some input parameters were varied using fixed size increments.
-Due to the resulting axis-aligned nature of some of the components of the available observations, the nearest neighbour method has been modified such that it can be applied on this model.
+Due to the resulting axis-aligned nature of some of the components of the available observation inputs, the nearest neighbour method has been modified such that it can be applied on this model.
 In cases when the observation inputs are partly aligned along some form of grid structure, always choosing the nearest neighbours of an observation can cause the method to only select neighbours along one axis, especially when the input parameter intervals differ along each dimension.
 This can cause the system of linear of equations to not put a constraint on some of the gradient components, which in turn can cause the solver to return approximated gradients with some arbitrary components.
 To fix this issue such that we can still use the nearest neighbour method, we add small random vectors to the neighbour observations when solving the gradient system of linear equations.
 
 We investigate the results for various dynamic pipelines that add different amounts of grid points per iteration as we did for the previous experiments.
 The dynamic pipeline uses the nearest neighbour gradient approximation method with $n'=1000$ and $m=100$ as it proved to be better than the random neighbour method.
-It then constructs sparse grid surrogate using regression with a maximum of $10$ train observations per grid point.
+It then constructs sparse grid surrogate with modified linear basis functions using regression with a maximum of $10$ train observations per grid point.
 The dataset consists out of $11,934$ observations where the first $70\%$ of observations are used for training and the last $30\%$ for testing.
+For comparison purposes we also approximate the model using normal spatially adaptive sparse grid regression surrogates, which effectively are pipeline runs with exactly one iteration and a fixed identity transformation function.
 Approximation results for the gas turbine compressor decay state coefficient $kM_c$ and the gas turbine decay state coefficient $kM_t$ are visualized in \cref{fig:cbm_comrpessor} and \cref{fig:cbm_turbine}, respectively.
 
 \begin{mdframed}[style=style]
@@ -3093,6 +3089,7 @@ We see that all approximations converge towards a similar error.
 Compared to normal, untransformed sparse grid surrogates, transformed sparse grids outperform their approximation quality for a low amount of grid points.
 As we add more grid points to the surrogates, the individual differences even out and the approximations all have an almost equal approximation quality.
 
+\newpage
 \begin{mdframed}[style=style]
 \begin{figure}[H]
 \vspace{-1mm}\includegraphics[width=\textwidth]{graphics/cbm_turbine}\vspace{-4mm}
@@ -3107,7 +3104,8 @@ We observe that the approximation errors in \cref{fig:cbm_turbine} behave simila
 Especially the $100$ gp/it transformation pipeline delivers very good results.
 
 In summary, we are only able to improve the approximation a little bit by using transformed sparse grids instead of untransformed sparse grids.
-As the inputs transformations only add another of flexibity to the approximation process, this does not necessarily result in guaranteed big improvements.
+Bigger improvements only occur for very low amounts of grid points.
+As the inputs transformations only add another layer of flexibity to the approximation process, this does not necessarily result in guaranteed big improvements.
 In cases when an identity transformation function works well enough, we are not able to outperform untransformed sparse grids.
 
 \section{Million songs dataset}
@@ -3121,7 +3119,7 @@ Therefore, one application is to predict the production year of a song based sol
 The limiting factor of this regression problem is the amount of input parameters, which in the case of this dataset are 90 different audio features.
 These features represent various timbre values that make up the song.
 A perfect identification of a song is not possible as audio features are not perfect predictors of the production year, \ie songs with completely different production years may still have very similar audio features.
-We can therefore not aim to for an approximation error close to zero because this problem is ill-posed.
+We can therefore not aim for an approximation error close to zero because this problem is ill-posed.
 Solving such a high-dimensional regression problem proves to be difficult as the curse of dimensionality is in full effect.
 
 In a regression setting like this, we aim to incorporate as much training data as possible into the surrogate.
@@ -3176,29 +3174,31 @@ This might be explained by the fact that both methods use a rougly similar appro
 \chapter{Conclusion and outlook}
 \label{chap:c9}
 
-To summarise this thesis, we discovered that the introduced transformed sparse grid technique is very flexible in a sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients by using neighbour approximation methods as a basis for the active subspace computations.
-In case more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve better results.
+To summarise this thesis, we discovered that the introduced transformed sparse grid technique is very flexible in the sense that it can be used as pure black box regression method without the need for additional model function evaluations or gradients.
+We saw that we can substiute required model gradients with approximated ones and use neighbour approximation methods as a basis for the active subspace computations to still obtain comparable results.
+In case more information about the model is available, such as the model function itself or its gradients, the technique can also incorporate that additional data to achieve slightly better results.
 
-Furthermore, it can be applied to both function approximation and regression problems and delivers competitive results in both cases.
+Furthermore, the technique can be applied to both function approximation and regression problems and delivers competitive results in both cases.
 In a setting where every additional model function evaluation is costly, the technique is able to construct surrogates with a very low amount of required model function observations as seen for the borehole function.
 When a lot of observations are already available, for example for the million songs dataset, the technique is also able to utilize the additional available training data as well.
 
-The technique also succeeds at its primary goal to reduce the impact of the curse of dimensionality.
+Transformed sparse grids also succeed at their primary goal of reducing the impact of the curse of dimensionality.
 In theory, the underlying sparse grid surrogates can still be affected by it if $r$ is required to be almost equal to $d$ to achieve an acceptable approximation.
-However, for all model functions we covered this was not the case, \ie the surrogate approximation quality was rather unaffected by higher values for $r$.
+However, for all model functions we covered this was not the case, \ie the surrogate approximation quality was rather unaffected by high values for $r$.
 In some cases, the approximation quality even dropped when $r$ was too high and resulted in a grid point resolution for each dimension that was too low.
 
 When being compared to other interpolation and regression techniques, we saw that a fundemental property of transformed sparse grids is a very fast approximation error convergence.
 Even for very high-dimensional models, the transformed sparse grid technique is usually able to converge within the first few hundred grid points.
 This is a strong indication that the active subspace method is very suitable for determining active directions and works well in conjunction with transformed sparse grids.
 
-The approximation error it converges to can be seen as competitive compared to other established methods as we have seen in the last chapter.
-However, mainly due to the fact that the technique is regression based, we saw that it can not deliver the same rate of convergence compared to interpolation techniques when more and more grid points are added to the surrogate.
-Relative to pure sparse grid regression, the technique delivers overall better results as it adds more flexibility to the approximation process.
-In a sense, classical sparse grid regression is a special case of the transformed sparse grid technique with an identity transformation function.
+The asymptotic approximation error of transformed sparse grids can be seen as competitive compared to other established methods as we have seen in the last chapter.
+As a result of focusing the attention on the most important active directions, transformed sparse grids always spend the grid points along directions that matter the most and are able to converge very quickly.
+However, mainly due to the fact that the technique is regression based, we saw that it can not deliver the same asymptotic approximation error when more and more grid points are added to the surrogate compared to interpolation techniques.
+Relative to normal sparse grid regression, the technique delivers overall better results as it adds more flexibility to the approximation process.
+In a sense, normal sparse grid regression is a special case of the transformed sparse grid technique with a fixed identity transformation function.
 
-\vspace{5mm}
-\noindent There are also a few more areas of interest regarding transformed sparse grids that might warrant further research that might yield potential improvements:
+\newpage
+\noindent There are also a few more areas of interest regarding transformed sparse grids that warrant further research and might yield potential improvements:
 \vspace{-3mm}
 \paragraph{Parallelization}
 The implementation of the transformation pipeline has the potential to be almost perfectly parallelized.
@@ -3211,14 +3211,15 @@ This can be combined with the already implemented support of the many of the lis
 The main workflow used to eventually come up with the resulting transformation pipeline was mainly based on ideas and practical experiments.
 While some formal concepts, like intrinsic dimensionality (\cref{sec:intrinsic}) or active subspaces (\cref{sec:as}), were used, many parts, especially the transformation construction and the iterative algorithm design, were introduced constructively without any proof of their qualities.
 Maybe there also exist better ways to construct transformed surrogates compared to the ones used in this thesis or a better way to design an iterative transformation algorithm that works with these surrogates.
-Therefore, the general ideas of this thesis can be investigated with a more formal and rigorous approach such that the results can be backed by a theory and can as a result be better explained and understood.
+Methods for determining active directions can also be evaluated in a more formal way.
+In summary, the general ideas of this thesis can be investigated with a more formal and rigorous approach such that the results can be backed by a theory.
 
 \paragraph{Active subspaces}
 The neigbour-based gradient approximation methods can also be interesting for purposes other than surrogate construction.
 For example, more general sensitivity analysis applications that active subspaces were originally designed to handle, \ie one where insights about the input parameter activity are enough or should be used for different purposes, could also benefit from it.
 The novel approach of just using neighbouring observations to compute an active subspace allows the active subspace method to be applied to regression problems as well.
 We saw that the active subspace directions computed this way are perfectly usable, at least for the purposes of this thesis.
-Therefore, the neighbour-based active subspace approximation methods warrant further research since they may be potentially suitable for other applications as well.
+Therefore, the neighbour-based active subspace approximation methods are good targets for further research since they may be potentially suitable for other applications as well.
 
 \paragraph{Surrogate types}
 In this thesis, we focused on the sparse grid technique when constructing reduced surrogates for the simple reason that they are better suited for a following dimensionality reduction after the inputs have been transformed using an orthonormal active direction matrix.
